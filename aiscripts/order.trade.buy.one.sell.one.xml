@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="utf-8"?>
+<aiscript name="order.trade.buy.one.sell.one" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="3">
+  <order id="BuyOneSellOne" name="BuySell One" description="BuySell One" category="trade" infinite="true" allowinloop="false">
+    <params>
+      <param name="rankIsPrimaryGoal" type="bool" default="1" advanced="true" text="Primary goal is rank" comment="Increase rank is primary goal" />
+      <param name="targetLevel" type="number" text="Rank target level" comment="Target level" advanced="true" default="3">
+        <input_param name="min" value="1" />
+        <input_param name="max" value="5" />
+      </param>
+      <param name="smallEnoughRange" type="length" text="Small enough range" comment="Consider a trade good if the distance is smaller than this value"
+        advanced="true" default="0km">
+        <input_param name="min" value="0km" />
+        <input_param name="max" value="100km" />
+        <input_param name="step" value="10km" />
+      </param>
+      <param name="debugchance" type="bool" default="0" advanced="true" text="{1041, 10086}" comment="Print debug output">
+        <input_param name="truevalue" value="100" />
+      </param>
+    </params>
+    <requires>
+      <match shiptype="shiptype.lasertower" negate="true" />
+      <match class="class.spacesuit" negate="true" />
+    </requires>
+  </order>
+  <interrupts>
+    <handler ref="SectorChangeHandler" />
+    <handler ref="AttackHandler" />
+    <handler ref="MissileLockHandler" />
+    <handler ref="ScannedHandler" />
+    <handler ref="InspectedHandler" />
+    <handler ref="FoundAbandonedHandler" />
+    <handler ref="FoundLockboxHandler" />
+    <handler ref="ResupplyHandler" />
+    <handler ref="TideHandler" />
+  </interrupts>
+  <init>
+    <set_value name="$amountMin" exact="5000" />
+    <set_value name="$enoughFactionsToCheck" exact="30" />
+    <set_value name="$blacklistGroup" exact="blacklistgroup.civilian" />
+    <set_value name="$tradeOfferTypes" exact="['buy', 'sell']" />
+  </init>
+  <attention min="unknown">
+    <actions>
+      <do_if value="this.assignedcontrolled.order" comment="Safety check in case the script is called from non-order script">
+        <!-- Required for all infinite orders, no effect in case of finite timeout -->
+        <set_order_syncpoint_reached order="this.assignedcontrolled.order" />
+      </do_if>
+      <do_if value="not player.entity.$pilotAcademyRandRFactionsList? and @player.entity.$pilotAcademyRandRCurrentFaction == null">
+        <create_list name="player.entity.$pilotAcademyRandRFactionsList" />
+      </do_if>
+
+      <label name="search" />
+
+      <do_if value="this.assignedcontrolled.tradeorders.count">
+        <debug_text text="'Pilot Academy: waiting for %s outstanding trade(s)'.[this.assignedcontrolled.tradeorders.count]" chance="$debugchance" />
+        <wait min="5s" max="8s" />
+        <resume label="search" />
+      </do_if>
+
+      <set_value name="$selectedFaction" exact="null" />
+      <set_value name="$selectedBuyOffer" exact="null" />
+      <set_value name="$selectedSellOffer" exact="null" />
+
+      <do_if value="player.entity.$pilotAcademyRandRFactionsList? and player.entity.$pilotAcademyRandRFactionsList.count">
+        <set_value name="$sortedFactions" exact="player.entity.$pilotAcademyRandRFactionsList.list.clone" />
+      </do_if>
+      <do_else>
+        <set_value name="$sortedFactions" exact="lookup.faction.list" />
+      </do_else>
+
+      <debug_text text="'Pilot Academy: evaluating %s factions for trade opportunities' . [$sortedFactions.count]" chance="$debugchance" />
+      <sort_list list="$sortedFactions" sortbyvalue="loop.element.relationto.{faction.player}" sortdescending="false" />
+
+      <set_value name="$bestDistance" exact="null" />
+      <set_value name="$bestGateDistance" exact="999" />
+      <set_value name="$checkedFactionsCount" exact="0" />
+
+      <set_value name="$tradeFound" exact="false" />
+
+      <do_for_each name="$loopFaction" in="$sortedFactions">
+        <debug_text text="'Pilot Academy: evaluating faction %s with relation %s' . [@$loopFaction.name, @$loopFaction.relationto.{faction.player}]"
+          chance="$debugchance" />
+
+        <do_if value="$loopFaction.hastag.hidden">
+          <debug_text text="'Pilot Academy: skipping faction %s due to hidden tag' . [@$loopFaction.name]" chance="$debugchance" />
+          <continue />
+        </do_if>
+
+        <do_if value="not ($loopFaction.isactive and $loopFaction.knowntoplayer) or $loopFaction.isvisitor">
+          <debug_text
+            text="'Pilot Academy: skipping faction %s due to inactive (%s) or unknown (%s)  or visitor (%s) status' . [@$loopFaction.name, not @$loopFaction.isactive, not @$loopFaction.knowntoplayer, @$loopFaction.isvisitor]"
+            chance="$debugchance" />
+          <continue />
+        </do_if>
+
+        <do_if value="$loopFaction.hasrelation.dock.{faction.player} == false">
+          <debug_text text="'Pilot Academy: skipping faction %s due to no docking rights' . [@$loopFaction.name]" chance="$debugchance" />
+          <continue />
+        </do_if>
+
+        <do_for_each name="$offerType" in="$tradeOfferTypes">
+
+          <set_value name="$demandOffers" exact="null" />
+          <do_if value="$offerType == 'buy'">
+            <find_buy_offer tradepartner="this.assignedcontrolled" space="player.galaxy" result="$demandOffers" multiple="true">
+              <amount min="$amountMin" />
+              <stocklevel min="0.5" />
+              <match_buyer tradesknownto="this.owner" owner="$loopFaction">
+                <match_relation_to object="this.assignedcontrolled" relation="enemy" comparison="not" />
+                <match_use_blacklist group="$blacklistGroup" type="blacklisttype.objectactivity" object="this.assignedcontrolled" />
+                <match_use_blacklist group="$blacklistGroup" type="blacklisttype.sectoractivity" object="this.assignedcontrolled" />
+                <match_use_blacklist group="$blacklistGroup" type="blacklisttype.sectortravel" object="this.assignedcontrolled" />
+              </match_buyer>
+            </find_buy_offer>
+          </do_if>
+          <do_else>
+            <find_sell_offer tradepartner="this.assignedcontrolled" space="player.galaxy" result="$demandOffers" multiple="true">
+              <amount min="$amountMin" />
+              <stocklevel min="0.5" />
+              <match_seller tradesknownto="this.owner" owner="$loopFaction">
+                <match_relation_to object="this.assignedcontrolled" relation="enemy" comparison="not" />
+                <match_use_blacklist group="$blacklistGroup" type="blacklisttype.objectactivity" object="this.assignedcontrolled" />
+                <match_use_blacklist group="$blacklistGroup" type="blacklisttype.sectoractivity" object="this.assignedcontrolled" />
+                <match_use_blacklist group="$blacklistGroup" type="blacklisttype.sectortravel" object="this.assignedcontrolled" />
+              </match_seller>
+            </find_sell_offer>
+          </do_else>
+
+          <debug_text text="'Pilot Academy: found %s %s offers from faction %s' . [@$demandOffers.count, $offerType, @$loopFaction.name]"
+            chance="$debugchance" />
+
+          <do_if value="$demandOffers.count gt 0">
+
+            <shuffle_list list="$demandOffers" />
+            <sort_trades name="$demandOffersSorted" tradelist="$demandOffers" sorter="amount" />
+
+            <do_for_each name="$demandOffer" in="$demandOffersSorted" reverse="true" counter="$j">
+
+              <debug_text
+                text="'Pilot Academy: evaluating %s offer for %s with stock level %s of %s from %s' . [$offerType, @$demandOffer.amount, @$demandOffer.stocklevel, @$demandOffer.ware.id, @$demandOffer.owner.knownname, @$loopFaction.name]"
+                chance="$debugchance" />
+
+              <do_if value="$demandOffer.ware.waretransport != waretransport.container">
+                <continue />
+              </do_if>
+
+              <set_value name="$demandAmount" exact="$demandOffer.amount" />
+
+              <set_value name="$demandOwner" exact="$demandOffer.owner" />
+
+              <set_value name="$supplyOffers" exact="null" />
+              <do_if value="$offerType == 'buy'">
+                <find_sell_offer tradepartner="this.assignedcontrolled" space="player.galaxy" result="$supplyOffers" wares="$demandOffer.ware" multiple="true">
+                  <amount min="$amountMin" />
+                  <stocklevel min="0.5" />
+                  <match_seller tradesknownto="this.owner">
+                    <match_relation_to object="this.assignedcontrolled" relation="enemy" comparison="not" />
+                    <match_use_blacklist group="$blacklistGroup" type="blacklisttype.objectactivity" object="this.assignedcontrolled" />
+                    <match_use_blacklist group="$blacklistGroup" type="blacklisttype.sectoractivity" object="this.assignedcontrolled" />
+                    <match_use_blacklist group="$blacklistGroup" type="blacklisttype.sectortravel" object="this.assignedcontrolled" />
+                  </match_seller>
+                </find_sell_offer>
+              </do_if>
+              <do_else>
+                <find_buy_offer tradepartner="this.assignedcontrolled" space="player.galaxy" result="$supplyOffers" wares="$demandOffer.ware" multiple="true">
+                  <amount min="$amountMin" />
+                  <stocklevel min="0.5" />
+                  <match_buyer tradesknownto="this.owner">
+                    <match_relation_to object="this.assignedcontrolled" relation="enemy" comparison="not" />
+                    <match_use_blacklist group="$blacklistGroup" type="blacklisttype.objectactivity" object="this.assignedcontrolled" />
+                    <match_use_blacklist group="$blacklistGroup" type="blacklisttype.sectoractivity" object="this.assignedcontrolled" />
+                    <match_use_blacklist group="$blacklistGroup" type="blacklisttype.sectortravel" object="this.assignedcontrolled" />
+                  </match_buyer>
+                </find_buy_offer>
+              </do_else>
+
+              <debug_text text="'Pilot Academy: found %s opposite offers for %s %s' . [@$supplyOffers.count, @$demandOffer.ware.id, $offerType]"
+                chance="$debugchance" />
+
+              <do_if value="$supplyOffers.count == 0">
+                <debug_text text="'Pilot Academy: no opposite offers for %s %s, skipping' . [@$demandOffer.ware.id, $offerType]" chance="$debugchance" />
+                <continue />
+              </do_if>
+
+              <sort_list list="$supplyOffers"
+                sortbyvalue="if $demandOwner.gatedistance.{loop.element.owner}.{$blacklistGroup}.{this.assignedcontrolled} lt 0 then 999 else $demandOwner.gatedistance.{loop.element.owner}.{$blacklistGroup}.{this.assignedcontrolled}"
+                sortdescending="false" />
+
+              <do_for_each name="$supplyOffer" in="$supplyOffers" counter="$k">
+
+                <set_value name="$gateDistance" exact="$demandOwner.gatedistance.{$supplyOffer.owner}.{$blacklistGroup}.{this.assignedcontrolled}" />
+
+                <do_if value="$gateDistance lt 0">
+                  <debug_text
+                    text="'Pilot Academy: skipping all next opposite offers for %s %s as no gate connection' . [@$demandOffer.ware.id, $offerType]"
+                    chance="$debugchance" />
+                  <break />
+                </do_if>
+                <debug_text
+                  text="'Pilot Academy: gate distance for opposite offer for %s with stock level %s from %s to %s offer %s is %s, best %s' . [$supplyOffer.amount, $supplyOffer.stocklevel, $supplyOffer.owner.knownname, $offerType ,$demandOwner.knownname, $gateDistance, $bestGateDistance]"
+                  chance="$debugchance" />
+                <do_if value="$bestGateDistance lt $gateDistance">
+                  <debug_text
+                    text="'Pilot Academy: skipping all next opposite offers for %s %s on %s due to worse gate distance %s vs best %s' . [@$demandOffer.ware.id, $offerType, $demandOwner.knownname, $gateDistance, $bestGateDistance]"
+                    chance="$debugchance" />
+                  <break />
+                </do_if>
+
+                <set_value name="$supplyAmount" exact="$supplyOffer.amount" />
+
+                <set_value name="$tradeDistance" exact="$demandOwner.distanceto.{$supplyOffer.owner}" />
+                <debug_text
+                  text="'Pilot Academy: trade distance for opposite offer for %s %s for %s with stock level %s from %s to %s is %s' . [@$demandOffer.ware.id, $offerType, $supplyOffer.amount, $supplyOffer.stocklevel, $supplyOffer.owner.knownname, $demandOwner.knownname, $tradeDistance]"
+                  chance="$debugchance" />
+
+                <do_if value="$bestDistance == null or $bestDistance gt $tradeDistance">
+                  <set_value name="$bestGateDistance" exact="$gateDistance" />
+                  <set_value name="$bestDistance" exact="$tradeDistance" />
+                  <set_value name="$selectedSellOffer" exact="if $offerType == 'buy' then $supplyOffer else $demandOffer" />
+                  <set_value name="$selectedBuyOffer" exact="if $offerType == 'sell' then $supplyOffer else $demandOffer" />
+                  <set_value name="$selectedFaction" exact="$loopFaction" />
+                  <debug_text
+                    text="'Pilot Academy: new best pair of offers found from %s to %s with distance %s' . [$demandOwner.knownname, $supplyOffer.owner.knownname, $bestDistance]"
+                    chance="$debugchance" />
+                  <do_if value="$bestGateDistance == 0 and $bestDistance le $smallEnoughRange">
+                    <debug_text
+                      text="'Pilot Academy: short enough distance %s and gate distance %s, stopping search for better trades'.[$bestDistance, $bestGateDistance]"
+                      chance="$debugchance" />
+                    <set_value name="$tradeFound" exact="true" />
+                  </do_if>
+                </do_if>
+
+                <remove_value name="$tradeDistance" />
+                <remove_value name="$gateDistance" />
+                <do_if value="$k % 10 == 0">
+                  <wait min="1ms" max="3ms" />
+                </do_if>
+              </do_for_each>
+
+              <remove_value name="$supplyOffers" />
+              <remove_value name="$supplyAmount" />
+              <do_if value="$tradeFound">
+                <debug_text text="'Pilot Academy: trade found, stopping evaluation of further offers for %s %s' . [@$demandOffer.ware.id, $offerType]"
+                  chance="$debugchance" />
+                <break />
+              </do_if>
+              <do_if value="$j % 10 == 0">
+                <wait min="1ms" max="3ms" />
+              </do_if>
+            </do_for_each>
+
+          </do_if>
+          <remove_value name="$demandOffers" />
+          <remove_value name="$demandOwner" />
+          <remove_value name="$demandAmount" />
+          <do_if value="$tradeFound">
+            <debug_text text="'Pilot Academy: trade found, stopping evaluation of further offer types for faction %s' . [@$loopFaction.name]"
+              chance="$debugchance" />
+            <break />
+          </do_if>
+        </do_for_each>
+
+        <!-- <do_if value="$rankIsPrimaryGoal">
+          <debug_text text="'Pilot Academy: primary goal achieved, stopping faction evaluation'" chance="$debugchance" />
+          <break />
+        </do_if> -->
+        <do_if value="@$selectedFaction != null">
+          <debug_text
+            text="'Pilot Academy: ----\ncurrent best offers pair for faction %s: sell ware %s from %s in amount %s and stock level %s, buy on %s with amount %s and stock level %s with distance %s and gate distance %s\n----'
+          .[$selectedFaction, $selectedSellOffer.ware.id, $selectedSellOffer.owner.knownname, $selectedSellOffer.amount, $selectedSellOffer.stocklevel, $selectedBuyOffer.owner.knownname, $selectedBuyOffer.amount, $selectedBuyOffer.stocklevel, $bestDistance, $bestGateDistance]"
+            chance="$debugchance" />
+          <set_value name="$checkedFactionsCount" operation="add" />
+        </do_if>
+        <do_else>
+          <debug_text text="'Pilot Academy: no qualifying trades found for faction %s' .[$loopFaction]" chance="$debugchance" />
+        </do_else>
+        <wait min="10ms" max="30ms" />
+        <do_if value="$checkedFactionsCount ge $enoughFactionsToCheck">
+          <debug_text text="'Pilot Academy: enough factions checked (%s), stopping evaluation' .[$checkedFactionsCount]" chance="$debugchance" />
+          <break />
+        </do_if>
+        <do_if value="$tradeFound">
+          <debug_text text="'Pilot Academy: trade found, stopping evaluation of further factions'" chance="$debugchance" />
+          <break />
+        </do_if>
+      </do_for_each>
+
+      <remove_value name="$sortedFactions" />
+
+      <!-- <do_if value="$selectedBuyOffer? and $selectedSellOffer? and $tradeFound">
+        <set_value name="$ware" exact="$selectedBuyOffer.ware" />
+        <set_value name="$demandAmount" exact="$selectedBuyOffer.amount.{this.assignedcontrolled}" />
+        <set_value name="$supplyAmount" exact="$selectedSellOffer.amount.{this.assignedcontrolled}" />
+        <set_value name="$currentCargo" exact="this.assignedcontrolled.cargo.{$ware}.count" />
+        <set_value name="$freeCargo" exact="this.assignedcontrolled.cargo.{$ware}.free" />
+        <set_value name="$targetAmount" exact="[[[$demandAmount, $supplyAmount].min, $currentCargo + $freeCargo].min, 0].max" />
+
+        <set_value name="$buyAmount" exact="[$targetAmount - $currentCargo, 0].max" />
+        <do_if value="$buyAmount gt 0">
+          <set_value name="$buyAmount" exact="[$buyAmount, $freeCargo].min" />
+          <clamp_trade_amount trade="$selectedSellOffer" amount="$buyAmount" buyer="this.assignedcontrolled" seller="$selectedSellOffer.owner"
+            result="$buyAmount" />
+        </do_if>
+
+        <set_value name="$sellAmount" exact="[[$currentCargo + $buyAmount, $targetAmount].min, 0].max" />
+        <do_if value="$sellAmount gt 0">
+          <clamp_trade_amount trade="$selectedBuyOffer" amount="$sellAmount" buyer="$selectedBuyOffer.owner" result="$sellAmount" />
+        </do_if>
+
+        <do_if value="$sellAmount le 0">
+          <debug_text text="'Pilot Academy: unable to clamp sell amount for %s'.[$ware]" chance="$debugchance" />
+          <wait min="5s" max="10s" />
+          <remove_value name="$ware" />
+          <remove_value name="$targetAmount" />
+          <remove_value name="$currentCargo" />
+          <remove_value name="$freeCargo" />
+          <remove_value name="$buyAmount" />
+          <remove_value name="$sellAmount" />
+          <remove_value name="$selectedFaction" />
+          <remove_value name="$selectedBuyOffer" />
+          <remove_value name="$selectedSellOffer" />
+          <remove_value name="$tradeFound" />
+          <resume label="search" />
+        </do_if>
+
+        <do_if value="$sellAmount gt 0">
+          <debug_text text="'Pilot Academy: selling %s of %s to %s'.[$sellAmount, $ware, $selectedBuyOffer.owner.knownname]" chance="$debugchance" />
+          <create_trade_order object="this.assignedcontrolled" tradeoffer="$selectedBuyOffer" amount="$sellAmount" immediate="true" internal="true" />
+        </do_if>
+
+        <do_if value="$buyAmount gt 0">
+          <debug_text text="'Pilot Academy: buying %s of %s from %s'.[$buyAmount, $ware, $selectedSellOffer.owner.knownname]" chance="$debugchance" />
+          <create_trade_order object="this.assignedcontrolled" tradeoffer="$selectedSellOffer" amount="$buyAmount" immediate="true" internal="true" />
+        </do_if>
+
+        <wait exact="1ms" />
+
+        <remove_value name="$ware" />
+        <remove_value name="$targetAmount" />
+        <remove_value name="$currentCargo" />
+        <remove_value name="$freeCargo" />
+        <remove_value name="$buyAmount" />
+        <remove_value name="$sellAmount" />
+        <remove_value name="$selectedFaction" />
+        <remove_value name="$selectedBuyOffer" />
+        <remove_value name="$selectedSellOffer" />
+        <remove_value name="$tradeFound" />
+      </do_if>
+      <do_else>
+        <debug_text text="'Pilot Academy: no qualifying faction trade found'" chance="$debugchance" />
+        <wait min="6s" max="10s" />
+      </do_else> -->
+      <wait exact="10min" />
+      <resume label="search" />
+    </actions>
+  </attention>
+</aiscript>
