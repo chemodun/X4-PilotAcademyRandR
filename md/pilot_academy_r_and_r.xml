@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mdscript name="Pilot_Academy_Ranks_And_Relations" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <cues>
+    <cue name="Main" version="1">
+      <actions>
+        <debug_text text="'Pilot Academy: Main'" chance="100" filter="scripts" />
+      </actions>
+      <cues>
+        <!-- <cue name="On_Reload" instantiate="true">
+          <conditions>
+            <event_ui_triggered screen="'MimicRepeatOrders'" control="'Reloaded'" />
+          </conditions>
+          <actions>
+            <debug_text text="'Pilot Academy: On_Reload'" chance="100" filter="scripts" />
+            <signal_cue_instantly cue="Reloaded" />
+          </actions>
+        </cue> -->
+
+        <cue name="Reloaded" instantiate="true" version="3">
+          <conditions>
+            <event_cue_signalled />
+          </conditions>
+          <actions>
+            <debug_text text="'Pilot Academy: Reloaded.: %s'" chance="100" filter="scripts" />
+          </actions>
+        </cue>
+
+        <cue name="Refresh_Pilot_Academy_Pilots" instantiate="true" checkinterval="3s">
+          <actions>
+            <debug_text text="'Pilot Academy: Refresh_Pilot_Academy_Pilots." chance="100" filter="scripts" />
+          </actions>
+        </cue>
+
+        <cue name="Process_Report_Rank_Up" instantiate="true" version="1">
+          <conditions>
+            <event_object_signalled object="player.entity" param="'AcademyPilotRankUpReached'" />
+            <check_value value="@event.param2 != null" />
+            <check_value value="@event.param3 != null" />
+            <check_value value="@event.param3.$timeStamp != null" />
+            <check_value value="@event.param3.$targetRankLevel != null" />
+            <check_value value="@event.param3.$selectedFaction != null" />
+            <check_value value="@event.param3.$selectedBuyOffer != null" />
+            <check_value value="@event.param3.$selectedSellOffer != null" />
+          </conditions>
+          <actions>
+            <debug_text
+              text="'Pilot Academy: Report_Rank_Up: Pilot %s on %s is reached target rank %s at %s'.
+                [@event.param2.pilot.debugname, @event.param2.debugname, @event.param3.$targetRankLevel, @event.param3.$timeStamp]"
+              chance="100" filter="scripts" />
+          </actions>
+        </cue>
+
+      </cues>
+    </cue>
+  </cues>
+</mdscript>
