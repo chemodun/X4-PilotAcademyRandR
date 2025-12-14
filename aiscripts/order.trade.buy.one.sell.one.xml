@@ -19,13 +19,13 @@
   </order>
   <interrupts>
     <library>
-      <actions name="PrintAcademyStats">
+      <actions name="PilotAcademyPrintStats">
         <debug_text
-          text="'Pilot Academy [%s]: \nfaction %s relation: %s (%s)\npilot skills - combined: %s, piloting %s, morale %s, management %s, engineering %s, boarding %s'.
+          text="'Pilot Academy [%s]: \nfaction %s relation: %s (%s)\npilot skills - combined: %s, Pilot: piloting %s, morale %s, management %s, engineering %s, boarding %s'.
             [this.assignedcontrolled.debugname, @$selectedFaction, @$selectedFaction.relationto.{faction.player}, @$selectedFaction.relation.{@$selectedFaction.relationto.{faction.player}}.uivalue, @this.combinedskill, @this.skill.{skilltype.piloting}, @this.skill.{skilltype.morale}, @this.skill.{skilltype.management}, @this.skill.{skilltype.engineering}, @this.skill.{skilltype.boarding}]"
           chance="$debugchance" />
       </actions>
-      <actions name="ShareAcademyTradeInfo">
+      <actions name="PilotAcademyShareTradeInfo">
         <do_if value="@$shareInfoTarget != null and @$selectedFaction != null and @$selectedBuyOffer != null and @$selectedSellOffer != null">
           <signal_objects object="$shareInfoTarget" param="'AcademyTradeInfoUpdated'" param2="this.assignedcontrolled"
             param3="table[
@@ -37,6 +37,24 @@
           <debug_text
             text="'Pilot Academy [%s]: shared trade info with %s: faction %s, buy offer %s, sell offer %s'.[this.assignedcontrolled.debugname, $shareInfoTarget.debugname, @$selectedFaction.name, @$selectedBuyOffer.ware.id, @$selectedSellOffer.ware.id]"
             chance="$debugchance" />
+        </do_if>
+      </actions>
+      <actions name="PilotAcademyReportRankUp">
+        <do_if
+          value="this.combinedskill ge $targetCombinedSkill and (not this.$pilotAcademyLastRankUpReportTime? or (player.age - this.$pilotAcademyLastRankUpReportTime) ge 180s)">
+          <debug_text
+            text="'Pilot Academy [%s]: Pilot %s reached target rank level %s with combined skill %s, reporting to Academy to request replacement.' .
+              [this.assignedcontrolled.debugname, this.debugname, $targetRankLevel, this.combinedskill]"
+            chance="$debugchance" />
+          <signal_objects object="player.entity" param="'AcademyPilotRankUpReached'" param2="this.assignedcontrolled"
+            param3="table[
+              $timeStamp = player.age,
+              $targetRankLevel = $targetRankLevel,
+              $selectedFaction = @$selectedFaction,
+              $selectedBuyOffer = @$selectedBuyOffer,
+              $selectedSellOffer = @$selectedSellOffer
+            ]" />
+          <set_value name="this.$pilotAcademyLastRankUpReportTime" exact="player.age" />
         </do_if>
       </actions>
     </library>
@@ -75,7 +93,7 @@
         <set_value name="$shareInfoTarget" exact="event.param2" />
         <debug_text text="'Pilot Academy [%s]: received trade info request from subordinate %s'.[this.assignedcontrolled.debugname, event.param2.debugname]"
           chance="$debugchance" />
-        <include_interrupt_actions ref="ShareAcademyTradeInfo" />
+        <include_interrupt_actions ref="PilotAcademyShareTradeInfo" />
       </actions>
     </handler>
   </interrupts>
@@ -92,6 +110,7 @@
     <set_value name="$selectedFaction" exact="null" />
     <set_value name="$selectedBuyOffer" exact="null" />
     <set_value name="$selectedSellOffer" exact="null" />
+    <set_value name="$targetCombinedSkill" exact="$targetRankLevel * 20" />
     <!-- <append_to_list name="$factionsList" exact="faction.ministry" /> -->
   </init>
   <attention min="unknown">
@@ -455,7 +474,7 @@
           <debug_text text="'Pilot Academy [%s]: going to share trade info with subordinate %s'.[this.assignedcontrolled.debugname, $subordinate.debugname]"
             chance="$debugchance" />
           <set_value name="$shareInfoTarget" exact="$subordinate" />
-          <include_interrupt_actions ref="ShareAcademyTradeInfo" />
+          <include_interrupt_actions ref="PilotAcademyShareTradeInfo" />
         </do_for_each>
       </do_if>
       <debug_text
@@ -499,7 +518,8 @@
           seller="$selectedSellOffer.owner" result="$tradeAmount" />
       </do_else>
 
-      <include_interrupt_actions ref="PrintAcademyStats" />
+      <include_interrupt_actions ref="PilotAcademyPrintStats" />
+      <include_interrupt_actions ref="PilotAcademyReportRankUp" />
 
       <do_if value="$tradeAmount le 0">
         <debug_text
