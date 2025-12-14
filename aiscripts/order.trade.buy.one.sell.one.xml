@@ -439,7 +439,7 @@
             <amount min="$selectedSellOffer.amount / 2" />
           </find_sell_offer>
           <sort_list list="$localSellOffers" sortbyvalue="loop.element.unitprice" sortdescending="false" />
-          <do_for_each name="$localSellOffer" in="$localSellOffers" counter="$m">
+          <do_for_each name="$localSellOffer" in="$localSellOffers" counter="$i">
             <do_if value="$localSellOffer.ware.id == $selectedSellOffer.ware.id">
               <debug_text
                 text="'Pilot Academy [%s]: skipping wares %s equal and after selected sell offer due to highest prices' .
@@ -463,7 +463,7 @@
                   .[this.assignedcontrolled.debugname, $selectedFaction, $selectedSellOffer.ware.id, $selectedSellOffer.owner.debugname, $selectedSellOffer.amount, $selectedSellOffer.volume, $selectedSellOffer.unitprice.formatted.default, $selectedSellOffer.quantityfactor, $selectedBuyOffer.owner.debugname, $selectedBuyOffer.amount, $selectedBuyOffer.volume, $selectedBuyOffer.unitprice.formatted.default, $selectedBuyOffer.quantityfactor, $bestDistance, $bestGateDistance]"
                 chance="$debugchance" />
             </do_if>
-            <do_if value="$j % 10 == 0">
+            <do_if value="$i % 10 == 0">
               <wait min="1ms" max="3ms" />
             </do_if>
           </do_for_each>
