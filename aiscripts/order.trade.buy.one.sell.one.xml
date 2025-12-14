@@ -1,18 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <aiscript name="order.trade.buy.one.sell.one" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="1">
-  <order id="BuyOneSellOne" name="BuySell One" description="BuySell One" category="trade" infinite="true" allowinloop="false">
+  <order id="BuyOneSellOneForSomething" name="BuySell One" description="BuySell One" category="trade" infinite="true" allowinloop="false">
     <params>
       <param name="targetRankLevel" type="number" text="Rank target level" comment="Target level for pilot rank" advanced="true" default="3">
         <input_param name="min" value="1" />
         <input_param name="max" value="5" />
       </param>
+      <param name="runMode" type="bool" text="Run Mode" comment="Run Mode" advanced="true" default="false" />
       <param name="debugchance" type="bool" default="0" advanced="true" text="{1041, 10086}" comment="Print debug output">
         <input_param name="truevalue" value="100" />
       </param>
       <param name="factionsList" type="internal" default="[]" text="List of factions to consider for trading" comment="List of factions to consider for trading" />
-      <param name="selectedFaction" type="internal" default="null" text="Selected faction for trading" comment="Selected faction for trading" />
-      <param name="selectedBuyOffer" type="internal" default="null" text="Selected buy offer" comment="Selected buy offer" />
-      <param name="selectedSellOffer" type="internal" default="null" text="Selected sell offer" comment="Selected sell offer" />
     </params>
     <requires>
       <match shiptype="shiptype.lasertower" negate="true" />
@@ -21,11 +19,25 @@
   </order>
   <interrupts>
     <library>
-      <actions name="printAcademyStats">
+      <actions name="PrintAcademyStats">
         <debug_text
-          text="'Pilot Academy: \nfaction %s relation: %s (%s)\npilot skills - combined: %s, piloting %s, morale %s, management %s, engineering %s, boarding %s'.
-            [@$selectedFaction, @$selectedFaction.relationto.{faction.player}, @$selectedFaction.relation.{@$selectedFaction.relationto.{faction.player}}.uivalue, @this.combinedskill, @this.skill.{skilltype.piloting}, @this.skill.{skilltype.morale}, @this.skill.{skilltype.management}, @this.skill.{skilltype.engineering}, @this.skill.{skilltype.boarding}]"
+          text="'Pilot Academy [%s]: \nfaction %s relation: %s (%s)\npilot skills - combined: %s, piloting %s, morale %s, management %s, engineering %s, boarding %s'.
+            [this.assignedcontrolled.debugname, @$selectedFaction, @$selectedFaction.relationto.{faction.player}, @$selectedFaction.relation.{@$selectedFaction.relationto.{faction.player}}.uivalue, @this.combinedskill, @this.skill.{skilltype.piloting}, @this.skill.{skilltype.morale}, @this.skill.{skilltype.management}, @this.skill.{skilltype.engineering}, @this.skill.{skilltype.boarding}]"
           chance="$debugchance" />
+      </actions>
+      <actions name="ShareAcademyTradeInfo">
+        <do_if value="@$shareInfoTarget != null and @$selectedFaction != null and @$selectedBuyOffer != null and @$selectedSellOffer != null">
+          <signal_objects object="$shareInfoTarget" param="'AcademyTradeInfoUpdated'" param2="this.assignedcontrolled"
+            param3="table[
+              $selectedFaction = $selectedFaction,
+              $selectedBuyOffer = $selectedBuyOffer,
+              $selectedSellOffer = $selectedSellOffer
+              ]"
+            delay="300ms" />
+          <debug_text
+            text="'Pilot Academy [%s]: shared trade info with %s: faction %s, buy offer %s, sell offer %s'.[this.assignedcontrolled.debugname, $shareInfoTarget.debugname, @$selectedFaction.name, @$selectedBuyOffer.ware.id, @$selectedSellOffer.ware.id]"
+            chance="$debugchance" />
+        </do_if>
       </actions>
     </library>
     <handler ref="AttackHandler" />
@@ -36,6 +48,36 @@
     <handler ref="FoundLockboxHandler" />
     <handler ref="ResupplyHandler" />
     <handler ref="TideHandler" />
+    <handler>
+      <conditions>
+        <event_object_signalled object="this.assignedcontrolled" param="'AcademyTradeInfoUpdated'" param2="this.assignedcontrolled.commander" />
+        <check_value value="@event.param3 != null" />
+        <check_value value="@event.param3.$selectedFaction != null" />
+        <check_value value="@event.param3.$selectedBuyOffer != null" />
+        <check_value value="@event.param3.$selectedSellOffer != null" />
+      </conditions>
+      <actions>
+        <debug_text text="'Pilot Academy [%s]: received trade info update from commander %s'.[this.assignedcontrolled.debugname, event.param2.debugname]"
+          chance="$debugchance" />
+        <set_value name="$selectedFaction" exact="event.param3.$selectedFaction" />
+        <set_value name="$selectedBuyOffer" exact="event.param3.$selectedBuyOffer" />
+        <set_value name="$selectedSellOffer" exact="event.param3.$selectedSellOffer" />
+        <abort_called_scripts resume="prepareTrade" />
+      </actions>
+    </handler>
+    <handler>
+      <conditions>
+        <event_object_signalled object="this.assignedcontrolled" param="'AcademyTradeInfoRequest'" />
+        <check_value value="@event.param2 != null" />
+        <check_value value="this.assignedcontrolled.subordinates.indexof.{@event.param2} gt 0" />
+      </conditions>
+      <actions>
+        <set_value name="$shareInfoTarget" exact="event.param2" />
+        <debug_text text="'Pilot Academy [%s]: received trade info request from subordinate %s'.[this.assignedcontrolled.debugname, event.param2.debugname]"
+          chance="$debugchance" />
+        <include_interrupt_actions ref="ShareAcademyTradeInfo" />
+      </actions>
+    </handler>
   </interrupts>
   <init>
     <set_value name="$enoughFactionsToCheck" exact="30" />
@@ -47,24 +89,29 @@
       <create_list name="$factionsList" />
     </do_if>
     <set_value name="$tradeOperation" exact="''" />
+    <set_value name="$selectedFaction" exact="null" />
+    <set_value name="$selectedBuyOffer" exact="null" />
+    <set_value name="$selectedSellOffer" exact="null" />
     <!-- <append_to_list name="$factionsList" exact="faction.ministry" /> -->
   </init>
   <attention min="unknown">
     <actions>
       <label name="prepareTrade" />
       <debug_text
-        text="'Pilot Academy: stored info to this.$pilotAcademyTradeInfo: %s, (%s, %s)'.[@this.$pilotAcademyTradeInfo, this.$pilotAcademyTradeInfo?, this.$pilotAcademyTradeInfo.$timeStamp?]"
+        text="'Pilot Academy [%s]: stored info to this.$pilotAcademyTradeInfo: %s, (%s, %s)'.[this.assignedcontrolled.debugname, @this.$pilotAcademyTradeInfo, this.$pilotAcademyTradeInfo?, this.$pilotAcademyTradeInfo.$timeStamp?]"
         chance="$debugchance" />
       <do_if value="this.$pilotAcademyTradeInfo? and this.$pilotAcademyTradeInfo.$timeStamp?">
         <set_value name="$lastTradeInfo" exact="this.$pilotAcademyTradeInfo" />
-        <debug_text text="'Pilot Academy: found last trade info at %s ago: %s'.[player.age - $lastTradeInfo.$timeStamp, $lastTradeInfo]" chance="$debugchance" />
+        <debug_text
+          text="'Pilot Academy [%s]: found last trade info at %s ago: %s'.[this.assignedcontrolled.debugname, player.age - $lastTradeInfo.$timeStamp, $lastTradeInfo]"
+          chance="$debugchance" />
         <do_if value="(player.age - $lastTradeInfo.$timeStamp) lt 180s">
           <set_value name="$tradeOperation" exact="$lastTradeInfo.$tradeOperation" />
           <set_value name="$selectedFaction" exact="$lastTradeInfo.$selectedFaction" />
           <set_value name="$selectedBuyOffer" exact="$lastTradeInfo.$selectedBuyOffer" />
           <set_value name="$selectedSellOffer" exact="$lastTradeInfo.$selectedSellOffer" />
           <debug_text
-            text="'Pilot Academy: reusing last trade info from %s ago. Completed %s on %s.' . [player.age - $lastTradeInfo.$timeStamp, $tradeOperation, if @$tradeOperation == 'sell' then @$selectedBuyOffer.owner.debugname else @$selectedSellOffer.owner.debugname]"
+            text="'Pilot Academy [%s]: reusing last trade info from %s ago. Completed %s on %s.' . [this.assignedcontrolled.debugname, player.age - $lastTradeInfo.$timeStamp, $tradeOperation, if @$tradeOperation == 'sell' then @$selectedBuyOffer.owner.debugname else @$selectedSellOffer.owner.debugname]"
             chance="$debugchance" />
         </do_if>
         <remove_value name="$lastTradeInfo" />
@@ -72,14 +119,24 @@
       </do_if>
 
       <do_if value="this.assignedcontrolled.tradeorders.count">
-        <debug_text text="'Pilot Academy: waiting for %s outstanding trade(s)'.[this.assignedcontrolled.tradeorders.count]" chance="$debugchance" />
+        <debug_text
+          text="'Pilot Academy [%s]: waiting for %s outstanding trade(s)'.[this.assignedcontrolled.debugname, this.assignedcontrolled.tradeorders.count]"
+          chance="$debugchance" />
         <wait min="5s" max="8s" />
         <resume label="prepareTrade" />
       </do_if>
       <debug_text
-        text="'Pilot Academy: started with: targetRankLevel %s, factionsList count %s, selectedFaction %s, selectedBuyOffer %s, selectedSellOffer %s'.[$targetRankLevel, $factionsList.count, $selectedFaction, $selectedBuyOffer, $selectedSellOffer]"
+        text="'Pilot Academy [%s]: started with: targetRankLevel %s, factionsList count %s, selectedFaction %s, selectedBuyOffer %s, selectedSellOffer %s'.
+          [this.assignedcontrolled.debugname, $targetRankLevel, $factionsList.count, @$selectedFaction, @$selectedBuyOffer, @$selectedSellOffer]"
         chance="$debugchance" />
       <do_if value="@$selectedFaction == null or @$selectedBuyOffer == null or @$selectedSellOffer == null">
+
+        <do_if value="this.assignedcontrolled.commander != null">
+          <debug_text
+            text="'Pilot Academy [%s]: going to request parent %s for trade info' . [this.assignedcontrolled.debugname, this.assignedcontrolled.commander.debugname]"
+            chance="$debugchance" />
+          <resume label="waitInfoFromCommander" />
+        </do_if>
 
         <do_if value="this.assignedcontrolled.order" comment="Safety check in case the script is called from non-order script">
           <!-- Required for all infinite orders, no effect in case of finite timeout -->
@@ -91,7 +148,7 @@
         </do_if>
 
         <debug_text
-          text="'Pilot Academy: evaluating %s factions for trade opportunities.' . [$factionsList.count]"
+          text="'Pilot Academy [%s]: evaluating %s factions for trade opportunities.' . [this.assignedcontrolled.debugname, $factionsList.count]"
           chance="$debugchance" />
 
         <sort_list list="$factionsList" sortbyvalue="loop.element.relationto.{faction.player}" sortdescending="false" />
@@ -99,19 +156,21 @@
         <create_list name="$filteredFactions" />
         <do_for_each name="$faction" in="$factionsList" counter="$i">
           <do_if value="$faction.hastag.hidden">
-            <debug_text text="'Pilot Academy: skipping faction %s due to hidden tag' . [@$faction.name]" chance="$debugchance" />
+            <debug_text text="'Pilot Academy [%s]: skipping faction %s due to hidden tag' . [this.assignedcontrolled.debugname, @$faction.name]"
+              chance="$debugchance" />
             <continue />
           </do_if>
 
           <do_if value="not ($faction.isactive and $faction.knowntoplayer) or $faction.isvisitor">
             <debug_text
-              text="'Pilot Academy: skipping faction %s due to inactive (%s) or unknown (%s)  or visitor (%s) status' . [@$faction.name, not @$faction.isactive, not @$faction.knowntoplayer, @$faction.isvisitor]"
+              text="'Pilot Academy [%s]: skipping faction %s due to inactive (%s) or unknown (%s)  or visitor (%s) status' . [this.assignedcontrolled.debugname, @$faction.name, not @$faction.isactive, not @$faction.knowntoplayer, @$faction.isvisitor]"
               chance="$debugchance" />
             <continue />
           </do_if>
 
           <do_if value="$faction.hasrelation.dock.{faction.player} == false">
-            <debug_text text="'Pilot Academy: skipping faction %s due to no docking rights' . [@$faction.name]" chance="$debugchance" />
+            <debug_text text="'Pilot Academy [%s]: skipping faction %s due to no docking rights' . [this.assignedcontrolled.debugname, @$faction.name]"
+              chance="$debugchance" />
             <continue />
           </do_if>
 
@@ -129,10 +188,12 @@
         <set_value name="$tradeFound" exact="false" />
 
         <do_for_each name="$tradeVolumeMin" in="$tradeVolumes">
-          <debug_text text="'Pilot Academy: evaluating trade volume tier %s on factions count %s' . [$tradeVolumeMin, $filteredFactions.count]"
+          <debug_text
+            text="'Pilot Academy [%s]: evaluating trade volume tier %s on factions count %s' . [this.assignedcontrolled.debugname, $tradeVolumeMin, $filteredFactions.count]"
             chance="$debugchance" />
           <do_for_each name="$faction" in="$filteredFactions">
-            <debug_text text="'Pilot Academy: evaluating faction %s with relation %s' . [@$faction.name, @$faction.relationto.{faction.player}]"
+            <debug_text
+              text="'Pilot Academy [%s]: evaluating faction %s with relation %s' . [this.assignedcontrolled.debugname, @$faction.name, @$faction.relationto.{faction.player}]"
               chance="$debugchance" />
 
             <do_for_each name="$offerType" in="$tradeOfferTypes">
@@ -161,7 +222,8 @@
                 </find_sell_offer>
               </do_else>
 
-              <debug_text text="'Pilot Academy: found %s %s offers from faction %s' . [@$demandOffers.count, $offerType, @$faction.name]"
+              <debug_text
+                text="'Pilot Academy [%s]: found %s %s offers from faction %s' . [this.assignedcontrolled.debugname, @$demandOffers.count, $offerType, @$faction.name]"
                 chance="$debugchance" />
 
               <do_if value="$demandOffers.count gt 0">
@@ -171,7 +233,8 @@
                 <do_for_each name="$demandOffer" in="$demandOffers" counter="$j">
 
                   <debug_text
-                    text="'Pilot Academy: evaluating %s offer for %s of %s with volume %s from %s. Price %s, Quantity factor %s' . [$offerType, $demandOffer.amount, $demandOffer.ware.id, $demandOffer.volume, $demandOffer.owner.debugname, $demandOffer.unitprice.formatted.default, $demandOffer.quantityfactor]"
+                    text="'Pilot Academy [%s]: evaluating %s offer for %s of %s with volume %s from %s. Price %s, Quantity factor %s' .
+                      [this.assignedcontrolled.debugname, $offerType, $demandOffer.amount, $demandOffer.ware.id, $demandOffer.volume, $demandOffer.owner.debugname, $demandOffer.unitprice.formatted.default, $demandOffer.quantityfactor]"
                     chance="$debugchance" />
 
                   <do_if value="$demandOffer.ware.waretransport != waretransport.container">
@@ -208,11 +271,14 @@
                     </find_buy_offer>
                   </do_else>
 
-                  <debug_text text="'Pilot Academy: found %s opposite offers to %s of %s' . [@$supplyOffers.count, $offerType, $demandOffer.ware.id]"
+                  <debug_text
+                    text="'Pilot Academy [%s]: found %s opposite offers to %s of %s' . [this.assignedcontrolled.debugname, @$supplyOffers.count, $offerType, $demandOffer.ware.id]"
                     chance="$debugchance" />
 
                   <do_if value="$supplyOffers.count == 0">
-                    <debug_text text="'Pilot Academy: no opposite offers to %s of %s, skipping' . [$offerType, $demandOffer.ware.id]" chance="$debugchance" />
+                    <debug_text
+                      text="'Pilot Academy [%s]: no opposite offers to %s of %s, skipping' . [this.assignedcontrolled.debugname, $offerType, $demandOffer.ware.id]"
+                      chance="$debugchance" />
                     <continue />
                   </do_if>
 
@@ -230,18 +296,20 @@
 
                     <do_if value="$gateDistance lt 0">
                       <debug_text
-                        text="'Pilot Academy: skipping all next opposite offers to %s of %s as no gate connection' . [$offerType, $demandOffer.ware.id]"
+                        text="'Pilot Academy [%s]: skipping all next opposite offers to %s of %s as no gate connection' . [this.assignedcontrolled.debugname, $offerType, $demandOffer.ware.id]"
                         chance="$debugchance" />
                       <break />
                     </do_if>
 
                     <set_value name="$tradeDistance" exact="$demandOwner.distanceto.{$supplyOffer.owner}* $distanceCoefficient" />
                     <debug_text
-                      text="'Pilot Academy: gate distance for opposite offer for %s with volume %s from %s to %s of %s offer on %s is %s, best %s. Distance: %s, best %s. Distance coefficient: %s. Price %s, Quantity factor %s' . [$supplyOffer.amount, $supplyOffer.volume, $supplyOffer.owner.debugname, $offerType, $demandOffer.ware.id, $demandOwner.debugname, $gateDistance, $bestGateDistance, $tradeDistance, $bestDistance, $distanceCoefficient, $supplyOffer.unitprice.formatted.default, $supplyOffer.quantityfactor]"
+                      text="'Pilot Academy [%s]: gate distance for opposite offer for %s with volume %s from %s to %s of %s offer on %s is %s, best %s. Distance: %s, best %s. Distance coefficient: %s. Price %s, Quantity factor %s' .
+                        [this.assignedcontrolled.debugname, $supplyOffer.amount, $supplyOffer.volume, $supplyOffer.owner.debugname, $offerType, $demandOffer.ware.id, $demandOwner.debugname, $gateDistance, $bestGateDistance, $tradeDistance, $bestDistance, $distanceCoefficient, $supplyOffer.unitprice.formatted.default, $supplyOffer.quantityfactor]"
                       chance="$debugchance" />
                     <do_if value="$bestGateDistance lt $gateDistance">
                       <debug_text
-                        text="'Pilot Academy: skipping all next opposite offers to %s due to worse gate distance %s vs best %s' . [$offerType, $gateDistance, $bestGateDistance]"
+                        text="'Pilot Academy [%s]: skipping all next opposite offers to %s due to worse gate distance %s vs best %s' .
+                        [this.assignedcontrolled.debugname, $offerType, $gateDistance, $bestGateDistance]"
                         chance="$debugchance" />
                       <break />
                     </do_if>
@@ -257,11 +325,13 @@
                       <set_value name="$selectedBuyOffer" exact="if $offerType == 'sell' then $supplyOffer else $demandOffer" />
                       <set_value name="$selectedFaction" exact="$faction" />
                       <debug_text
-                        text="'Pilot Academy: new best pair of offers of %s found from %s to %s with distance %s, coefficient %s' . [$demandOwner.debugname, $demandOffer.ware.id, $supplyOffer.owner.debugname, $bestDistance, $distanceCoefficient]"
+                        text="'Pilot Academy [%s]: new best pair of offers of %s found from %s to %s with distance %s, coefficient %s' .
+                          [this.assignedcontrolled.debugname, $demandOwner.debugname, $demandOffer.ware.id, $supplyOffer.owner.debugname, $bestDistance, $distanceCoefficient]"
                         chance="$debugchance" />
                       <do_if value="$bestGateDistance == 0 and $bestDistance le $tradeRangeEnough">
                         <debug_text
-                          text="'Pilot Academy: short enough distance %s (enough %s) and gate distance %s, stopping search for better trades'.[$bestDistance, $tradeRangeEnough, $bestGateDistance]"
+                          text="'Pilot Academy [%s]: short enough distance %s (enough %s) and gate distance %s, stopping search for better trades'.
+                          [this.assignedcontrolled.debugname, $bestDistance, $tradeRangeEnough, $bestGateDistance]"
                           chance="$debugchance" />
                         <set_value name="$tradeFound" exact="true" />
                       </do_if>
@@ -271,7 +341,8 @@
                     <remove_value name="$gateDistance" />
                     <do_if value="$tradeFound">
                       <debug_text
-                        text="'Pilot Academy: trade found, stopping evaluation of further opposite offers %s of %s' . [$offerType, $demandOffer.ware.id]"
+                        text="'Pilot Academy [%s]: trade found, stopping evaluation of further opposite offers %s of %s' .
+                          [this.assignedcontrolled.debugname, $offerType, $demandOffer.ware.id]"
                         chance="$debugchance" />
                       <break />
                     </do_if>
@@ -283,7 +354,9 @@
                   <remove_value name="$supplyOffers" />
                   <remove_value name="$supplyAmount" />
                   <do_if value="$tradeFound">
-                    <debug_text text="'Pilot Academy: trade found, stopping evaluation of further offers %s of %s' . [$offerType, $demandOffer.ware.id]"
+                    <debug_text
+                      text="'Pilot Academy [%s]: trade found, stopping evaluation of further offers %s of %s' .
+                      [this.assignedcontrolled.debugname, $offerType, $demandOffer.ware.id]"
                       chance="$debugchance" />
                     <break />
                   </do_if>
@@ -297,7 +370,8 @@
               <remove_value name="$demandOwner" />
               <remove_value name="$demandAmount" />
               <do_if value="$tradeFound">
-                <debug_text text="'Pilot Academy: trade found, stopping evaluation of further offer types for faction %s' . [@$faction.name]"
+                <debug_text
+                  text="'Pilot Academy [%s]: trade found, stopping evaluation of further offer types for faction %s' . [this.assignedcontrolled.debugname, @$faction.name]"
                   chance="$debugchance" />
                 <break />
               </do_if>
@@ -309,33 +383,38 @@
                 <set_value name="$bestDistance" exact="$bestDistance / 2" />
               </do_if>
               <debug_text
-                text="'Pilot Academy: ----\ncurrent best offers pair for faction %s: sell ware %s from %s in amount %s and volume %s, price %s, quantity factor %s, buy on %s with amount %s and volume %s, price %s, quantity factor %s with distance %s and gate distance %s\n----'
-                  .[$selectedFaction, $selectedSellOffer.ware.id, $selectedSellOffer.owner.debugname, $selectedSellOffer.amount, $selectedSellOffer.volume, $selectedSellOffer.unitprice.formatted.default, $selectedSellOffer.quantityfactor, $selectedBuyOffer.owner.debugname, $selectedBuyOffer.amount, $selectedBuyOffer.volume, $selectedBuyOffer.unitprice.formatted.default, $selectedBuyOffer.quantityfactor, $bestDistance, $bestGateDistance]"
+                text="'Pilot Academy [%s]: ----\ncurrent best offers pair for faction %s: sell ware %s from %s in amount %s and volume %s, price %s, quantity factor %s, buy on %s with amount %s and volume %s, price %s, quantity factor %s with distance %s and gate distance %s\n----'
+                  .[this.assignedcontrolled.debugname, $selectedFaction, $selectedSellOffer.ware.id, $selectedSellOffer.owner.debugname, $selectedSellOffer.amount, $selectedSellOffer.volume, $selectedSellOffer.unitprice.formatted.default, $selectedSellOffer.quantityfactor, $selectedBuyOffer.owner.debugname, $selectedBuyOffer.amount, $selectedBuyOffer.volume, $selectedBuyOffer.unitprice.formatted.default, $selectedBuyOffer.quantityfactor, $bestDistance, $bestGateDistance]"
                 chance="$debugchance" />
             </do_if>
             <do_else>
-              <debug_text text="'Pilot Academy: no qualifying trades found for faction %s' .[$faction]" chance="$debugchance" />
+              <debug_text text="'Pilot Academy [%s]: no qualifying trades found for faction %s' .[this.assignedcontrolled.debugname, @$faction.name]"
+                chance="$debugchance" />
             </do_else>
             <do_if value="$tradeFound">
-              <debug_text text="'Pilot Academy: trade found, stopping evaluation of further factions'" chance="$debugchance" />
+              <debug_text text="'Pilot Academy [%s]: trade found, stopping evaluation of further factions'.[this.assignedcontrolled.debugname]"
+                chance="$debugchance" />
               <break />
             </do_if>
             <wait min="1ms" max="3ms" />
           </do_for_each>
           <do_if value="$tradeFound">
-            <debug_text text="'Pilot Academy: trade found, stopping evaluation of further factions'" chance="$debugchance" />
+            <debug_text text="'Pilot Academy [%s]: trade found, stopping evaluation of further factions' .[this.assignedcontrolled.debugname]"
+              chance="$debugchance" />
             <break />
           </do_if>
         </do_for_each>
         <remove_value name="$sortedFactions" />
         <do_if value="not $tradeFound">
-          <debug_text text="'Pilot Academy: no qualifying trade found after evaluating all factions'" chance="$debugchance" />
+          <debug_text text="'Pilot Academy [%s]: no qualifying trade found after evaluating all factions' .[this.assignedcontrolled.debugname]"
+            chance="$debugchance" />
           <wait min="6s" max="10s" />
           <resume label="prepareTrade" />
         </do_if>
         <do_if value="$selectedSellOffer.owner == $selectedBuyOffer.owner">
           <debug_text
-            text="'Pilot Academy: selected buy and sell offers have the same owner %s, going to find a ware with lowest price' . [$selectedBuyOffer.owner.debugname]"
+            text="'Pilot Academy [%s]: selected buy and sell offers have the same owner %s, going to find a ware with lowest price' .
+              [this.assignedcontrolled.debugname, $selectedBuyOffer.owner.debugname]"
             chance="$debugchance" />
           <find_sell_offer tradepartner="this.assignedcontrolled" seller="$selectedSellOffer.owner" result="$localSellOffers" multiple="true">
             <amount min="$selectedSellOffer.amount / 2" />
@@ -343,12 +422,15 @@
           <sort_list list="$localSellOffers" sortbyvalue="loop.element.unitprice" sortdescending="false" />
           <do_for_each name="$localSellOffer" in="$localSellOffers" counter="$m">
             <do_if value="$localSellOffer.ware.id == $selectedSellOffer.ware.id">
-              <debug_text text="'Pilot Academy: skipping wares %s equal and after selected sell offer due to highest prices' . [$localSellOffer.ware.id]"
+              <debug_text
+                text="'Pilot Academy [%s]: skipping wares %s equal and after selected sell offer due to highest prices' .
+                [this.assignedcontrolled.debugname, $localSellOffer.ware.id]"
                 chance="$debugchance" />
               <break />
             </do_if>
             <debug_text
-              text="'Pilot Academy: evaluating local sell offer for ware %s with amount %s and volume %s, price %s, quantity factor %s' . [$localSellOffer.ware.id, $localSellOffer.amount, $localSellOffer.volume, $localSellOffer.unitprice.formatted.default, $localSellOffer.quantityfactor]"
+              text="'Pilot Academy [%s]: evaluating local sell offer for ware %s with amount %s and volume %s, price %s, quantity factor %s' .
+                [this.assignedcontrolled.debugname, $localSellOffer.ware.id, $localSellOffer.amount, $localSellOffer.volume, $localSellOffer.unitprice.formatted.default, $localSellOffer.quantityfactor]"
               chance="$debugchance" />
             <find_buy_offer result="$matchingBuyOffers" tradepartner="this.assignedcontrolled" buyer="$selectedBuyOffer.owner" wares="$localSellOffer.ware"
               multiple="true">
@@ -358,8 +440,8 @@
               <set_value name="$selectedSellOffer" exact="$localSellOffer" />
               <set_value name="$selectedBuyOffer" exact="$matchingBuyOffers.{1}" />
               <debug_text
-                text="'Pilot Academy: ----\new best offers pair for faction %s: sell ware %s from %s in amount %s and volume %s, price %s, quantity factor %s, buy on %s with amount %s and volume %s, price %s, quantity factor %s with distance %s and gate distance %s\n----'
-                  .[$selectedFaction, $selectedSellOffer.ware.id, $selectedSellOffer.owner.debugname, $selectedSellOffer.amount, $selectedSellOffer.volume, $selectedSellOffer.unitprice.formatted.default, $selectedSellOffer.quantityfactor, $selectedBuyOffer.owner.debugname, $selectedBuyOffer.amount, $selectedBuyOffer.volume, $selectedBuyOffer.unitprice.formatted.default, $selectedBuyOffer.quantityfactor, $bestDistance, $bestGateDistance]"
+                text="'Pilot Academy [%s]: ----\new best offers pair for faction %s: sell ware %s from %s in amount %s and volume %s, price %s, quantity factor %s, buy on %s with amount %s and volume %s, price %s, quantity factor %s with distance %s and gate distance %s\n----'
+                  .[this.assignedcontrolled.debugname, $selectedFaction, $selectedSellOffer.ware.id, $selectedSellOffer.owner.debugname, $selectedSellOffer.amount, $selectedSellOffer.volume, $selectedSellOffer.unitprice.formatted.default, $selectedSellOffer.quantityfactor, $selectedBuyOffer.owner.debugname, $selectedBuyOffer.amount, $selectedBuyOffer.volume, $selectedBuyOffer.unitprice.formatted.default, $selectedBuyOffer.quantityfactor, $bestDistance, $bestGateDistance]"
                 chance="$debugchance" />
             </do_if>
             <do_if value="$j % 10 == 0">
@@ -369,15 +451,21 @@
           <remove_value name="$localSellOffers" />
           <remove_value name="$matchingBuyOffers" />
         </do_if>
+        <do_for_each name="$subordinate" in="this.assignedcontrolled.subordinates">
+          <debug_text text="'Pilot Academy [%s]: going to share trade info with subordinate %s'.[this.assignedcontrolled.debugname, $subordinate.debugname]"
+            chance="$debugchance" />
+          <set_value name="$shareInfoTarget" exact="$subordinate" />
+          <include_interrupt_actions ref="ShareAcademyTradeInfo" />
+        </do_for_each>
       </do_if>
       <debug_text
-        text="'Pilot Academy: selected trade from %s: sell ware %s from %s in amount %s and volume %s, price %s, quantity factor %s, buy on %s with amount %s and volume %s, price %s, quantity factor %s.'
-          .[$selectedFaction, $selectedSellOffer.ware.id, $selectedSellOffer.owner.debugname, $selectedSellOffer.amount, $selectedSellOffer.volume, $selectedSellOffer.unitprice.formatted.default, $selectedSellOffer.quantityfactor, $selectedBuyOffer.owner.debugname, $selectedBuyOffer.amount, $selectedBuyOffer.volume, $selectedBuyOffer.unitprice.formatted.default, $selectedBuyOffer.quantityfactor]"
+        text="'Pilot Academy [%s]: selected trade from %s: sell ware %s from %s in amount %s and volume %s, price %s, quantity factor %s, buy on %s with amount %s and volume %s, price %s, quantity factor %s.'
+          .[this.assignedcontrolled.debugname, $selectedFaction, $selectedSellOffer.ware.id, $selectedSellOffer.owner.debugname, $selectedSellOffer.amount, $selectedSellOffer.volume, $selectedSellOffer.unitprice.formatted.default, $selectedSellOffer.quantityfactor, $selectedBuyOffer.owner.debugname, $selectedBuyOffer.amount, $selectedBuyOffer.volume, $selectedBuyOffer.unitprice.formatted.default, $selectedBuyOffer.quantityfactor]"
         chance="$debugchance" />
 
       <label name="proceedWithTrade" />
 
-      <debug_text text="'Pilot Academy: proceeding with trade operation %s'. [@$tradeOperation]" chance="$debugchance" />
+      <debug_text text="'Pilot Academy [%s]: proceeding with trade operation %s'. [this.assignedcontrolled.debugname, @$tradeOperation]" chance="$debugchance" />
 
       <set_value name="$seller" exact="$selectedSellOffer.owner" />
       <set_value name="$buyer" exact="$selectedBuyOffer.owner" />
@@ -385,7 +473,8 @@
       <set_value name="$tradeAmountDefault" exact="1" />
 
       <do_if value="$tradeOperation == 'buy'">
-        <debug_text text="'Pilot Academy: completed buying %s of %s from %s' . [$tradeAmountDefault, $selectedSellOffer.ware.id, $seller.debugname]"
+        <debug_text
+          text="'Pilot Academy [%s]: completed buying %s of %s from %s' . [this.assignedcontrolled.debugname, $tradeAmountDefault, $selectedSellOffer.ware.id, $seller.debugname]"
           chance="$debugchance" />
         <set_value name="$tradeTarget" exact="$buyer" />
         <set_value name="$targetType" exact="'buyer'" />
@@ -396,7 +485,8 @@
       </do_if>
       <do_else>
         <do_if value="$tradeOperation == 'sell'">
-          <debug_text text="'Pilot Academy: completed selling %s of %s to %s' . [$tradeAmountDefault, $selectedBuyOffer.ware.id, $buyer.debugname]"
+          <debug_text
+            text="'Pilot Academy [%s]: completed selling %s of %s to %s' . [this.assignedcontrolled.debugname, $tradeAmountDefault, $selectedBuyOffer.ware.id, $buyer.debugname]"
             chance="$debugchance" />
           <apply_experience entity="this" experience="'ship_trade_good'" factor="1" />
           <apply_experience object="this.assignedcontrolled" role="entityrole.service" experience="'ship_trade_good'" factor="1" />
@@ -409,17 +499,20 @@
           seller="$selectedSellOffer.owner" result="$tradeAmount" />
       </do_else>
 
-      <include_interrupt_actions ref="printAcademyStats" />
+      <include_interrupt_actions ref="PrintAcademyStats" />
 
       <do_if value="$tradeAmount le 0">
-        <debug_text text="'Pilot Academy: unable to clamp trade amount to %s on %s'.[$tradeOperation, $tradeOffer.owner.debugname]" chance="$debugchance" />
+        <debug_text
+          text="'Pilot Academy [%s]: unable to clamp trade amount to %s on %s'.[this.assignedcontrolled.debugname, $tradeOperation, $tradeOffer.owner.debugname]"
+          chance="$debugchance" />
         <wait min="500ms" max="1s" />
         <resume label="prepareTrade" />
       </do_if>
 
       <label name="moveTo" />
       <do_if value="@this.assignedcontrolled.dock.container != $tradeTarget">
-        <debug_text text="'Pilot Academy: moving to dock on %s %s' . [$targetType, $tradeTarget.debugname]" chance="$debugchance" />
+        <debug_text text="'Pilot Academy [%s]: moving to dock on %s %s' . [this.assignedcontrolled.debugname, $targetType, $tradeTarget.debugname]"
+          chance="$debugchance" />
         <run_script name="'order.dock'">
           <param name="destination" value="$tradeTarget" />
           <param name="dockfollowers" value="false" />
@@ -427,11 +520,12 @@
         </run_script>
       </do_if>
       <do_if value="@this.assignedcontrolled.dock.container != $tradeTarget">
-        <debug_text text="'Pilot Academy: still not reached %s %s' . [$targetType, $tradeTarget.debugname]" chance="$debugchance" />
+        <debug_text text="'Pilot Academy [%s]: still not reached %s %s' . [this.assignedcontrolled.debugname, $targetType, $tradeTarget.debugname]"
+          chance="$debugchance" />
         <wait min="10ms" max="20ms" />
         <resume label="moveTo" />
       </do_if>
-      <debug_text text="'Pilot Academy: reached %s %s' . [$targetType, $tradeTarget.debugname]" chance="$debugchance" />
+      <debug_text text="'Pilot Academy [%s]: reached %s %s' . [this.assignedcontrolled.debugname, $targetType, $tradeTarget.debugname]" chance="$debugchance" />
 
       <set_value name="this.$pilotAcademyTradeInfo"
         exact="table[
@@ -442,27 +536,34 @@
           $selectedSellOffer = $selectedSellOffer,
         ]" />
 
-      <debug_text text="'Pilot Academy: store info to this.$pilotAcademyTradeInfo: %s'.[@this.$pilotAcademyTradeInfo]"
+      <debug_text text="'Pilot Academy [%s]: store info to this.$pilotAcademyTradeInfo: %s'.[this.assignedcontrolled.debugname, @this.$pilotAcademyTradeInfo]"
         chance="$debugchance" />
 
       <create_trade_order object="this.assignedcontrolled" tradeoffer="$tradeOffer" amount="$tradeAmount" immediate="true" internal="false" />
-      <debug_text text="'Pilot Academy: proceed to %s %s of %s from %s'.[$tradeOperation, $tradeAmount, $tradeOffer.ware.id, $tradeTarget.debugname]"
+      <debug_text
+        text="'Pilot Academy [%s]: proceed to %s %s of %s from %s'.[this.assignedcontrolled.debugname, $tradeOperation, $tradeAmount, $tradeOffer.ware.id, $tradeTarget.debugname]"
         chance="$debugchance" />
 
       <label name="waitForTradeCompletion" />
       <do_if value="this.assignedcontrolled.tradeorders.count">
-        <debug_text text="'Pilot Academy: waiting for %s outstanding trade(s)'.[this.assignedcontrolled.tradeorders.count]" chance="$debugchance" />
+        <debug_text
+          text="'Pilot Academy [%s]: waiting for %s outstanding trade(s)'.[this.assignedcontrolled.debugname, this.assignedcontrolled.tradeorders.count]"
+          chance="$debugchance" />
         <wait min="10ms" max="50ms" />
         <resume label="waitForTradeCompletion" />
       </do_if>
-
-
       <resume label="proceedWithTrade" />
-      <wait exact="10min" />
+
+      <label name="waitInfoFromCommander" />
+      <signal_objects object="this.assignedcontrolled.commander" param="'AcademyTradeInfoRequest'" param2="this.assignedcontrolled" delay="300ms" />
+      <debug_text text="'Pilot Academy [%s]: request was sent, waiting now for trade info update from commander' . [this.assignedcontrolled.debugname]"
+        chance="$debugchance" />
+      <wait exact="5min" />
       <resume label="prepareTrade" />
+
     </actions>
   </attention>
   <on_abort>
-    <debug_text text="'Pilot Academy: aborted order.trade.buy.one.sell.one at %s' . [player.age]" chance="$debugchance" />
+    <debug_text text="'Pilot Academy [%s]: aborted order.trade.buy.one.sell.one at %s' . [this.assignedcontrolled.debugname, player.age]" chance="$debugchance" />
   </on_abort>
 </aiscript>
