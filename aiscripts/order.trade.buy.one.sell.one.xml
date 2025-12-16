@@ -20,8 +20,8 @@
   <interrupts>
     <library>
       <actions name="PilotAcademyInitEntityVariables">
-        <do_if value="not this.$pilotAcademy? or @this.$pilotAcademy == null">
-          <set_value name="this.$pilotAcademy" exact="table[]" />
+        <do_if value="not this.$pilotAcademyRandR? or @this.$pilotAcademyRandR == null">
+          <set_value name="this.$pilotAcademyRandR" exact="table[]" />
         </do_if>
       </actions>
       <actions name="PilotAcademyPrintStats">
@@ -46,7 +46,7 @@
       </actions>
       <actions name="PilotAcademyReportRankUp">
         <do_if
-          value="this.combinedskill ge $targetCombinedSkill and (not this.$pilotAcademy.$LastRankUpReportTime? or (player.age - this.$pilotAcademy.$LastRankUpReportTime) ge 180s)">
+          value="this.combinedskill ge $targetCombinedSkill and (not this.$pilotAcademyRandR.$LastRankUpReportTime? or (player.age - this.$pilotAcademyRandR.$LastRankUpReportTime) ge 180s)">
           <debug_text
             text="'Pilot Academy [%s]: Pilot %s reached target rank level %s with combined skill %s, reporting to Academy to request replacement.' .
               [this.assignedcontrolled.debugname, this.debugname, $targetRankLevel, this.combinedskill]"
@@ -60,7 +60,7 @@
               $selectedSellOffer = @$selectedSellOffer
             ]" />
           <include_interrupt_actions ref="PilotAcademyInitEntityVariables" />
-          <set_value name="this.$pilotAcademy.$LastRankUpReportTime" exact="player.age" />
+          <set_value name="this.$pilotAcademyRandR.$LastRankUpReportTime" exact="player.age" />
         </do_if>
       </actions>
     </library>
@@ -86,7 +86,7 @@
         <set_value name="$selectedFaction" exact="event.param3.$selectedFaction" />
         <set_value name="$selectedBuyOffer" exact="event.param3.$selectedBuyOffer" />
         <set_value name="$selectedSellOffer" exact="event.param3.$selectedSellOffer" />
-        <do_if value="@this.$pilotAcademy.$shipRegistered != true">
+        <do_if value="@this.$pilotAcademyRandR.$shipRegistered != true">
           <debug_text text="'Pilot Academy [%s]: sending ship register request to Academy'.[this.assignedcontrolled.debugname]"
             chance="$debugchance" />
           <signal_objects object="player.entity" param="'AcademyPilotShipRegisterRequest'" param2="this.assignedcontrolled" />
@@ -113,7 +113,7 @@
       </conditions>
       <actions>
         <include_interrupt_actions ref="PilotAcademyInitEntityVariables" />
-        <set_value name="this.$pilotAcademy.$shipRegistered" exact="true" />
+        <set_value name="this.$pilotAcademyRandR.$shipRegistered" exact="true" />
         <debug_text text="'Pilot Academy [%s]: ship registration confirmed'.[this.assignedcontrolled.debugname]"
           chance="$debugchance" />
       </actions>
@@ -123,8 +123,8 @@
         <event_player_subordinate_removed previous="this.assignedcontrolled" />
       </conditions>
       <actions>
-        <do_if value="event.object.pilot.entity.$pilotAcademy? and @event.object.pilot.entity.$pilotAcademy != null">
-          <remove_value name="event.object.pilot.entity.$pilotAcademy" />
+        <do_if value="event.object.pilot.entity.$pilotAcademyRandR? and @event.object.pilot.entity.$pilotAcademyRandR != null">
+          <remove_value name="event.object.pilot.entity.$pilotAcademyRandR" />
         </do_if>
         <signal_objects object="player.entity" param="'AcademyPilotShipDeregisterRequest'" param2="event.object" />
       </actions>
@@ -150,10 +150,10 @@
     <actions>
       <label name="prepareTrade" />
       <debug_text
-        text="'Pilot Academy [%s]: stored info to this.$pilotAcademy.$tradeInfo: %s, (%s, %s)'.[this.assignedcontrolled.debugname, @this.$pilotAcademy.$tradeInfo, this.$pilotAcademy.$tradeInfo?, this.$pilotAcademy.$tradeInfo.$timeStamp?]"
+        text="'Pilot Academy [%s]: stored info to this.$pilotAcademyRandR.$tradeInfo: %s, (%s, %s)'.[this.assignedcontrolled.debugname, @this.$pilotAcademyRandR.$tradeInfo, this.$pilotAcademyRandR.$tradeInfo?, this.$pilotAcademyRandR.$tradeInfo.$timeStamp?]"
         chance="$debugchance" />
-      <do_if value="this.$pilotAcademy.$tradeInfo? and this.$pilotAcademy.$tradeInfo.$timeStamp?">
-        <set_value name="$lastTradeInfo" exact="this.$pilotAcademy.$tradeInfo" />
+      <do_if value="this.$pilotAcademyRandR.$tradeInfo? and this.$pilotAcademyRandR.$tradeInfo.$timeStamp?">
+        <set_value name="$lastTradeInfo" exact="this.$pilotAcademyRandR.$tradeInfo" />
         <debug_text
           text="'Pilot Academy [%s]: found last trade info at %s ago: %s'.[this.assignedcontrolled.debugname, player.age - $lastTradeInfo.$timeStamp, $lastTradeInfo]"
           chance="$debugchance" />
@@ -167,7 +167,7 @@
             chance="$debugchance" />
         </do_if>
         <remove_value name="$lastTradeInfo" />
-        <remove_value name="this.$pilotAcademy.$tradeInfo" />
+        <remove_value name="this.$pilotAcademyRandR.$tradeInfo" />
       </do_if>
 
       <do_if value="this.assignedcontrolled.tradeorders.count">
@@ -581,7 +581,7 @@
       <debug_text text="'Pilot Academy [%s]: reached %s %s' . [this.assignedcontrolled.debugname, $targetType, $tradeTarget.debugname]" chance="$debugchance" />
 
       <include_interrupt_actions ref="PilotAcademyInitEntityVariables" />
-      <set_value name="this.$pilotAcademy.$tradeInfo"
+      <set_value name="this.$pilotAcademyRandR.$tradeInfo"
         exact="table[
           $timeStamp = player.age,
           $tradeOperation = $tradeOperation,
@@ -591,7 +591,7 @@
         ]" />
 
       <debug_text
-        text="'Pilot Academy [%s]: store info to this.$pilotAcademy.$tradeInfo: %s'.[this.assignedcontrolled.debugname, @this.$pilotAcademy.$tradeInfo]"
+        text="'Pilot Academy [%s]: store info to this.$pilotAcademyRandR.$tradeInfo: %s'.[this.assignedcontrolled.debugname, @this.$pilotAcademyRandR.$tradeInfo]"
         chance="$debugchance" />
 
       <create_trade_order object="this.assignedcontrolled" tradeoffer="$tradeOffer" amount="$tradeAmount" immediate="true" internal="false" />
