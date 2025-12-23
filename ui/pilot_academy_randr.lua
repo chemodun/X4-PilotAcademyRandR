@@ -5,7 +5,7 @@ ffi.cdef [[
   typedef uint64_t UniverseID;
   typedef uint64_t NPCSeed;
 
-	UniverseID GetPlayerID(void);
+  UniverseID GetPlayerID(void);
 ]]
 
 local traceEnabled = true
@@ -32,15 +32,17 @@ local function bind(obj, methodName)
   end
 end
 
-local function testAddRowCheck(contextMenuData, contextMenuMode)
+local function preAddRowToMapMenuContext(contextMenuData, contextMenuMode, menu)
   if contextMenuData.person then
-    trace("person: " .. ffi.string(C.GetPersonName(contextMenuData.person, contextMenuData.component)) .. ", combinedskill: " .. C.GetPersonCombinedSkill(contextMenuData.component, contextMenuData.person, nil, nil))
+    trace("person: " ..
+      ffi.string(C.GetPersonName(contextMenuData.person, contextMenuData.component)) ..
+      ", combinedskill: " .. C.GetPersonCombinedSkill(contextMenuData.component, contextMenuData.person, nil, nil))
   end
   local result = nil
   return result
 end
 
-local function testAddRow(contextFrame, contextMenuData, contextMenuMode)
+local function addRowToMapMenuContext(contextFrame, contextMenuData, contextMenuMode, menu)
   local result = nil
   trace("testAddRow called")
 
@@ -110,20 +112,142 @@ local function testAddRow(contextFrame, contextMenuData, contextMenuMode)
 end
 
 
+local function preAddRowToPlayerInfoMenuContext(contextMenuData, contextMenuMode, menu)
+  local result = nil
+  return result
+end
+
+local function addRowToPlayerInfoMenuContext(contextFrame, contextMenuData, contextMenuMode, menu)
+  local result = nil
+  trace("testAddRow called")
+
+  if contextMenuMode ~= "personnel" then
+    trace(string.format("contextMenuMode is '%s', not 'info_context', returning", tostring(contextMenuMode)))
+    return result
+  end
+
+  if contextFrame == nil or type(contextFrame) ~= "table" then
+    trace("contextFrame is nil or not a table, returning")
+    return result
+  end
+
+  if contextMenuData == nil or type(contextMenuData) ~= "table" then
+    trace("contextMenuData is not a table, returning")
+    -- return result
+  end
+
+  if type(contextFrame.content) ~= "table" or #contextFrame.content == 0 then
+    trace("contextFrame.content is not not a table or empty table, returning")
+    return result
+  end
+
+  local menuTable = nil
+
+  for i = 1, #contextFrame.content do
+    local item = contextFrame.content[i]
+    if type(item) == "table" and item.index == 1 then
+      menuTable = item
+      break
+    end
+  end
+
+  if menuTable == nil then
+    trace("menuTable not found in contextFrame.content, returning")
+    return result
+  end
+
+
+  local controllable = C.ConvertStringTo64Bit(tostring(menu.personnelData.curEntry.container))
+  local entity, person
+  if menu.personnelData.curEntry.type == "person" then
+    person = C.ConvertStringTo64Bit(tostring(menu.personnelData.curEntry.id))
+  else
+    entity = menu.personnelData.curEntry.id
+  end
+
+  local transferscheduled = false
+  local hasarrived = true
+  local personrole = ""
+  if person then
+    -- get real NPC if instantiated
+    local instance = C.GetInstantiatedPerson(person, controllable)
+    entity = (instance ~= 0 and instance or nil)
+    transferscheduled = C.IsPersonTransferScheduled(controllable, person)
+    hasarrived = C.HasPersonArrived(controllable, person)
+    personrole = ffi.string(C.GetPersonRole(person, controllable))
+  end
+
+  local player = C.GetPlayerID()
+
+  if (not transferscheduled) and hasarrived then
+    trace("Adding Pilot Academy R&R row to context menu")
+    local mt = getmetatable(menuTable)
+    local row = mt.__index.addRow(menuTable, "info_move_to_academy", { fixed = true })
+    row[1]:createButton({ bgColor = Color["button_background_hidden"], height = Helper.standardTextHeight }):setText("Send to Pilot Academy R&R")
+    result = { contextFrame = contextFrame }
+  end
+  return result
+end
+local sideBarUsCreated = false
+
+function createSideBar(config)
+  if not sideBarUsCreated then
+    local pilotAcademy = {
+      name = "Pilot Academy R&R",
+      icon = "pa_icon_academy",
+      mode = "pilot_academy_randr",
+      helpOverlayID = "pilot_academy_randr",
+      helpOverlayText = "pilot_academy_randr_help_overlay",
+    }
+    config.leftBar[#config.leftBar+1] = { spacing = true}
+    config.leftBar[#config.leftBar+1] = pilotAcademy
+    sideBarUsCreated = true
+  end
+end
 local function Init()
   playerId = ConvertStringTo64Bit(tostring(C.GetPlayerID()))
   debug("Initializing Pilot Academy UI extension with PlayerID: " .. tostring(playerId))
-  local menu = Helper.getMenu("MapMenu")
+  local menuMap = Helper.getMenu("MapMenu")
   ---@diagnostic disable-next-line: undefined-field
-  if menu ~= nil and type(menu.registerCallback) == "function" then
+  if menuMap ~= nil and type(menuMap.registerCallback) == "function" then
     ---@diagnostic disable-next-line: undefined-field
-    menu.registerCallback("createContextFrame_on_start", testAddRowCheck)
-    menu.registerCallback("refreshContextFrame_on_start", testAddRowCheck)
-    menu.registerCallback("createContextFrame_on_end", testAddRow)
-    menu.registerCallback("refreshContextFrame_on_end", testAddRow)
-    debug("Registered callback for Context Frame creation and refresh")
+    menuMap.registerCallback("createContextFrame_on_start", function(contextMenuData, contextMenuMode)
+      return preAddRowToMapMenuContext(contextMenuData, contextMenuMode, menuMap)
+    end)
+    menuMap.registerCallback("refreshContextFrame_on_start", function(contextMenuData, contextMenuMode)
+      return preAddRowToMapMenuContext(contextMenuData, contextMenuMode, menuMap)
+    end)
+    menuMap.registerCallback("createContextFrame_on_end", function(contextFrame, contextMenuData, contextMenuMode)
+      return addRowToMapMenuContext(contextFrame, contextMenuData, contextMenuMode, menuMap)
+    end)
+    menuMap.registerCallback("refreshContextFrame_on_end", function(contextFrame, contextMenuData, contextMenuMode)
+      return addRowToMapMenuContext(contextFrame, contextMenuData, contextMenuMode, menuMap)
+    end)
+    debug("Registered callback for Context Frame creation and refresh in MapMenu")
+    menuMap.registerCallback("createSideBar_on_start", createSideBar)
+    -- menuMap.registerCallback("createInfoFrame_on_menu_infoTableMode", fcm.createInfoFrame)
   else
     debug("Failed to get MapMenu or registerCallback is not a function")
+  end
+  local menuPlayerInfo = Helper.getMenu("PlayerInfoMenu")
+  ---@diagnostic disable-next-line: undefined-field
+  if menuPlayerInfo ~= nil and type(menuPlayerInfo.registerCallback) == "function" then
+    ---@diagnostic disable-next-line: undefined-field
+    menuPlayerInfo.registerCallback("createContextFrame_on_start", function(contextMenuData, contextMenuMode)
+      return preAddRowToPlayerInfoMenuContext(contextMenuData, contextMenuMode, menuPlayerInfo)
+    end)
+    menuPlayerInfo.registerCallback("refreshContextFrame_on_start", function(contextMenuData, contextMenuMode)
+      return preAddRowToPlayerInfoMenuContext(contextMenuData, contextMenuMode, menuPlayerInfo)
+    end)
+    menuPlayerInfo.registerCallback("createContextFrame_on_end", function(contextFrame, contextMenuData, contextMenuMode)
+      return addRowToPlayerInfoMenuContext(contextFrame, contextMenuData, contextMenuMode, menuPlayerInfo)
+    end)
+    menuPlayerInfo.registerCallback("refreshContextFrame_on_end", function(contextFrame, contextMenuData, contextMenuMode)
+      return addRowToPlayerInfoMenuContext(contextFrame, contextMenuData, contextMenuMode, menuPlayerInfo)
+    end)
+    debug("Registered callback for Context Frame creation and refresh in PlayerInfoMenu")
+  else
+    debug("Failed to get PlayerInfoMenu or registerCallback is not a function")
   end
 end
 
