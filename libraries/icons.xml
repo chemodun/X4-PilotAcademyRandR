@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<diff>
+    <add sel="/icons">
+        <icon name="pa_icon_a" texture="extensions\pilot_academy_randr\assets\fx\gui\textures\pa_icons\icon_a.tga" height="128" width="128"/>
+        <icon name="pa_icon_b" texture="extensions\pilot_academy_randr\assets\fx\gui\textures\pa_icons\icon_b.tga" height="128" width="128"/>
+        <icon name="pa_icon_c" texture="extensions\pilot_academy_randr\assets\fx\gui\textures\pa_icons\icon_c.tga" height="128" width="128"/>
+        <icon name="pa_icon_d" texture="extensions\pilot_academy_randr\assets\fx\gui\textures\pa_icons\icon_d.tga" height="128" width="128"/>
+        <icon name="pa_icon_e" texture="extensions\pilot_academy_randr\assets\fx\gui\textures\pa_icons\icon_e.tga" height="128" width="128"/>
+        <icon name="pa_icon_f" texture="extensions\pilot_academy_randr\assets\fx\gui\textures\pa_icons\icon_f.tga" height="128" width="128"/>
+        <icon name="pa_icon_g" texture="extensions\pilot_academy_randr\assets\fx\gui\textures\pa_icons\icon_g.tga" height="128" width="128"/>
+        <icon name="pa_icon_h" texture="extensions\pilot_academy_randr\assets\fx\gui\textures\pa_icons\icon_h.tga" height="128" width="128"/>
+        <icon name="pa_icon_i" texture="extensions\pilot_academy_randr\assets\fx\gui\textures\pa_icons\icon_i.tga" height="128" width="128"/>
+        <icon name="pa_icon_add" texture="extensions\pilot_academy_randr\assets\fx\gui\textures\pa_icons\icon_add.tga" height="128" width="128"/>
+        <icon name="pa_icon_academy" texture="extensions\pilot_academy_randr\assets\fx\gui\textures\pa_icons\icon_academy.tga" height="128" width="128"/>
+    </add>
+</diff>
