@@ -22,6 +22,7 @@ local pilotAcademy = {
     helpOverlayText = "pilot_academy_r_and_r_help_overlay",
   },
   sideBarIsCreated = false,
+  selectedWing = nil,
   wings = {},
   wingIds = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i' },
 }
@@ -240,7 +241,8 @@ function pilotAcademy.createInfoFrame()
     end
 
     local row = tableWing:addRow("pilot_academy_r_and_r_wings_header", { fixed = true })
-    row[1]:setColSpan(12):createText("Pilot Academy R&R Wings", { halign = "center", fontsize = config.mapFontSize + 2, bold = true })
+    local suffix = string.format(pilotAcademy.selectedWing ~= nil and "Wing %s" or "Add new Wing", pilotAcademy.selectedWing ~= nil and pilotAcademy.wingIds[pilotAcademy.selectedWing]:upper() or "")
+    row[1]:setColSpan(12):createText("Pilot Academy R&R Wings: " .. suffix, { halign = "center", fontsize = config.mapFontSize + 2, bold = true })
     local numdisplayed = 0
     local maxVisibleHeight = tableWing:getFullHeight()
 
@@ -251,7 +253,7 @@ function pilotAcademy.createInfoFrame()
 
     if maxNumCategoryColumns > 0 then
       local wingsCount = #pilotAcademy.wings
-      -- wingsCount = #pilotAcademy.wingIds
+      wingsCount = #pilotAcademy.wingIds
       for i = 1, maxNumCategoryColumns do
         local columnWidth = menu.sideBarWidth
         if wingsCount > 0 and i == wingsCount + 1 then
@@ -291,7 +293,7 @@ function pilotAcademy.createInfoFrame()
               })
               :setIcon(icon, { color = color })
           row[i - math.floor((i - 1) / maxNumCategoryColumns) * maxNumCategoryColumns].handlers.onClick = function()
-            return true
+            return pilotAcademy.buttonSelectWing(i)
           end
         end
       end
@@ -319,6 +321,23 @@ function pilotAcademy.createInfoFrame()
   end
 end
 
+function pilotAcademy.buttonSelectWing(i)
+  local menu = pilotAcademy.menuMap
+  if menu == nil then
+    trace("Menu is nil; cannot process buttonSelectWing")
+    return
+  end
+  if i ~= pilotAcademy.selectedWing then
+    pilotAcademy.selectedWing = i <= #pilotAcademy.wingIds and i or nil
+
+    -- AddUITriggeredEvent(menu.name, pilotAcademy.tableMode)
+
+    menu.selectedRows.propertytabs = 1
+    menu.selectedCols.propertytabs = i
+    menu.refreshInfoFrame(1, i)
+  end
+end
+
 function pilotAcademy.Init(menuMap, menuPlayerInfo)
   trace("pilotAcademy.Init called")
   pilotAcademy.sideBarIsCreated = false
@@ -328,6 +347,11 @@ function pilotAcademy.Init(menuMap, menuPlayerInfo)
     menuMap.registerCallback("createSideBar_on_start", pilotAcademy.createSideBar)
     menuMap.registerCallback("createInfoFrame_on_menu_infoTableMode", pilotAcademy.createInfoFrame)
     -- menuMap.registerCallback("utRenaming_setupInfoSubmenuRows_on_end", fcm.setupInfoSubmenuRows)
+    if #pilotAcademy.wings > 0 then
+      pilotAcademy.selectedWing = 1
+    else
+      pilotAcademy.selectedWing = nil
+    end
   end
 end
 
