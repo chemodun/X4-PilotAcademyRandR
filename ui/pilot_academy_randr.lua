@@ -533,23 +533,6 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   row[7].handlers.onSliderCellActivated = function() menu.noupdate = true end
   row[7].handlers.onSliderCellDeactivated = function() menu.noupdate = false end
   tableWing:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-  local row = tableWing:addRow(nil, { fixed = true })
-  row[2]:setColSpan(10):createText(texts.factions, { titleColor = Color["row_title"] })
-  for i = 1, #factions do
-    local faction = factions[i]
-    if faction ~= nil then
-      local row = tableWing:addRow(faction.id, { fixed = true })
-      row[2]:createCheckBox(selectedFactions[faction.id] == true, { scaling = false })
-      row[2].handlers.onClick = function(_, checked) return pilotAcademy.onSelectFaction(faction.id, checked) end
-      row[3]:createIcon(faction.icon, { height = config.mapRowHeight, width = config.mapRowHeight, color = Color[faction.colorId] or Color["text_normal"] })
-      row[4]:createText(string.format("[%s]", faction.shortName), { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
-      row[5]:createText("-", { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
-      row[6]:setColSpan(4):createText(faction.name, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
-      row[10]:createText(faction.relationName, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
-      row[11]:createText(string.format("(%+2d)", faction.uiRelation), { halign = "right", color = Color[faction.colorId] or Color["text_normal"] })
-    end
-  end
-  tableWing:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local row = tableWing:addRow("wing_leader", { fixed = true })
   local wingLeaderOptions = pilotAcademy.fetchPotentialWingLeaders(existingWing, wingLeader)
   row[2]:setColSpan(5):createText(texts.wingLeader, { halign = "left" })
@@ -565,6 +548,24 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   row[7]:setText2Properties({ halign = "right", color = Color["text_positive"] })
   row[7].handlers.onDropDownConfirmed = function(_, id)
     return pilotAcademy.onSelectWingLeader(id)
+  end
+  tableWing:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  tableWing:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  local row = tableWing:addRow(nil, { fixed = true })
+  row[2]:setColSpan(10):createText(texts.factions, { titleColor = Color["row_title"] })
+  for i = 1, #factions do
+    local faction = factions[i]
+    if faction ~= nil then
+      local row = tableWing:addRow(faction.id, { fixed = false })
+      row[2]:createCheckBox(selectedFactions[faction.id] == true, { scaling = false })
+      row[2].handlers.onClick = function(_, checked) return pilotAcademy.onSelectFaction(faction.id, checked) end
+      row[3]:createIcon(faction.icon, { height = config.mapRowHeight, width = config.mapRowHeight, color = Color[faction.colorId] or Color["text_normal"] })
+      row[4]:createText(string.format("[%s]", faction.shortName), { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
+      row[5]:createText("-", { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
+      row[6]:setColSpan(4):createText(faction.name, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
+      row[10]:createText(faction.relationName, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
+      row[11]:createText(string.format("(%+2d)", faction.uiRelation), { halign = "right", color = Color[faction.colorId] or Color["text_normal"] })
+    end
   end
   return tableWing
 end
