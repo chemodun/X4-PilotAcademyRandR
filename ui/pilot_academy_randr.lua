@@ -10,16 +10,31 @@ ffi.cdef [[
 
 local traceEnabled = true
 
-local playerId = nil
+local pilotAcademy = {
+  playerId = nil,
+  menuMap = nil,
+  menuMapConfig = {},
+  academySideBarInfo = {
+    name = "Pilot Academy R&R",
+    icon = "pa_icon_academy",
+    mode = "pilot_academy_r_and_r",
+    helpOverlayID = "pilot_academy_r_and_r",
+    helpOverlayText = "pilot_academy_r_and_r_help_overlay",
+  },
+  sideBarIsCreated = false,
+  wings = {},
+  wingIds = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'},
+}
 
-function debug(message)
+
+local function debug(message)
   local text = "Pilot Academy: " .. message
   if type(DebugError) == "function" then
     DebugError(text)
   end
 end
 
-function trace(message)
+local function trace(message)
   ---@diagnostic disable-next-line: unnecessary-if
   if traceEnabled then
     debug(message)
@@ -188,25 +203,143 @@ local function addRowToPlayerInfoMenuContext(contextFrame, contextMenuData, cont
   end
   return result
 end
-local sideBarUsCreated = false
-
-function createSideBar(config)
-  if not sideBarUsCreated then
-    local pilotAcademy = {
-      name = "Pilot Academy R&R",
-      icon = "pa_icon_academy",
-      mode = "pilot_academy_randr",
-      helpOverlayID = "pilot_academy_randr",
-      helpOverlayText = "pilot_academy_randr_help_overlay",
-    }
-    config.leftBar[#config.leftBar+1] = { spacing = true}
-    config.leftBar[#config.leftBar+1] = pilotAcademy
-    sideBarUsCreated = true
+function pilotAcademy.createSideBar(config)
+  if not pilotAcademy.sideBarIsCreated then
+    for i = 1, #config.leftBar do
+      if config.leftBar[i].mode == pilotAcademy.academySideBarInfo.mode then
+        trace("Pilot Academy R&R sidebar entry already exists, not adding again")
+        return
+      end
+    end
+    config.leftBar[#config.leftBar + 1] = { spacing = true }
+    config.leftBar[#config.leftBar + 1] = pilotAcademy.academySideBarInfo
+    trace("Added Pilot Academy R&R sidebar entry")
+    pilotAcademy.sideBarIsCreated = true
   end
 end
+
+function pilotAcademy.createInfoFrame()
+  if pilotAcademy.menuMap.infoTableMode == pilotAcademy.academySideBarInfo.mode then
+
+    local menu = pilotAcademy.menuMap
+    local config = pilotAcademy.menuMapConfig
+    if menu == nil or config == nil then
+      trace("Menu or config is nil, cannot create info frame")
+      return
+    end
+    local frame = menu.infoFrame
+    local instance = "left"
+    local infoTableMode = menu.infoTableMode[instance]
+    local tableWing = frame:addTable(12, { tabOrder = 2, reserveScrollBar = false })
+    tableWing:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
+    tableWing:setDefaultCellProperties("button", { height = config.mapRowHeight })
+    tableWing:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
+
+    if menu.objectMode == "objectall" then
+      menu.objectMode = "pilot_academy_r_and_r"
+    end
+
+    local maxNumCategoryColumns = math.floor(menu.infoTableWidth / (menu.sideBarWidth + Helper.borderSize))
+    if maxNumCategoryColumns > Helper.maxTableCols then
+      maxNumCategoryColumns = Helper.maxTableCols
+    end
+
+    local row = tableWing:addRow("pilot_academy_r_and_r_wings_header", { fixed = true })
+    row[1]:setColSpan(12):createText("Pilot Academy R&R Wings", { halign = "center", fontsize = config.mapFontSize + 2, bold = true })
+    local numdisplayed = 0
+    local maxVisibleHeight = tableWing:getFullHeight()
+
+    -- if menu.objectMode == "cheats_player" then
+    --   numdisplayed = fcm.createPlayerCheatsSection(table, numdisplayed)
+    -- elseif menu.objectMode == "cheats_factions" then
+    --   numdisplayed = fcm.createFactionCheatsSection(table, numdisplayed)
+    -- elseif menu.objectMode == "cheats_objectspawn" then
+    --   numdisplayed = fcm.createObjectSpawnCheatsSection(table, numdisplayed)
+    -- end
+
+    local tabsTable = frame:addTable(maxNumCategoryColumns, { tabOrder = 2, reserveScrollBar = false })
+    tabsTable:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
+    tabsTable:setDefaultCellProperties("button", { height = config.mapRowHeight })
+    tabsTable:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
+
+    if maxNumCategoryColumns > 0 then
+      for i = 1, maxNumCategoryColumns do
+        tabsTable:setColWidth(i, menu.sideBarWidth, false)
+      end
+      local diff = menu.infoTableWidth - maxNumCategoryColumns * (menu.sideBarWidth + Helper.borderSize)
+      tabsTable:setColWidth(maxNumCategoryColumns, menu.sideBarWidth + diff, false)
+      -- object list categories row
+      local row = tabsTable:addRow("pilot_academy_r_and_r_tabs", { fixed = true })
+      local rowCount = 1
+      if pilotAcademy.wings and #pilotAcademy.wings > 0 then
+      end
+      for i = 1, #pilotAcademy.wings + 1 do
+        if i / maxNumCategoryColumns > rowCount then
+          row = tabsTable:addRow("pilot_academy_r_and_r_tabs", { fixed = true })
+          rowCount = rowCount + 1
+        end
+        local name = "Add Wing"
+        local icon = "pa_icon_add"
+        if i <= #pilotAcademy.wings then
+          name = string.format("Wing %s", pilotAcademy.wingIds[i]:upper())
+          icon = "pa_icon_" .. pilotAcademy.wingIds[i]
+        end
+        local bgcolor = Color["row_title_background"]
+        local color = Color["icon_normal"]
+        row[i - math.floor((i - 1) / maxNumCategoryColumns) * maxNumCategoryColumns]
+            :createButton({
+              height = menu.sideBarWidth,
+              width = menu.sideBarWidth,
+              bgColor = bgcolor,
+              mouseOverText = name,
+              scaling = false,
+              -- helpOverlayID = entry.helpOverlayID,
+              -- helpOverlayText = entry.helpOverlayText,
+            })
+            :setIcon(icon, { color = color })
+        row[i - math.floor((i - 1) / maxNumCategoryColumns) * maxNumCategoryColumns].handlers.onClick = function()
+          return true
+        end
+      end
+    end
+
+    -- if numdisplayed > 50 then
+    --   table.properties.maxVisibleHeight = maxVisibleHeight + 50 * (Helper.scaleY(config.mapRowHeight) + Helper.borderSize)
+    -- end
+    menu.numFixedRows = tableWing.numfixedrows
+
+    tableWing:setTopRow(menu.settoprow)
+    if menu.infoTable then
+      local result = GetShiftStartEndRow(menu.infoTable)
+      if result then
+        tableWing:setShiftStartEnd(tableWing.unpack(result))
+      end
+    end
+    tableWing:setSelectedRow(menu.sethighlightborderrow or menu.setrow)
+    menu.setrow = nil
+    menu.settoprow = nil
+    menu.setcol = nil
+    menu.sethighlightborderrow = nil
+
+    tableWing.properties.y = tabsTable.properties.y + tabsTable:getFullHeight() + Helper.borderSize
+  end
+end
+
+function pilotAcademy.Init(menuMap, menuPlayerInfo)
+  trace("pilotAcademy.Init called")
+  pilotAcademy.sideBarIsCreated = false
+  if menuMap ~= nil and type(menuMap.registerCallback) == "function" and type(menuMap.uix_getConfig) == "function" then
+    pilotAcademy.menuMap = menuMap
+    pilotAcademy.menuMapConfig = menuMap.uix_getConfig()
+    menuMap.registerCallback("createSideBar_on_start", pilotAcademy.createSideBar)
+    menuMap.registerCallback("createInfoFrame_on_menu_infoTableMode", pilotAcademy.createInfoFrame)
+    -- menuMap.registerCallback("utRenaming_setupInfoSubmenuRows_on_end", fcm.setupInfoSubmenuRows)
+  end
+end
+
 local function Init()
-  playerId = ConvertStringTo64Bit(tostring(C.GetPlayerID()))
-  debug("Initializing Pilot Academy UI extension with PlayerID: " .. tostring(playerId))
+  pilotAcademy.playerId = ConvertStringTo64Bit(tostring(C.GetPlayerID()))
+  debug("Initializing Pilot Academy UI extension with PlayerID: " .. tostring(pilotAcademy.playerId))
   local menuMap = Helper.getMenu("MapMenu")
   ---@diagnostic disable-next-line: undefined-field
   if menuMap ~= nil and type(menuMap.registerCallback) == "function" then
@@ -224,7 +357,6 @@ local function Init()
       return addRowToMapMenuContext(contextFrame, contextMenuData, contextMenuMode, menuMap)
     end)
     debug("Registered callback for Context Frame creation and refresh in MapMenu")
-    menuMap.registerCallback("createSideBar_on_start", createSideBar)
     -- menuMap.registerCallback("createInfoFrame_on_menu_infoTableMode", fcm.createInfoFrame)
   else
     debug("Failed to get MapMenu or registerCallback is not a function")
@@ -248,6 +380,10 @@ local function Init()
     debug("Registered callback for Context Frame creation and refresh in PlayerInfoMenu")
   else
     debug("Failed to get PlayerInfoMenu or registerCallback is not a function")
+  end
+  trace(string.format("menuMap is %s and menuPlayerInfo is %s", tostring(menuMap), tostring(menuPlayerInfo)))
+  if (menuMap ~= nil and menuPlayerInfo ~= nil) then
+    pilotAcademy.Init(menuMap, menuPlayerInfo)
   end
 end
 
