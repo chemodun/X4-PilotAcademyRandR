@@ -10,7 +10,8 @@
       <param name="debugchance" type="bool" default="0" advanced="true" text="{1041, 10086}" comment="Print debug output">
         <input_param name="truevalue" value="100" />
       </param>
-      <param name="factionsList" type="internal" default="[]" text="List of factions to consider for trading" comment="List of factions to consider for trading" />
+      <param name="factionNames" type="internal" default="[]" text="List of factions id's to consider for trading"
+        comment="List of factions id's to consider for trading" />
     </params>
     <requires>
       <match shiptype="shiptype.lasertower" negate="true" />
@@ -136,15 +137,15 @@
     <set_value name="$tradeOfferTypes" exact="['buy', 'sell']" />
     <set_value name="$tradeRangeEnough" exact="10km" />
     <set_value name="$tradeVolumes" exact="[500000, 50000, 5000, 500, 50]" />
-    <do_if value="not $factionsList? or @$factionsList == null">
-      <create_list name="$factionsList" />
+    <do_if value="not $factionNames? or @$factionNames == null">
+      <create_list name="$factionNames" />
     </do_if>
     <set_value name="$tradeOperation" exact="''" />
     <set_value name="$selectedFaction" exact="null" />
     <set_value name="$selectedBuyOffer" exact="null" />
     <set_value name="$selectedSellOffer" exact="null" />
     <set_value name="$targetCombinedSkill" exact="$targetRankLevel * 20" />
-    <!-- <append_to_list name="$factionsList" exact="faction.ministry" /> -->
+    <!-- <append_to_list name="$factionNames" exact="'ministry'" /> -->
   </init>
   <attention min="unknown">
     <actions>
@@ -178,8 +179,8 @@
         <resume label="prepareTrade" />
       </do_if>
       <debug_text
-        text="'Pilot Academy [%s]: started with: targetRankLevel %s, factionsList count %s, selectedFaction %s, selectedBuyOffer %s, selectedSellOffer %s'.
-          [this.assignedcontrolled.debugname, $targetRankLevel, $factionsList.count, @$selectedFaction, @$selectedBuyOffer, @$selectedSellOffer]"
+        text="'Pilot Academy [%s]: started with: targetRankLevel %s, factionsNames count %s, selectedFaction %s, selectedBuyOffer %s, selectedSellOffer %s'.
+          [this.assignedcontrolled.debugname, $targetRankLevel, $factionNames.count, @$selectedFaction, @$selectedBuyOffer, @$selectedSellOffer]"
         chance="$debugchance" />
       <do_if value="@$selectedFaction == null or @$selectedBuyOffer == null or @$selectedSellOffer == null">
 
@@ -195,18 +196,15 @@
           <set_order_syncpoint_reached order="this.assignedcontrolled.order" />
         </do_if>
 
-        <do_if value="$factionsList.count == 0">
-          <set_value name="$factionsList" exact="lookup.faction.list" />
-        </do_if>
-
+        <set_value name="$factionsListAll" exact="lookup.faction.list" />
         <debug_text
-          text="'Pilot Academy [%s]: evaluating %s factions for trade opportunities.' . [this.assignedcontrolled.debugname, $factionsList.count]"
+          text="'Pilot Academy [%s]: evaluating %s factions for trade opportunities.' . [this.assignedcontrolled.debugname, $factionsListAll.count]"
           chance="$debugchance" />
 
-        <sort_list list="$factionsList" sortbyvalue="loop.element.relationto.{faction.player}" sortdescending="false" />
+        <sort_list list="$factionsListAll" sortbyvalue="loop.element.relationto.{faction.player}" sortdescending="false" />
 
         <create_list name="$filteredFactions" />
-        <do_for_each name="$faction" in="$factionsList" counter="$i">
+        <do_for_each name="$faction" in="$factionsListAll" counter="$i">
           <do_if value="$faction.hastag.hidden">
             <debug_text text="'Pilot Academy [%s]: skipping faction %s due to hidden tag' . [this.assignedcontrolled.debugname, @$faction.name]"
               chance="$debugchance" />
@@ -226,7 +224,12 @@
             <continue />
           </do_if>
 
-          <append_to_list name="$filteredFactions" exact="$faction" />
+          <do_if value="$factionNames.count == 0">
+            <append_to_list name="$filteredFactions" exact="$faction" />
+          </do_if>
+          <do_elseif value="$factionNames.indexof.{$faction.id} gt 0">
+            <append_to_list name="$filteredFactions" exact="$faction" />
+          </do_elseif>
 
           <do_if value="$i % 10 == 0">
             <wait min="1ms" max="3ms" />
