@@ -40,6 +40,8 @@ local texts = {
   primaryGoal = "Primary Goal:",
   factions = "Factions:",
   targetRankLevel = "Target Rank:",
+  wingLeader = "Wing Leader:",
+  noAvailableWingLeaders = "No available wing leaders",
 }
 
 local function debug(message)
@@ -446,7 +448,7 @@ function pilotAcademy.setTableWingColumnWidths(tableWing, menu, config, maxShort
     tableWing:setColWidth(i, config.mapRowHeight, false)
   end
   tableWing:setColWidth(10, maxRelationNameWidth + Helper.borderSize * 2)
-  local relationWidth = C.GetTextWidth("(-30)", Helper.standardFont, Helper.scaleFont(Helper.standardFont, config.mapFontSize))
+  local relationWidth = C.GetTextWidth(string.format("(%+2d)", 30), Helper.standardFont, Helper.scaleFont(Helper.standardFont, config.mapFontSize))
   tableWing:setColWidth(11, relationWidth + Helper.borderSize * 2, false)
   tableWing:setColWidth(12, config.mapRowHeight, false)
 end
@@ -544,8 +546,25 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
       row[5]:createText("-", { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
       row[6]:setColSpan(4):createText(faction.name, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
       row[10]:createText(faction.relationName, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
-      row[11]:createText(string.format("(%d)", faction.uiRelation), { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
+      row[11]:createText(string.format("(%+2d)", faction.uiRelation), { halign = "right", color = Color[faction.colorId] or Color["text_normal"] })
     end
+  end
+  tableWing:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  local row = tableWing:addRow("wing_leader", { fixed = true })
+  local wingLeaderOptions = pilotAcademy.fetchPotentialWingLeaders(existingWing, wingLeader)
+  row[2]:setColSpan(5):createText(texts.wingLeader, { halign = "left" })
+  row[7]:setColSpan(5):createDropDown(
+    wingLeaderOptions,
+    {
+      startOption = wingLeader or -1,
+      active = not existingWing,
+      textOverride = (#wingLeaderOptions == 0) and texts.noAvailableWingLeaders or nil,
+    }
+  )
+  row[7]:setTextProperties({ halign = "left" })
+  row[7]:setText2Properties({ halign = "right", color = Color["text_positive"] })
+  row[7].handlers.onDropDownConfirmed = function(_, id)
+    return pilotAcademy.onSelectWingLeader(id)
   end
   return tableWing
 end
@@ -614,9 +633,25 @@ function pilotAcademy.onSelectFaction(factionId, isSelected)
   menu.refreshInfoFrame()
 end
 
-function pilotAcademy.fetchPotentialWingLeaders()
+function pilotAcademy.fetchPotentialWingLeaders(existingWing, existingWingLeader)
   local potentialWingLeaders = {}
   return potentialWingLeaders
+end
+
+function pilotAcademy.onSelectWingLeader(id)
+  trace("onSelectWingLeader called with id: " .. tostring(id))
+  if id == nil then
+    trace("id is nil; cannot process")
+    return
+  end
+  pilotAcademy.editData.wingLeader = id
+
+  local menu = pilotAcademy.menuMap
+  if menu == nil then
+    trace("Menu is nil; cannot refresh info frame")
+    return
+  end
+  menu.refreshInfoFrame()
 end
 
 function pilotAcademy.loadWings()
