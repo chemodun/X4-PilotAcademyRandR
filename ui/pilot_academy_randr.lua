@@ -23,7 +23,7 @@ local pilotAcademy = {
   },
   sideBarIsCreated = false,
   wings = {},
-  wingIds = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'},
+  wingIds = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i' },
 }
 
 
@@ -220,7 +220,6 @@ end
 
 function pilotAcademy.createInfoFrame()
   if pilotAcademy.menuMap.infoTableMode == pilotAcademy.academySideBarInfo.mode then
-
     local menu = pilotAcademy.menuMap
     local config = pilotAcademy.menuMapConfig
     if menu == nil or config == nil then
@@ -235,10 +234,6 @@ function pilotAcademy.createInfoFrame()
     tableWing:setDefaultCellProperties("button", { height = config.mapRowHeight })
     tableWing:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
 
-    if menu.objectMode == "objectall" then
-      menu.objectMode = "pilot_academy_r_and_r"
-    end
-
     local maxNumCategoryColumns = math.floor(menu.infoTableWidth / (menu.sideBarWidth + Helper.borderSize))
     if maxNumCategoryColumns > Helper.maxTableCols then
       maxNumCategoryColumns = Helper.maxTableCols
@@ -249,56 +244,55 @@ function pilotAcademy.createInfoFrame()
     local numdisplayed = 0
     local maxVisibleHeight = tableWing:getFullHeight()
 
-    -- if menu.objectMode == "cheats_player" then
-    --   numdisplayed = fcm.createPlayerCheatsSection(table, numdisplayed)
-    -- elseif menu.objectMode == "cheats_factions" then
-    --   numdisplayed = fcm.createFactionCheatsSection(table, numdisplayed)
-    -- elseif menu.objectMode == "cheats_objectspawn" then
-    --   numdisplayed = fcm.createObjectSpawnCheatsSection(table, numdisplayed)
-    -- end
-
     local tabsTable = frame:addTable(maxNumCategoryColumns, { tabOrder = 2, reserveScrollBar = false })
     tabsTable:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
     tabsTable:setDefaultCellProperties("button", { height = config.mapRowHeight })
     tabsTable:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
 
     if maxNumCategoryColumns > 0 then
+      local wingsCount = #pilotAcademy.wings
+      -- wingsCount = #pilotAcademy.wingIds
       for i = 1, maxNumCategoryColumns do
-        tabsTable:setColWidth(i, menu.sideBarWidth, false)
+        local columnWidth = menu.sideBarWidth
+        if wingsCount > 0 and i == wingsCount + 1 then
+          columnWidth = math.floor(columnWidth / 2)
+        end
+        tabsTable:setColWidth(i, columnWidth, false)
       end
       local diff = menu.infoTableWidth - maxNumCategoryColumns * (menu.sideBarWidth + Helper.borderSize)
       tabsTable:setColWidth(maxNumCategoryColumns, menu.sideBarWidth + diff, false)
       -- object list categories row
       local row = tabsTable:addRow("pilot_academy_r_and_r_tabs", { fixed = true })
       local rowCount = 1
-      if pilotAcademy.wings and #pilotAcademy.wings > 0 then
-      end
-      for i = 1, #pilotAcademy.wings + 1 do
+      local placesCount = wingsCount == 0 and 1 or (wingsCount + 2 <= maxNumCategoryColumns and wingsCount + 2 or wingsCount + 1)
+      for i = 1, placesCount do
         if i / maxNumCategoryColumns > rowCount then
           row = tabsTable:addRow("pilot_academy_r_and_r_tabs", { fixed = true })
           rowCount = rowCount + 1
         end
-        local name = "Add Wing"
-        local icon = "pa_icon_add"
-        if i <= #pilotAcademy.wings then
-          name = string.format("Wing %s", pilotAcademy.wingIds[i]:upper())
-          icon = "pa_icon_" .. pilotAcademy.wingIds[i]
-        end
-        local bgcolor = Color["row_title_background"]
-        local color = Color["icon_normal"]
-        row[i - math.floor((i - 1) / maxNumCategoryColumns) * maxNumCategoryColumns]
-            :createButton({
-              height = menu.sideBarWidth,
-              width = menu.sideBarWidth,
-              bgColor = bgcolor,
-              mouseOverText = name,
-              scaling = false,
-              -- helpOverlayID = entry.helpOverlayID,
-              -- helpOverlayText = entry.helpOverlayText,
-            })
-            :setIcon(icon, { color = color })
-        row[i - math.floor((i - 1) / maxNumCategoryColumns) * maxNumCategoryColumns].handlers.onClick = function()
-          return true
+        if i <= wingsCount or i == placesCount then
+          local name = "Add Wing"
+          local icon = "pa_icon_add"
+          if i <= wingsCount then
+            name = string.format("Wing %s", pilotAcademy.wingIds[i]:upper())
+            icon = "pa_icon_" .. pilotAcademy.wingIds[i]
+          end
+          local bgcolor = Color["row_title_background"]
+          local color = Color["icon_normal"]
+          row[i - math.floor((i - 1) / maxNumCategoryColumns) * maxNumCategoryColumns]
+              :createButton({
+                height = menu.sideBarWidth,
+                width = menu.sideBarWidth,
+                bgColor = bgcolor,
+                mouseOverText = name,
+                scaling = false,
+                -- helpOverlayID = entry.helpOverlayID,
+                -- helpOverlayText = entry.helpOverlayText,
+              })
+              :setIcon(icon, { color = color })
+          row[i - math.floor((i - 1) / maxNumCategoryColumns) * maxNumCategoryColumns].handlers.onClick = function()
+            return true
+          end
         end
       end
     end
