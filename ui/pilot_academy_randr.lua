@@ -219,7 +219,7 @@ function pilotAcademy.createSideBar(config)
 end
 
 function pilotAcademy.createInfoFrame()
-  if pilotAcademy.menuMap.infoTableMode == pilotAcademy.academySideBarInfo.mode then
+  if pilotAcademy.menuMap ~= nil and pilotAcademy.menuMap.infoTableMode == pilotAcademy.academySideBarInfo.mode then
     local menu = pilotAcademy.menuMap
     local config = pilotAcademy.menuMapConfig
     if menu == nil or config == nil then
