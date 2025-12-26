@@ -39,6 +39,7 @@ local texts = {
   noAvailablePrimaryGoals = "No available primary goals",
   primaryGoal = "Primary Goal:",
   factions = "Factions:",
+  targetRankLevel = "Target Rank:",
 }
 
 local function debug(message)
@@ -279,7 +280,7 @@ function pilotAcademy.createInfoFrame()
   local frame = menu.infoFrame
   local instance = "left"
   local infoTableMode = menu.infoTableMode[instance]
-  local tableWing = pilotAcademy.displayWingInfo(frame, pilotAcademy.selectedWing)
+  local tableWing = pilotAcademy.displayWingInfo(frame, menu, config)
 
   local maxNumCategoryColumns = math.floor(menu.infoTableWidth / (menu.sideBarWidth + Helper.borderSize))
   if maxNumCategoryColumns > Helper.maxTableCols then
@@ -376,36 +377,85 @@ function pilotAcademy.createInfoFrame()
   tableWing.properties.y = tabsTable.properties.y + tabsTable:getFullHeight() + Helper.borderSize
 end
 
-function pilotAcademy.getFactions()
+function pilotAcademy.sortFactions(a, b)
+  if a.uiRelation == b.uiRelation then
+    return a.shortName < b.shortName
+  end
+  return a.uiRelation < b.uiRelation
+end
+
+function pilotAcademy.getFactions(config)
   local factionsAll = GetLibrary("factions")
   local factions = {}
+  local maxShortNameWidth = 0
+  local maxRelationNameWidth = 0
   for i, faction in ipairs(factionsAll) do
     if faction.id ~= "player" then
       local shortName, isAtDockRelation = GetFactionData(faction.id, "shortname", "isatdockrelation")
       if isAtDockRelation then
-        faction.shortNAme = shortName
+        faction.shortName = shortName
         faction.isAtDockRelation = isAtDockRelation
         faction.uiRelation = GetUIRelation(faction.id)
         local relationInfo = C.GetUIRelationName("player", faction.id)
         faction.relationName = ffi.string(relationInfo.name)
         faction.colorId = ffi.string(relationInfo.colorid)
         factions[#factions + 1] = faction
+        local shortNameWidth = C.GetTextWidth(string.format("[%s]", shortName), Helper.standardFont, Helper.scaleFont(Helper.standardFont, config.mapFontSize))
+        if shortNameWidth > maxShortNameWidth then
+          maxShortNameWidth = shortNameWidth
+        end
+        local relationNameWidth = C.GetTextWidth(faction.relationName, Helper.standardFont, Helper.scaleFont(Helper.standardFont, config.mapFontSize))
+        if relationNameWidth > maxRelationNameWidth then
+          maxRelationNameWidth = relationNameWidth
+        end
       end
     end
   end
-  table.sort(factions, function(a, b)
-    return a.uiRelation < b.uiRelation
-  end)
-  return factions
+  table.sort(factions, pilotAcademy.sortFactions)
+  return factions, maxShortNameWidth, maxRelationNameWidth
 end
 
-function pilotAcademy.displayWingInfo(frame)
+function pilotAcademy.buttonSelectWing(i)
+  local menu = pilotAcademy.menuMap
+  if menu == nil then
+    trace("Menu is nil; cannot process buttonSelectWing")
+    return
+  end
+  if i ~= pilotAcademy.selectedWing then
+    pilotAcademy.selectedWing = i <= #pilotAcademy.wingIds and i or nil
+
+    -- AddUITriggeredEvent(menu.name, pilotAcademy.tableMode)
+
+    menu.refreshInfoFrame()
+  end
+end
+
+function pilotAcademy.setTableWingColumnWidths(tableWing, menu, config, maxShortNameWidth, maxRelationNameWidth)
+  if tableWing == nil or menu == nil then
+    debug("TableWing or menu is nil; cannot set column widths")
+    return
+  end
+  for i = 1, 3 do
+    tableWing:setColWidth(i, config.mapRowHeight, false)
+  end
+  tableWing:setColWidth(4, maxShortNameWidth + Helper.borderSize * 2, false)
+  tableWing:setColWidth(5, config.mapRowHeight, false)
+  tableWing:setColWidth(6, menu.sideBarWidth, false)
+  tableWing:setColWidthMin(7, menu.sideBarWidth, 2, true)
+  for i = 8, 9 do
+    tableWing:setColWidth(i, config.mapRowHeight, false)
+  end
+  tableWing:setColWidth(10, maxRelationNameWidth + Helper.borderSize * 2)
+  local relationWidth = C.GetTextWidth("(-30)", Helper.standardFont, Helper.scaleFont(Helper.standardFont, config.mapFontSize))
+  tableWing:setColWidth(11, relationWidth + Helper.borderSize * 2, false)
+  tableWing:setColWidth(12, config.mapRowHeight, false)
+end
+
+function pilotAcademy.displayWingInfo(frame, menu, config)
   if frame == nil then
     trace("Frame is nil; cannot display wing info")
     return nil
   end
-  local menu = pilotAcademy.menuMap
-  local config = pilotAcademy.menuMapConfig
   if menu == nil or config == nil then
     trace("Menu or config is nil; cannot display wing info")
     return nil
@@ -417,9 +467,9 @@ function pilotAcademy.displayWingInfo(frame)
   local wings = pilotAcademy.wings or {}
   local wingIndex = pilotAcademy.selectedWing
   local existingWing = wingIndex ~= nil and wingIndex <= #wings and wings[wingIndex] ~= nil
-  local factions = pilotAcademy.getFactions()
+  local factions, maxShortNameWidth, maxRelationNameWidth = pilotAcademy.getFactions(config)
   -- local factionsSorted =
-
+  pilotAcademy.setTableWingColumnWidths(tableWing, menu, config, maxShortNameWidth, maxRelationNameWidth)
   local wingData = existingWing and wings[wingIndex] or {}
   local editData = pilotAcademy.editData or {}
   local primaryGoal = editData.primaryGoal or wingData.primaryGoal or "rank"
@@ -449,8 +499,8 @@ function pilotAcademy.displayWingInfo(frame)
     { id = "rank",     icon = "", text = "Increase Rank",     text2 = "", displayremoveoption = false },
     { id = "relation", icon = "", text = "Improve Relations", text2 = "", displayremoveoption = false },
   }
-  row[2]:setColSpan(3):createText(texts.primaryGoal, { halign = "left" })
-  row[5]:setColSpan(4):createDropDown(
+  row[2]:setColSpan(5):createText(texts.primaryGoal, { halign = "left" })
+  row[7]:setColSpan(5):createDropDown(
     primaryGoalOptions,
     {
       startOption = primaryGoal or -1,
@@ -458,34 +508,44 @@ function pilotAcademy.displayWingInfo(frame)
       textOverride = (#primaryGoalOptions == 0) and texts.noAvailablePrimaryGoals or nil,
     }
   )
-  row[5]:setTextProperties({ halign = "left" })
-  row[5].handlers.onDropDownConfirmed = function(_, id)
+  row[7]:setTextProperties({ halign = "left" })
+  row[7].handlers.onDropDownConfirmed = function(_, id)
     return pilotAcademy.onSelectPrimaryGoal(id)
   end
   tableWing:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  local row = tableWing:addRow("target_rank_level", { fixed = true })
+  row[2]:setColSpan(5):createText(texts.targetRankLevel, { halign = "left" })
+  row[7]:setColSpan(5):createSliderCell({
+    height = config.mapRowHeight,
+    bgColor = Color["slider_background_transparent"],
+    min = 2,
+    minSelect = 2,
+    max = 5,
+    maxSelect = 5,
+    start = targetRankLevel,
+    step = 1,
+    -- mouseOverText = ffi.string(C.GetDisplayedModifierKey("shift")) .. " - " .. ReadText(1026, 3279),
+  })
+  row[7].handlers.onSliderCellChanged = function(_, val) return pilotAcademy.onSelectTargetRankLevel(val) end
+  row[7].handlers.onSliderCellConfirm = function() return menu.refreshInfoFrame() end
+  row[7].handlers.onSliderCellActivated = function() menu.noupdate = true end
+  row[7].handlers.onSliderCellDeactivated = function() menu.noupdate = false end
+  tableWing:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local row = tableWing:addRow(nil, { fixed = true })
-  row[2]:setColSpan(3):createText(texts.factions, { halign = "left" })
+  row[2]:setColSpan(10):createText(texts.factions, { titleColor = Color["row_title"] })
   for i = 1, #factions do
     local faction = factions[i]
     local row = tableWing:addRow(faction.id, { fixed = true })
-    row[5]:setColSpan(5):createText(faction.name, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
+    row[2]:createCheckBox(selectedFactions[faction.id] == true, { scaling = false })
+    row[2].handlers.onClick = function(_, checked) return pilotAcademy.onSelectFaction(faction.id, checked) end
+    row[3]:createIcon(faction.icon, { height = config.mapRowHeight, width = config.mapRowHeight, color = Color[faction.colorId] or Color["text_normal"] })
+    row[4]:createText(string.format("[%s]", faction.shortName), { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
+    row[5]:createText("-", { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
+    row[6]:setColSpan(4):createText(faction.name, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
+    row[10]:createText(faction.relationName, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
+    row[11]:createText(string.format("(%d)", faction.uiRelation), { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
   end
   return tableWing
-end
-
-function pilotAcademy.buttonSelectWing(i)
-  local menu = pilotAcademy.menuMap
-  if menu == nil then
-    trace("Menu is nil; cannot process buttonSelectWing")
-    return
-  end
-  if i ~= pilotAcademy.selectedWing then
-    pilotAcademy.selectedWing = i <= #pilotAcademy.wingIds and i or nil
-
-    -- AddUITriggeredEvent(menu.name, pilotAcademy.tableMode)
-
-    menu.refreshInfoFrame()
-  end
 end
 
 function pilotAcademy.onSelectPrimaryGoal(id)
@@ -495,6 +555,55 @@ function pilotAcademy.onSelectPrimaryGoal(id)
     return
   end
   pilotAcademy.editData.primaryGoal = id
+  local menu = pilotAcademy.menuMap
+  if menu == nil then
+    trace("Menu is nil; cannot refresh info frame")
+    return
+  end
+  menu.refreshInfoFrame()
+end
+
+function pilotAcademy.onSelectTargetRankLevel(level)
+  trace("onSelectTargetRankLevel called with level: " .. tostring(level))
+  if level == nil then
+    trace("level is nil; cannot process")
+    return
+  end
+  pilotAcademy.editData.targetRankLevel = level
+end
+
+function pilotAcademy.onSelectFaction(factionId, isSelected)
+  trace("onSelectFaction called with factionId: " .. tostring(factionId) .. ", isSelected: " .. tostring(isSelected))
+  if factionId == nil then
+    trace("factionId is nil; cannot process")
+    return
+  end
+  if pilotAcademy.editData.factions == nil or type(pilotAcademy.editData.factions) ~= "table" then
+    pilotAcademy.editData.factions = {}
+  end
+  local factions = pilotAcademy.editData.factions
+  if isSelected then
+    -- Add faction if not already present
+    local found = false
+    for i = 1, #factions do
+      if factions[i] == factionId then
+        found = true
+        break
+      end
+    end
+    if not found then
+      factions[#factions + 1] = factionId
+    end
+  else
+    -- Remove faction if present
+    for i = 1, #factions do
+      if factions[i] == factionId then
+        table.remove(factions, i)
+        break
+      end
+    end
+  end
+
   local menu = pilotAcademy.menuMap
   if menu == nil then
     trace("Menu is nil; cannot refresh info frame")
