@@ -5,7 +5,13 @@ ffi.cdef [[
   typedef uint64_t UniverseID;
   typedef uint64_t NPCSeed;
 
+	typedef struct {
+		const char* name;
+		const char* colorid;
+	} RelationRangeInfo;
+
   UniverseID GetPlayerID(void);
+  RelationRangeInfo GetUIRelationName(const char* fromfactionid, const char* tofactionid);
 ]]
 
 local traceEnabled = true
@@ -23,10 +29,17 @@ local pilotAcademy = {
   },
   sideBarIsCreated = false,
   selectedWing = nil,
-  wings = {},
+  wings = nil,
   wingIds = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i' },
+  wingsVariableId = "pilotAcademyRAndRWings",
+  editData = {},
 }
 
+local texts = {
+  noAvailablePrimaryGoals = "No available primary goals",
+  primaryGoal = "Primary Goal:",
+  factions = "Factions:",
+}
 
 local function debug(message)
   local text = "Pilot Academy: " .. message
@@ -204,6 +217,32 @@ local function addRowToPlayerInfoMenuContext(contextFrame, contextMenuData, cont
   end
   return result
 end
+
+function pilotAcademy.Init(menuMap, menuPlayerInfo)
+  trace("pilotAcademy.Init called")
+  pilotAcademy.sideBarIsCreated = false
+  if menuMap ~= nil and type(menuMap.registerCallback) == "function" and type(menuMap.uix_getConfig) == "function" then
+    pilotAcademy.menuMap = menuMap
+    pilotAcademy.menuMapConfig = menuMap.uix_getConfig()
+    menuMap.registerCallback("createSideBar_on_start", pilotAcademy.createSideBar)
+    menuMap.registerCallback("createInfoFrame_on_menu_infoTableMode", pilotAcademy.createInfoFrame)
+    -- menuMap.registerCallback("utRenaming_setupInfoSubmenuRows_on_end", fcm.setupInfoSubmenuRows)
+    pilotAcademy.resetData()
+  end
+end
+
+function pilotAcademy.resetData()
+  pilotAcademy.editData = {}
+  if pilotAcademy.wings == nil then
+    pilotAcademy.loadWings()
+  end
+  if #pilotAcademy.wings > 0 then
+    pilotAcademy.selectedWing = 1
+  else
+    pilotAcademy.selectedWing = nil
+  end
+end
+
 function pilotAcademy.createSideBar(config)
   if not pilotAcademy.sideBarIsCreated then
     for i = 1, #config.leftBar do
@@ -220,105 +259,218 @@ function pilotAcademy.createSideBar(config)
 end
 
 function pilotAcademy.createInfoFrame()
-  if pilotAcademy.menuMap ~= nil and pilotAcademy.menuMap.infoTableMode == pilotAcademy.academySideBarInfo.mode then
-    local menu = pilotAcademy.menuMap
-    local config = pilotAcademy.menuMapConfig
-    if menu == nil or config == nil then
-      trace("Menu or config is nil, cannot create info frame")
-      return
-    end
-    local frame = menu.infoFrame
-    local instance = "left"
-    local infoTableMode = menu.infoTableMode[instance]
-    local tableWing = frame:addTable(12, { tabOrder = 2, reserveScrollBar = false })
-    tableWing:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
-    tableWing:setDefaultCellProperties("button", { height = config.mapRowHeight })
-    tableWing:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-
-    local maxNumCategoryColumns = math.floor(menu.infoTableWidth / (menu.sideBarWidth + Helper.borderSize))
-    if maxNumCategoryColumns > Helper.maxTableCols then
-      maxNumCategoryColumns = Helper.maxTableCols
-    end
-
-    local row = tableWing:addRow("pilot_academy_r_and_r_wings_header", { fixed = true })
-    local suffix = string.format(pilotAcademy.selectedWing ~= nil and "Wing %s" or "Add new Wing", pilotAcademy.selectedWing ~= nil and pilotAcademy.wingIds[pilotAcademy.selectedWing]:upper() or "")
-    row[1]:setColSpan(12):createText("Pilot Academy R&R Wings: " .. suffix, { halign = "center", fontsize = config.mapFontSize + 2, bold = true })
-    local numdisplayed = 0
-    local maxVisibleHeight = tableWing:getFullHeight()
-
-    local tabsTable = frame:addTable(maxNumCategoryColumns, { tabOrder = 2, reserveScrollBar = false })
-    tabsTable:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
-    tabsTable:setDefaultCellProperties("button", { height = config.mapRowHeight })
-    tabsTable:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-
-    if maxNumCategoryColumns > 0 then
-      local wingsCount = #pilotAcademy.wings
-      wingsCount = #pilotAcademy.wingIds
-      for i = 1, maxNumCategoryColumns do
-        local columnWidth = menu.sideBarWidth
-        if wingsCount > 0 and i == wingsCount + 1 then
-          columnWidth = math.floor(columnWidth / 2)
-        end
-        tabsTable:setColWidth(i, columnWidth, false)
-      end
-      local diff = menu.infoTableWidth - maxNumCategoryColumns * (menu.sideBarWidth + Helper.borderSize)
-      tabsTable:setColWidth(maxNumCategoryColumns, menu.sideBarWidth + diff, false)
-      -- object list categories row
-      local row = tabsTable:addRow("pilot_academy_r_and_r_tabs", { fixed = true })
-      local rowCount = 1
-      local placesCount = wingsCount == 0 and 1 or (wingsCount + 2 <= maxNumCategoryColumns and wingsCount + 2 or wingsCount + 1)
-      for i = 1, placesCount do
-        if i / maxNumCategoryColumns > rowCount then
-          row = tabsTable:addRow("pilot_academy_r_and_r_tabs", { fixed = true })
-          rowCount = rowCount + 1
-        end
-        if i <= wingsCount or i == placesCount then
-          local name = "Add Wing"
-          local icon = "pa_icon_add"
-          if i <= wingsCount then
-            name = string.format("Wing %s", pilotAcademy.wingIds[i]:upper())
-            icon = "pa_icon_" .. pilotAcademy.wingIds[i]
-          end
-          local bgcolor = Color["row_title_background"]
-          local color = Color["icon_normal"]
-          row[i - math.floor((i - 1) / maxNumCategoryColumns) * maxNumCategoryColumns]
-              :createButton({
-                height = menu.sideBarWidth,
-                width = menu.sideBarWidth,
-                bgColor = bgcolor,
-                mouseOverText = name,
-                scaling = false,
-                -- helpOverlayID = entry.helpOverlayID,
-                -- helpOverlayText = entry.helpOverlayText,
-              })
-              :setIcon(icon, { color = color })
-          row[i - math.floor((i - 1) / maxNumCategoryColumns) * maxNumCategoryColumns].handlers.onClick = function()
-            return pilotAcademy.buttonSelectWing(i)
-          end
-        end
-      end
-    end
-
-    -- if numdisplayed > 50 then
-    --   table.properties.maxVisibleHeight = maxVisibleHeight + 50 * (Helper.scaleY(config.mapRowHeight) + Helper.borderSize)
-    -- end
-    menu.numFixedRows = tableWing.numfixedrows
-
-    tableWing:setTopRow(menu.settoprow)
-    if menu.infoTable then
-      local result = GetShiftStartEndRow(menu.infoTable)
-      if result then
-        tableWing:setShiftStartEnd(tableWing.unpack(result))
-      end
-    end
-    tableWing:setSelectedRow(menu.sethighlightborderrow or menu.setrow)
-    menu.setrow = nil
-    menu.settoprow = nil
-    menu.setcol = nil
-    menu.sethighlightborderrow = nil
-
-    tableWing.properties.y = tabsTable.properties.y + tabsTable:getFullHeight() + Helper.borderSize
+  if pilotAcademy.menuMap == nil then
+    debug("MenuMap is nil; cannot create info frame")
+    return
   end
+
+  local menu = pilotAcademy.menuMap
+  if menu.infoTableMode ~= pilotAcademy.academySideBarInfo.mode then
+    trace("Info table mode is not Pilot Academy R&R, clearing edit data!")
+    pilotAcademy.resetData()
+    return
+  end
+
+  local config = pilotAcademy.menuMapConfig
+  if config == nil then
+    trace("Config is nil, cannot create info frame")
+    return
+  end
+  local frame = menu.infoFrame
+  local instance = "left"
+  local infoTableMode = menu.infoTableMode[instance]
+  local tableWing = pilotAcademy.displayWingInfo(frame, pilotAcademy.selectedWing)
+
+  local maxNumCategoryColumns = math.floor(menu.infoTableWidth / (menu.sideBarWidth + Helper.borderSize))
+  if maxNumCategoryColumns > Helper.maxTableCols then
+    maxNumCategoryColumns = Helper.maxTableCols
+  end
+
+  local numdisplayed = 0
+  local maxVisibleHeight = tableWing:getFullHeight()
+
+  pilotAcademy.loadWings()
+
+  local tabsTable = frame:addTable(maxNumCategoryColumns, { tabOrder = 2, reserveScrollBar = false })
+  tabsTable:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
+  tabsTable:setDefaultCellProperties("button", { height = config.mapRowHeight })
+  tabsTable:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
+
+  if maxNumCategoryColumns > 0 then
+    local wingsCount = #pilotAcademy.wings
+    wingsCount = #pilotAcademy.wingIds - 1
+    for i = 1, maxNumCategoryColumns do
+      local columnWidth = menu.sideBarWidth
+      if wingsCount > 0 and i == wingsCount + 1 and wingsCount + 1 < maxNumCategoryColumns then
+        columnWidth = math.floor(columnWidth / 2)
+      end
+      tabsTable:setColWidth(i, columnWidth, false)
+    end
+    local diff = menu.infoTableWidth - maxNumCategoryColumns * (menu.sideBarWidth + Helper.borderSize)
+    tabsTable:setColWidth(maxNumCategoryColumns, menu.sideBarWidth + diff, false)
+    -- object list categories row
+    local row = tabsTable:addRow("pilot_academy_r_and_r_tabs", { fixed = true })
+    local rowCount = 1
+    local placesCount = 1
+    if wingsCount == #pilotAcademy.wingIds then
+      placesCount = wingsCount
+    elseif wingsCount == 0 then
+      placesCount = 1
+    else
+      placesCount = wingsCount + 2
+    end
+    for i = 1, placesCount do
+      if i / maxNumCategoryColumns > rowCount then
+        row = tabsTable:addRow("pilot_academy_r_and_r_tabs", { fixed = true })
+        rowCount = rowCount + 1
+      end
+      if i <= wingsCount or i == placesCount then
+        local name = "Add Wing"
+        local icon = "pa_icon_add"
+        if i <= wingsCount then
+          local wingId = tostring(pilotAcademy.wingIds[i] or "")
+          name = string.format("Wing %s", wingId:upper())
+          icon = "pa_icon_" .. wingId
+        end
+        local bgColor = Color["row_title_background"]
+        if i == pilotAcademy.selectedWing or i == placesCount and pilotAcademy.selectedWing == nil then
+          bgColor = Color["row_background_selected"]
+        end
+        local color = Color["icon_normal"]
+        row[i - math.floor((i - 1) / maxNumCategoryColumns) * maxNumCategoryColumns]
+            :createButton({
+              height = menu.sideBarWidth,
+              width = menu.sideBarWidth,
+              bgColor = bgColor,
+              mouseOverText = name,
+              scaling = false,
+              -- helpOverlayID = entry.helpOverlayID,
+              -- helpOverlayText = entry.helpOverlayText,
+            })
+            :setIcon(icon, { color = color })
+        row[i - math.floor((i - 1) / maxNumCategoryColumns) * maxNumCategoryColumns].handlers.onClick = function()
+          return pilotAcademy.buttonSelectWing(i)
+        end
+      end
+    end
+  end
+
+  -- if numdisplayed > 50 then
+  --   table.properties.maxVisibleHeight = maxVisibleHeight + 50 * (Helper.scaleY(config.mapRowHeight) + Helper.borderSize)
+  -- end
+  menu.numFixedRows = tableWing.numfixedrows
+
+  tableWing:setTopRow(menu.settoprow)
+  if menu.infoTable then
+    local result = GetShiftStartEndRow(menu.infoTable)
+    if result then
+      tableWing:setShiftStartEnd(tableWing.unpack(result))
+    end
+  end
+  tableWing:setSelectedRow(menu.sethighlightborderrow or menu.setrow)
+  menu.setrow = nil
+  menu.settoprow = nil
+  menu.setcol = nil
+  menu.sethighlightborderrow = nil
+
+  tableWing.properties.y = tabsTable.properties.y + tabsTable:getFullHeight() + Helper.borderSize
+end
+
+function pilotAcademy.getFactions()
+  local factionsAll = GetLibrary("factions")
+  local factions = {}
+  for i, faction in ipairs(factionsAll) do
+    if faction.id ~= "player" then
+      local shortName, isAtDockRelation = GetFactionData(faction.id, "shortname", "isatdockrelation")
+      if isAtDockRelation then
+        faction.shortNAme = shortName
+        faction.isAtDockRelation = isAtDockRelation
+        faction.uiRelation = GetUIRelation(faction.id)
+        local relationInfo = C.GetUIRelationName("player", faction.id)
+        faction.relationName = ffi.string(relationInfo.name)
+        faction.colorId = ffi.string(relationInfo.colorid)
+        factions[#factions + 1] = faction
+      end
+    end
+  end
+  table.sort(factions, function(a, b)
+    return a.uiRelation < b.uiRelation
+  end)
+  return factions
+end
+
+function pilotAcademy.displayWingInfo(frame)
+  if frame == nil then
+    trace("Frame is nil; cannot display wing info")
+    return nil
+  end
+  local menu = pilotAcademy.menuMap
+  local config = pilotAcademy.menuMapConfig
+  if menu == nil or config == nil then
+    trace("Menu or config is nil; cannot display wing info")
+    return nil
+  end
+  local tableWing = frame:addTable(12, { tabOrder = 2, reserveScrollBar = false })
+  tableWing:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
+  tableWing:setDefaultCellProperties("button", { height = config.mapRowHeight })
+  tableWing:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
+  local wings = pilotAcademy.wings or {}
+  local wingIndex = pilotAcademy.selectedWing
+  local existingWing = wingIndex ~= nil and wingIndex <= #wings and wings[wingIndex] ~= nil
+  local factions = pilotAcademy.getFactions()
+  -- local factionsSorted =
+
+  local wingData = existingWing and wings[wingIndex] or {}
+  local editData = pilotAcademy.editData or {}
+  local primaryGoal = editData.primaryGoal or wingData.primaryGoal or "rank"
+  local targetRankLevel = editData.targetRankLevel or wingData.targetRankLevel or 2
+  local selectedFactions = {}
+  if editData.factions ~= nil and type(editData.factions) == "table" then
+    for _, factionId in ipairs(editData.factions) do
+      selectedFactions[factionId] = true
+    end
+  elseif wingData.factions ~= nil and type(wingData.factions) == "table" then
+    for _, factionId in ipairs(wingData.factions) do
+      selectedFactions[factionId] = true
+    end
+  end
+
+  local wingLeader = editData.wingLeader or wingData.wingLeader or nil
+
+  local potentialWingLeaders = existingWing and {} or pilotAcademy.fetchPotentialWingLeaders()
+
+  local row = tableWing:addRow("wing_header", { fixed = true })
+  local suffix = string.format(pilotAcademy.selectedWing ~= nil and "Wing %s" or "Add new Wing",
+    existingWing and pilotAcademy.wingIds[pilotAcademy.selectedWing]:upper() or "")
+  row[1]:setColSpan(12):createText("Pilot Academy R&R Wings: " .. suffix, Helper.headerRowCenteredProperties)
+  tableWing:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  local row = tableWing:addRow("wing_primary_goal", { fixed = true })
+  local primaryGoalOptions = {
+    { id = "rank",     icon = "", text = "Increase Rank",     text2 = "", displayremoveoption = false },
+    { id = "relation", icon = "", text = "Improve Relations", text2 = "", displayremoveoption = false },
+  }
+  row[2]:setColSpan(3):createText(texts.primaryGoal, { halign = "left" })
+  row[5]:setColSpan(4):createDropDown(
+    primaryGoalOptions,
+    {
+      startOption = primaryGoal or -1,
+      active = true,
+      textOverride = (#primaryGoalOptions == 0) and texts.noAvailablePrimaryGoals or nil,
+    }
+  )
+  row[5]:setTextProperties({ halign = "left" })
+  row[5].handlers.onDropDownConfirmed = function(_, id)
+    return pilotAcademy.onSelectPrimaryGoal(id)
+  end
+  tableWing:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  local row = tableWing:addRow(nil, { fixed = true })
+  row[2]:setColSpan(3):createText(texts.factions, { halign = "left" })
+  for i = 1, #factions do
+    local faction = factions[i]
+    local row = tableWing:addRow(faction.id, { fixed = true })
+    row[5]:setColSpan(5):createText(faction.name, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
+  end
+  return tableWing
 end
 
 function pilotAcademy.buttonSelectWing(i)
@@ -332,27 +484,64 @@ function pilotAcademy.buttonSelectWing(i)
 
     -- AddUITriggeredEvent(menu.name, pilotAcademy.tableMode)
 
-    menu.selectedRows.propertytabs = 1
-    menu.selectedCols.propertytabs = i
-    menu.refreshInfoFrame(1, i)
+    menu.refreshInfoFrame()
   end
 end
 
-function pilotAcademy.Init(menuMap, menuPlayerInfo)
-  trace("pilotAcademy.Init called")
-  pilotAcademy.sideBarIsCreated = false
-  if menuMap ~= nil and type(menuMap.registerCallback) == "function" and type(menuMap.uix_getConfig) == "function" then
-    pilotAcademy.menuMap = menuMap
-    pilotAcademy.menuMapConfig = menuMap.uix_getConfig()
-    menuMap.registerCallback("createSideBar_on_start", pilotAcademy.createSideBar)
-    menuMap.registerCallback("createInfoFrame_on_menu_infoTableMode", pilotAcademy.createInfoFrame)
-    -- menuMap.registerCallback("utRenaming_setupInfoSubmenuRows_on_end", fcm.setupInfoSubmenuRows)
-    if #pilotAcademy.wings > 0 then
-      pilotAcademy.selectedWing = 1
-    else
-      pilotAcademy.selectedWing = nil
-    end
+function pilotAcademy.onSelectPrimaryGoal(id)
+  trace("onSelectPrimaryGoal called with id: " .. tostring(id))
+  if id == nil then
+    trace("id is nil; cannot process")
+    return
   end
+  pilotAcademy.editData.primaryGoal = id
+  local menu = pilotAcademy.menuMap
+  if menu == nil then
+    trace("Menu is nil; cannot refresh info frame")
+    return
+  end
+  menu.refreshInfoFrame()
+end
+
+function pilotAcademy.fetchPotentialWingLeaders()
+  local potentialWingLeaders = {}
+  return potentialWingLeaders
+end
+
+function pilotAcademy.loadWings()
+  pilotAcademy.wings = {}
+  if pilotAcademy.playerId == nil or pilotAcademy.playerId == 0 then
+    debug("loadWings: unable to resolve player id")
+    return
+  end
+
+  local variableId = string.format("$%s", pilotAcademy.wingsVariableId)
+  local savedData = GetNPCBlackboard(pilotAcademy.playerId, variableId)
+
+  if savedData == nil or type(savedData) ~= "table" then
+    debug("loadWings: no saved wings data found, initializing empty wings list")
+    return
+  end
+
+  pilotAcademy.wings = savedData or {}
+  debug("loadWings: loaded " .. tostring(#pilotAcademy.wings) .. " wings from saved data")
+  -- Load wings data from saved data or initialize as needed
+end
+
+function pilotAcademy.saveWings()
+  if pilotAcademy.playerId == nil or pilotAcademy.playerId == 0 then
+    debug("saveWings: unable to resolve player id")
+    return
+  end
+  local variableId = string.format("$%s", pilotAcademy.wingsVariableId)
+  if pilotAcademy.wings == nil or type(pilotAcademy.wings) ~= "table" or #pilotAcademy.wings == 0 then
+    debug("saveWings: no wings data to save, going to clear saved data")
+    SetNPCBlackboard(pilotAcademy.playerId, variableId, nil)
+    return
+  end
+  SetNPCBlackboard(pilotAcademy.playerId, variableId, pilotAcademy.wings)
+  debug("saveWings: saved " .. tostring(#pilotAcademy.wings) .. " wings to saved data")
+  -- Save wings data to persistent storage
 end
 
 local function Init()
