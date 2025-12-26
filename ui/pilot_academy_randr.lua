@@ -535,15 +535,17 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   row[2]:setColSpan(10):createText(texts.factions, { titleColor = Color["row_title"] })
   for i = 1, #factions do
     local faction = factions[i]
-    local row = tableWing:addRow(faction.id, { fixed = true })
-    row[2]:createCheckBox(selectedFactions[faction.id] == true, { scaling = false })
-    row[2].handlers.onClick = function(_, checked) return pilotAcademy.onSelectFaction(faction.id, checked) end
-    row[3]:createIcon(faction.icon, { height = config.mapRowHeight, width = config.mapRowHeight, color = Color[faction.colorId] or Color["text_normal"] })
-    row[4]:createText(string.format("[%s]", faction.shortName), { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
-    row[5]:createText("-", { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
-    row[6]:setColSpan(4):createText(faction.name, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
-    row[10]:createText(faction.relationName, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
-    row[11]:createText(string.format("(%d)", faction.uiRelation), { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
+    if faction ~= nil then
+      local row = tableWing:addRow(faction.id, { fixed = true })
+      row[2]:createCheckBox(selectedFactions[faction.id] == true, { scaling = false })
+      row[2].handlers.onClick = function(_, checked) return pilotAcademy.onSelectFaction(faction.id, checked) end
+      row[3]:createIcon(faction.icon, { height = config.mapRowHeight, width = config.mapRowHeight, color = Color[faction.colorId] or Color["text_normal"] })
+      row[4]:createText(string.format("[%s]", faction.shortName), { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
+      row[5]:createText("-", { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
+      row[6]:setColSpan(4):createText(faction.name, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
+      row[10]:createText(faction.relationName, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
+      row[11]:createText(string.format("(%d)", faction.uiRelation), { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
+    end
   end
   return tableWing
 end
