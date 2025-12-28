@@ -47,7 +47,7 @@ local texts = {
   addNewWing = "Add new Wing",
   wingmans = "Wingmans:",
   noAvailableWingmans = "No wingmans assigned",
-  dismissWingman = "Dismiss",
+  dismissWing = "Dismiss",
   cancelChanges = "Cancel",
   saveWing = "Update",
   createWing = "Create",
@@ -310,7 +310,6 @@ function pilotAcademy.createInfoFrame()
 
   if maxNumCategoryColumns > 0 then
     local wingsCount = #pilotAcademy.wings
-    wingsCount = #pilotAcademy.wingIds - 1
     for i = 1, maxNumCategoryColumns do
       local columnWidth = menu.sideBarWidth
       if wingsCount > 0 and i == wingsCount + 1 and wingsCount + 1 < maxNumCategoryColumns then
@@ -641,20 +640,20 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
 
   row[4]:createButton({ active = next(editData) ~= nil }):setText(texts.cancelChanges, { halign = "center" })
   row[4].handlers.onClick = function() return pilotAcademy.buttonCancelChanges() end
-
-  row[6]:createButton({ active = next(editData) == nil }):setText(existingWing and texts.saveWing or texts.createWing, { halign = "center" })
+  -- temporary (wingLeader ~= nil or true)
+  row[6]:createButton({ active = next(editData) ~= nil and (wingLeader ~= nil or true) }):setText(existingWing and texts.saveWing or texts.createWing, { halign = "center" })
   row[6].handlers.onClick = function() return pilotAcademy.buttonSaveWing() end
   tableBottom:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   tables[#tables + 1] = { table = tableBottom, height = tableBottom:getFullHeight() }
 
 
   tableFaction:setTopRow(menu.settoprow)
-  if menu.infoTable then
-    local result = GetShiftStartEndRow(menu.infoTable)
-    if result then
-      tableFaction:setShiftStartEnd(tableFaction.unpack(result))
-    end
-  end
+  -- if menu.infoTable then
+  --   local result = GetShiftStartEndRow(menu.infoTable)
+  --   if result then
+  --     tableFaction:setShiftStartEnd(tableFaction.unpack(result))
+  --   end
+  -- end
   tableFaction:setSelectedRow(menu.sethighlightborderrow or menu.setrow)
   menu.setrow = nil
   menu.settoprow = nil
@@ -756,6 +755,28 @@ end
 
 function pilotAcademy.buttonDismissWing()
   trace("buttonDismissWing called")
+  local wings = pilotAcademy.wings
+  if wings == nil then
+    trace("Wings is nil; cannot dismiss wing")
+    return
+  end
+  local wingIndex = pilotAcademy.selectedWing
+  if wingIndex == nil or wingIndex > #wings then
+    trace("No wing selected or invalid index; cannot dismiss wing")
+    return
+  end
+  table.remove(wings, wingIndex)
+  if pilotAcademy.selectedWing > #wings then
+    pilotAcademy.selectedWing = #wings > 0 and #wings or nil
+  end
+
+  pilotAcademy.saveWings()
+  local menu = pilotAcademy.menuMap
+  if menu == nil then
+    trace("Menu is nil; cannot refresh info frame")
+    return
+  end
+  menu.refreshInfoFrame()
 end
 
 function pilotAcademy.buttonCancelChanges()
@@ -771,6 +792,39 @@ end
 
 function pilotAcademy.buttonSaveWing()
   trace("buttonSaveWing called")
+  local wings = pilotAcademy.wings
+  if wings == nil then
+    wings = {}
+    pilotAcademy.wings = wings
+  end
+  local wingIndex = pilotAcademy.selectedWing
+  local existingWing = wingIndex ~= nil and wingIndex <= #wings and wings[wingIndex] ~= nil
+  local wingData = existingWing and wings[wingIndex] or {}
+  local editData = pilotAcademy.editData or {}
+  if editData.primaryGoal ~= nil then
+    wingData.primaryGoal = editData.primaryGoal
+  end
+  if editData.targetRankLevel ~= nil then
+    wingData.targetRankLevel = editData.targetRankLevel
+  end
+  if editData.factions ~= nil then
+    wingData.factions = editData.factions
+  end
+  if editData.wingLeader ~= nil then
+    wingData.wingLeader = editData.wingLeader
+  end
+  if not existingWing then
+    wings[#wings + 1] = wingData
+    pilotAcademy.selectedWing = #wings
+  end
+  pilotAcademy.saveWings()
+  pilotAcademy.editData = {}
+  local menu = pilotAcademy.menuMap
+  if menu == nil then
+    trace("Menu is nil; cannot refresh info frame")
+    return
+  end
+  menu.refreshInfoFrame()
 end
 
 
