@@ -626,22 +626,24 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
     return pilotAcademy.onSelectWingLeader(id)
   end
   tableWing:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-  row = tableWing:addRow("wingmans", { fixed = true })
-  row[2]:setColSpan(10):createText(texts.wingmans, { halign = "left", titleColor = Color["row_title"] })
-  local wingmans = pilotAcademy.fetchWingmans(wingLeader)
   local tableWingMaxHeight = 0
-  for i = 1, #wingmans do
-    local wingman = wingmans[i]
-    if wingman ~= nil then
-      local row = tableWing:addRow(true, { fixed = false })
-      if i == 10 then
-        tableWingMaxHeight = tableWing:getFullHeight()
+  if existingWing then
+    row = tableWing:addRow("wingmans", { fixed = true })
+    row[2]:setColSpan(10):createText(texts.wingmans, { halign = "left", titleColor = Color["row_title"] })
+    local wingmans = pilotAcademy.fetchWingmans(wingLeader)
+    for i = 1, #wingmans do
+      local wingman = wingmans[i]
+      if wingman ~= nil then
+        local row = tableWing:addRow(true, { fixed = false })
+        if i == 10 then
+          tableWingMaxHeight = tableWing:getFullHeight()
+        end
       end
     end
-  end
-  if #wingmans == 0 then
-    row = tableWing:addRow("noWingmans", { fixed = true })
-    row[2]:setColSpan(10):createText(texts.noAvailableWingmans, { halign = "left", color = Color["text_warning"] })
+    if #wingmans == 0 then
+      row = tableWing:addRow("noWingmans", { fixed = true })
+      row[2]:setColSpan(10):createText(texts.noAvailableWingmans, { halign = "left", color = Color["text_warning"] })
+    end
   end
   if tableWingMaxHeight == 0 then
     tableWingMaxHeight = tableWing:getFullHeight()
@@ -674,10 +676,11 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
 
   row[4]:createButton({ active = next(editData) ~= nil }):setText(texts.cancelChanges, { halign = "center" })
   row[4].handlers.onClick = function() return pilotAcademy.buttonCancelChanges() end
-  -- temporary (wingLeader ~= nil or true)
-  row[6]:createButton({ active = next(editData) ~= nil and (wingLeader ~= nil or true) }):setText(existingWing and texts.saveWing or texts.createWing,
+
+  row[6]:createButton({ active = next(editData) ~= nil and wingLeader ~= nil }):setText(existingWing and texts.saveWing or texts.createWing,
     { halign = "center" })
   row[6].handlers.onClick = function() return pilotAcademy.buttonSaveWing() end
+
   tableBottom:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   tables[#tables + 1] = { table = tableBottom, height = tableBottom:getFullHeight() }
   return tables
@@ -750,6 +753,9 @@ function pilotAcademy.onSelectFaction(factionId, isSelected)
 end
 
 function pilotAcademy.fetchPotentialWingLeaders(existingWing, existingWingLeader)
+  if existingWing and existingWingLeader ~= nil then
+    return { pilotAcademy.wingLeaderToOption(existingWingLeader) }
+  end
   local candidateShips = {}
   local allShipsCount = C.GetNumAllFactionShips("player")
   local allShips = ffi.new("UniverseID[?]", allShipsCount)
@@ -804,6 +810,21 @@ function pilotAcademy.formatWingLeaderOption(shipId, shipName, shipIdCode, pilot
   }
 end
 
+function pilotAcademy.wingLeaderToOption(wingLeaderId)
+  if type(wingLeaderId) == "string" then
+    wingLeaderId = ConvertStringTo64Bit(wingLeaderId)
+  end
+  local shipName, pilot = GetComponentData(wingLeaderId, "name", "assignedaipilot")
+  local pilotName, pilotSkill = GetComponentData(pilot, "name", "combinedskill")
+  local shipIdCode = ffi.string(C.GetObjectIDCode(wingLeaderId))
+  return pilotAcademy.formatWingLeaderOption(
+    wingLeaderId,
+    shipName,
+    shipIdCode,
+    pilotName,
+    pilotSkill
+  )
+end
 function pilotAcademy.formatName(name, maxLength)
   if name == nil then
     return ""
@@ -828,6 +849,10 @@ function pilotAcademy.onSelectWingLeader(id)
     trace("id is nil; cannot process")
     return
   end
+  if type(id) == "string" then
+    id = ConvertStringTo64Bit(id)
+  end
+
   pilotAcademy.editData.wingLeader = id
 
   local menu = pilotAcademy.menuMap
