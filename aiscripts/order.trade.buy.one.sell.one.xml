@@ -6,12 +6,14 @@
         <input_param name="min" value="1" />
         <input_param name="max" value="5" />
       </param>
+      <param name="factionNames" type="list" default="[]" text="List of factions id's to consider for trading" advanced="true"
+        comment="List of factions id's to consider for trading">
+        <input_param name="type" value="string" />
+      </param>
       <param name="debugchance" type="bool" default="0" advanced="true" text="{1041, 10086}" comment="Print debug output">
         <input_param name="truevalue" value="100" />
       </param>
       <param name="runMode" type="internal" text="Run Mode" comment="Run Mode" default="false" />
-      <param name="factionNames" type="internal" default="[]" text="List of factions id's to consider for trading"
-        comment="List of factions id's to consider for trading" />
     </params>
     <requires>
       <match shiptype="shiptype.lasertower" negate="true" />
