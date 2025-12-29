@@ -635,6 +635,9 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
       local wingman = wingmans[i]
       if wingman ~= nil then
         local row = tableWing:addRow(true, { fixed = false })
+        local icon = row[2]:setColSpan(10):createIcon("order_assist", { halign = "left", height = config.mapRowHeight, width = config.mapRowHeight })
+        icon.setText(wingman.text, { halign = "left", color = Color["text_normal"] })
+        icon.setText2(wingman.text2, { halign = "right", color = Color["text_skills"] })
         if i == 10 then
           tableWingMaxHeight = tableWing:getFullHeight()
         end
@@ -781,7 +784,7 @@ function pilotAcademy.fetchPotentialWingLeaders(existingWing, existingWingLeader
   table.sort(candidateShips, pilotAcademy.sortPotentialWingLeaders)
   local potentialWingLeaders = {}
   for i = 1, #candidateShips do
-    potentialWingLeaders[#potentialWingLeaders + 1] = pilotAcademy.formatWingLeaderOption(
+    potentialWingLeaders[#potentialWingLeaders + 1] = pilotAcademy.formatShipInfoOption(
       candidateShips[i].shipId,
       candidateShips[i].shipName,
       candidateShips[i].shipIdCode,
@@ -799,7 +802,7 @@ function pilotAcademy.sortPotentialWingLeaders(a, b)
   return a.pilotSkill < b.pilotSkill
 end
 
-function pilotAcademy.formatWingLeaderOption(shipId, shipName, shipIdCode, pilotName, pilotSkill)
+function pilotAcademy.formatShipInfoOption(shipId, shipName, shipIdCode, pilotName, pilotSkill)
   return {
     id = tostring(shipId),
     icon = "",
@@ -817,7 +820,7 @@ function pilotAcademy.wingLeaderToOption(wingLeaderId)
   local shipName, pilot = GetComponentData(wingLeaderId, "name", "assignedaipilot")
   local pilotName, pilotSkill = GetComponentData(pilot, "name", "combinedskill")
   local shipIdCode = ffi.string(C.GetObjectIDCode(wingLeaderId))
-  return pilotAcademy.formatWingLeaderOption(
+  return pilotAcademy.formatShipInfoOption(
     wingLeaderId,
     shipName,
     shipIdCode,
@@ -838,8 +841,35 @@ function pilotAcademy.formatName(name, maxLength)
   return string.sub(name, 1, maxLength - 1) .. "..."
 end
 
-function pilotAcademy.fetchWingmans(wingLeader)
+function pilotAcademy.fetchWingmans(wingLeaderId)
   local wingmans = {}
+  if type(wingLeaderId) == "string" then
+    wingLeaderId = ConvertStringTo64Bit(wingLeaderId)
+  end
+  local subordinates = GetSubordinates(wingLeaderId)
+  local mimicGroupId = nil
+  for i = 1, #subordinates do
+    local wingmanId = subordinates[i]
+    local groupId = GetComponentData(wingmanId, "subordinategroup")
+    if mimicGroupId == nil then
+      local group = ffi.string(C.GetSubordinateGroupAssignment(wingLeaderId, groupId))
+      if group == "assist" then
+        mimicGroupId = groupId
+      end
+    end
+    if mimicGroupId ~= nil and groupId == mimicGroupId then
+      local shipName, pilot = GetComponentData(wingmanId, "name", "assignedaipilot")
+      local pilotName, pilotSkill = GetComponentData(pilot, "name", "combinedskill")
+      local shipIdCode = ffi.string(C.GetObjectIDCode(wingmanId))
+      wingmans[#wingmans + 1] = pilotAcademy.formatShipInfoOption(
+        wingmanId,
+        shipName,
+        shipIdCode,
+        pilotName,
+        pilotSkill
+      )
+    end
+  end
   return wingmans
 end
 
