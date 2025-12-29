@@ -12,6 +12,9 @@ ffi.cdef [[
 
   UniverseID GetPlayerID(void);
   RelationRangeInfo GetUIRelationName(const char* fromfactionid, const char* tofactionid);
+
+	uint32_t GetNumAllFactionShips(const char* factionid);
+	uint32_t GetAllFactionShips(UniverseID* result, uint32_t resultlen, const char* factionid);
 ]]
 
 local traceEnabled = true
@@ -378,7 +381,6 @@ function pilotAcademy.createInfoFrame()
     tables[i].table.properties.y = topY
     topY = topY + tables[i].height
   end
-
 end
 
 function pilotAcademy.sortFactions(a, b)
@@ -516,8 +518,6 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
 
   local wingLeader = editData.wingLeader or wingData.wingLeader or nil
 
-  local potentialWingLeaders = existingWing and {} or pilotAcademy.fetchPotentialWingLeaders()
-
   local row = tableTop:addRow("wing_header", { fixed = true })
   local suffix = string.format(pilotAcademy.selectedWing ~= nil and texts.wing or texts.addNewWing,
     existingWing and pilotAcademy.wingIds[pilotAcademy.selectedWing]:upper() or "")
@@ -607,10 +607,12 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   tableWing:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
   pilotAcademy.setTableWingColumnWidths(tableWing, menu, config, maxShortNameWidth, maxRelationNameWidth)
   tableWing:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-  local row = tableWing:addRow("wing_leader", { fixed = true })
+  local row = tableWing:addRow(nil, { fixed = true })
   local wingLeaderOptions = pilotAcademy.fetchPotentialWingLeaders(existingWing, wingLeader)
-  row[2]:setColSpan(5):createText(texts.wingLeader, { halign = "left", titleColor = Color["row_title"] })
-  row[7]:setColSpan(5):createDropDown(
+  row[2]:setColSpan(10):createText(texts.wingLeader, { halign = "left", titleColor = Color["row_title"] })
+  row = tableWing:addRow("wing_leader", { fixed = true })
+  row[1]:createText("", { halign = "left" })
+  row[2]:setColSpan(10):createDropDown(
     wingLeaderOptions,
     {
       startOption = wingLeader or -1,
@@ -618,9 +620,9 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
       textOverride = (#wingLeaderOptions == 0) and texts.noAvailableWingLeaders or nil,
     }
   )
-  row[7]:setTextProperties({ halign = "left" })
-  row[7]:setText2Properties({ halign = "right", color = Color["text_positive"] })
-  row[7].handlers.onDropDownConfirmed = function(_, id)
+  row[2]:setTextProperties({ halign = "left" })
+  row[2]:setText2Properties({ halign = "right", color = Color["text_skills"] })
+  row[2].handlers.onDropDownConfirmed = function(_, id)
     return pilotAcademy.onSelectWingLeader(id)
   end
   tableWing:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
@@ -673,7 +675,8 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   row[4]:createButton({ active = next(editData) ~= nil }):setText(texts.cancelChanges, { halign = "center" })
   row[4].handlers.onClick = function() return pilotAcademy.buttonCancelChanges() end
   -- temporary (wingLeader ~= nil or true)
-  row[6]:createButton({ active = next(editData) ~= nil and (wingLeader ~= nil or true) }):setText(existingWing and texts.saveWing or texts.createWing, { halign = "center" })
+  row[6]:createButton({ active = next(editData) ~= nil and (wingLeader ~= nil or true) }):setText(existingWing and texts.saveWing or texts.createWing,
+    { halign = "center" })
   row[6].handlers.onClick = function() return pilotAcademy.buttonSaveWing() end
   tableBottom:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   tables[#tables + 1] = { table = tableBottom, height = tableBottom:getFullHeight() }
@@ -747,8 +750,60 @@ function pilotAcademy.onSelectFaction(factionId, isSelected)
 end
 
 function pilotAcademy.fetchPotentialWingLeaders(existingWing, existingWingLeader)
+  local candidateShips = {}
+  local allShipsCount = C.GetNumAllFactionShips("player")
+  local allShips = ffi.new("UniverseID[?]", allShipsCount)
+  allShipsCount = C.GetAllFactionShips(allShips, allShipsCount, "player")
+  for i = 0, allShipsCount - 1 do
+    local shipId = ConvertStringTo64Bit(tostring(allShips[i]))
+    local shipMacro, isDeployable, shipName, pilot, classId = GetComponentData(shipId, "macro", "isdeployable", "name", "assignedaipilot", "classid")
+    local isLasertower, shipWare = GetMacroData(shipMacro, "islasertower", "ware")
+    local isUnit = C.IsUnit(shipId)
+    if shipWare and (not isUnit) and (not isLasertower) and (not isDeployable) and Helper.isComponentClass(classId, "ship_s") and pilot and IsValidComponent(pilot) then
+      local subordinates = GetSubordinates(shipId)
+      if #subordinates == 0 then
+        local candidate = {}
+        candidate.shipId = shipId
+        candidate.shipName = shipName
+        candidate.shipIdCode = ffi.string(C.GetObjectIDCode(shipId))
+        candidate.pilotId = pilot
+        candidate.pilotName, candidate.pilotSkill = GetComponentData(pilot, "name", "combinedskill")
+        candidateShips[#candidateShips + 1] = candidate
+      end
+    end
+  end
+  table.sort(candidateShips, pilotAcademy.sortPotentialWingLeaders)
   local potentialWingLeaders = {}
+  for i = 1, #candidateShips do
+    potentialWingLeaders[#potentialWingLeaders + 1] = {
+      id = tostring(candidateShips[i].shipId),
+      icon = "",
+      text = string.format("%s (%s): %s", pilotAcademy.formatName(candidateShips[i].shipName, 25), candidateShips[i].shipIdCode, pilotAcademy.formatName(candidateShips[i].pilotName, 20)),
+      text2 = string.format("%s", Helper.displaySkill(candidateShips[i].pilotSkill * 15 / 100)),
+      displayremoveoption = false,
+    }
+  end
   return potentialWingLeaders
+end
+
+function pilotAcademy.sortPotentialWingLeaders(a, b)
+  if a.pilotSkill == b.pilotSkill then
+    return a.pilotName < b.pilotName
+  end
+  return a.pilotSkill < b.pilotSkill
+end
+
+function pilotAcademy.formatName(name, maxLength)
+  if name == nil then
+    return ""
+  end
+  if maxLength == nil or maxLength <= 0 then
+    return name
+  end
+  if #name <= maxLength then
+    return name
+  end
+  return string.sub(name, 1, maxLength - 1) .. "..."
 end
 
 function pilotAcademy.fetchWingmans(wingLeader)
@@ -855,7 +910,6 @@ function pilotAcademy.buttonSaveWing()
   end
   menu.refreshInfoFrame()
 end
-
 
 function pilotAcademy.loadWings()
   pilotAcademy.wings = {}
