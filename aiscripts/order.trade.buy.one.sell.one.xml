@@ -6,10 +6,10 @@
         <input_param name="min" value="1" />
         <input_param name="max" value="5" />
       </param>
-      <param name="runMode" type="bool" text="Run Mode" comment="Run Mode" advanced="true" default="false" />
       <param name="debugchance" type="bool" default="0" advanced="true" text="{1041, 10086}" comment="Print debug output">
         <input_param name="truevalue" value="100" />
       </param>
+      <param name="runMode" type="internal" text="Run Mode" comment="Run Mode" default="false" />
       <param name="factionNames" type="internal" default="[]" text="List of factions id's to consider for trading"
         comment="List of factions id's to consider for trading" />
     </params>
@@ -149,6 +149,12 @@
   </init>
   <attention min="unknown">
     <actions>
+
+      <do_if value="$runMode == false">
+        <debug_text text="'Pilot Academy [%s]: order executed outside an Academy run, terminating.' . [this.assignedcontrolled.debugname]" chance="$debugchance" />
+        <resume label="finish" />
+      </do_if>
+
       <label name="prepareTrade" />
       <debug_text
         text="'Pilot Academy [%s]: stored info to this.$pilotAcademyRandR.$tradeInfo: %s, (%s, %s)'.[this.assignedcontrolled.debugname, @this.$pilotAcademyRandR.$tradeInfo, this.$pilotAcademyRandR.$tradeInfo?, this.$pilotAcademyRandR.$tradeInfo.$timeStamp?]"
@@ -620,6 +626,7 @@
       <wait exact="5min" />
       <resume label="prepareTrade" />
 
+      <label name="finish" />
     </actions>
   </attention>
   <on_abort>
