@@ -33,6 +33,7 @@ local pilotAcademy = {
   sideBarIsCreated = false,
   selectedWing = nil,
   wings = nil,
+  wingsCountMax = 9,
   wingIds = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i' },
   wingsVariableId = "pilotAcademyRAndRWings",
   editData = {},
@@ -54,6 +55,7 @@ local texts = {
   cancelChanges = "Cancel",
   saveWing = "Update",
   createWing = "Create",
+  wingNames = { "Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India" },
 }
 
 local function debug(message)
@@ -326,7 +328,7 @@ function pilotAcademy.createInfoFrame()
     local row = tabsTable:addRow("pilot_academy_r_and_r_tabs", { fixed = true })
     local rowCount = 1
     local placesCount = 1
-    if wingsCount == #pilotAcademy.wingIds then
+    if wingsCount == pilotAcademy.wingsCountMax then
       placesCount = wingsCount
     elseif wingsCount == 0 then
       placesCount = 1
@@ -342,9 +344,8 @@ function pilotAcademy.createInfoFrame()
         local name = "Add Wing"
         local icon = "pa_icon_add"
         if i <= wingsCount then
-          local wingId = tostring(pilotAcademy.wingIds[i] or "")
-          name = string.format("Wing %s", wingId:upper())
-          icon = "pa_icon_" .. wingId
+          name = string.format("Wing %s", texts.wingNames[i] or "")
+          icon = "pa_icon_" .. pilotAcademy.wingIds[i] or ""
         end
         local bgColor = Color["row_title_background"]
         if i == pilotAcademy.selectedWing or i == placesCount and pilotAcademy.selectedWing == nil then
@@ -429,7 +430,7 @@ function pilotAcademy.buttonSelectWing(wing)
   end
   if wing ~= pilotAcademy.selectedWing then
     pilotAcademy.storeTableFactionsTopRow()
-    pilotAcademy.selectedWing = wing <= #pilotAcademy.wingIds and wing or nil
+    pilotAcademy.selectedWing = wing <= pilotAcademy.wingsCountMax and wing or nil
     pilotAcademy.editData = {}
 
     menu.refreshInfoFrame()
@@ -520,7 +521,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
 
   local row = tableTop:addRow("wing_header", { fixed = true })
   local suffix = string.format(pilotAcademy.selectedWing ~= nil and texts.wing or texts.addNewWing,
-    existingWing and pilotAcademy.wingIds[pilotAcademy.selectedWing]:upper() or "")
+    existingWing and texts.wingNames[pilotAcademy.selectedWing] or "")
   row[1]:setColSpan(12):createText(string.format("%s: %s", texts.pilotAcademy, suffix), Helper.headerRowCenteredProperties)
   tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local row = tableTop:addRow("wing_primary_goal", { fixed = true })
