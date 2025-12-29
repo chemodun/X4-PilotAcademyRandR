@@ -10,11 +10,27 @@ ffi.cdef [[
 		const char* colorid;
 	} RelationRangeInfo;
 
+	typedef struct {
+		size_t queueidx;
+		const char* state;
+		const char* statename;
+		const char* orderdef;
+		size_t actualparams;
+		bool enabled;
+		bool isinfinite;
+		bool issyncpointreached;
+		bool istemporder;
+	} Order;
+
   UniverseID GetPlayerID(void);
   RelationRangeInfo GetUIRelationName(const char* fromfactionid, const char* tofactionid);
 
 	uint32_t GetNumAllFactionShips(const char* factionid);
 	uint32_t GetAllFactionShips(UniverseID* result, uint32_t resultlen, const char* factionid);
+
+	uint32_t CreateOrder(UniverseID controllableid, const char* orderid, bool default);
+	bool EnablePlannedDefaultOrder(UniverseID controllableid, bool checkonly);
+	bool EnableOrder(UniverseID controllableid, size_t idx);
 ]]
 
 local traceEnabled = true
@@ -829,6 +845,7 @@ function pilotAcademy.wingLeaderToOption(wingLeaderId)
     pilotSkill
   )
 end
+
 function pilotAcademy.formatName(name, maxLength)
   if name == nil then
     return ""
@@ -911,11 +928,13 @@ function pilotAcademy.buttonDismissWing()
     pilotAcademy.tableFactionsTopRows[tostring(i - 1)] = pilotAcademy.tableFactionsTopRows[tostring(i)]
     pilotAcademy.tableFactionsTopRows[tostring(i)] = nil
   end
+  if wings[wingIndex] and wings[wingIndex].wingLeader ~= nil then
+    pilotAcademy.clearOrders(wings[wingIndex].wingLeader)
+  end
   table.remove(wings, wingIndex)
   if pilotAcademy.selectedWing > #wings then
     pilotAcademy.selectedWing = #wings > 0 and #wings or nil
   end
-
   pilotAcademy.saveWings()
   local menu = pilotAcademy.menuMap
   if menu == nil then
@@ -967,8 +986,11 @@ function pilotAcademy.buttonSaveWing()
     pilotAcademy.tableFactionsTopRows[tostring(pilotAcademy.selectedWing)] = nil
     pilotAcademy.selectedWing = #wings
     pilotAcademy.tableFactionsTopRows[tostring(pilotAcademy.selectedWing)] = currentTopRow
+  else
+    pilotAcademy.clearOrders(wingData.wingLeader)
   end
   pilotAcademy.saveWings()
+  pilotAcademy.setOrderForWingLeader(wingData.wingLeader, pilotAcademy.selectedWing)
   pilotAcademy.editData = {}
   local menu = pilotAcademy.menuMap
   if menu == nil then
@@ -976,6 +998,39 @@ function pilotAcademy.buttonSaveWing()
     return
   end
   menu.refreshInfoFrame()
+end
+
+function pilotAcademy.clearOrders(shipId)
+  C.CreateOrder(shipId, "Wait", true)
+  C.EnablePlannedDefaultOrder(shipId, false)
+  C.SetOrderLoop(shipId, 0, false)
+end
+
+function pilotAcademy.setOrderForWingLeader(wingLeaderId, wingIndex)
+  if type(wingLeaderId) == "string" then
+    wingLeaderId = ConvertStringTo64Bit(wingLeaderId)
+  end
+  local wings = pilotAcademy.wings or {}
+  local existingWing = wingIndex ~= nil and wingIndex <= #wings and wings[wingIndex] ~= nil
+  local wingData = existingWing and wings[wingIndex] or {}
+  if wingData.wingLeader == nil or wingData.wingLeader ~= wingLeaderId then
+    trace("wingLeaderId does not match wing data; cannot set orders")
+    return
+  end
+  C.CreateOrder(wingLeaderId, "BuyOneSellOneForSomething", true)
+  local buf = ffi.new("Order")
+  if C.GetPlannedDefaultOrder(buf, wingLeaderId) then
+    local newOrderIdx = tonumber(buf.queueidx)
+    local orderDef = ffi.string(buf.orderdef)
+    SetOrderParam(wingLeaderId, "planneddefault", 1, nil, wingData.targetRankLevel or 2)
+    if wingData.factions ~= nil and type(wingData.factions) == "table" and #wingData.factions > 0 then
+      for i = 1, #wingData.factions do
+        SetOrderParam(wingLeaderId, "planneddefault", 2, i, wingData.factions[i])
+      end
+    end
+    SetOrderParam(wingLeaderId, "planneddefault", 4, nil, true)
+    C.EnablePlannedDefaultOrder(wingLeaderId, false)
+  end
 end
 
 function pilotAcademy.loadWings()
