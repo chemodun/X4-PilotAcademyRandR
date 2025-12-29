@@ -775,13 +775,13 @@ function pilotAcademy.fetchPotentialWingLeaders(existingWing, existingWingLeader
   table.sort(candidateShips, pilotAcademy.sortPotentialWingLeaders)
   local potentialWingLeaders = {}
   for i = 1, #candidateShips do
-    potentialWingLeaders[#potentialWingLeaders + 1] = {
-      id = tostring(candidateShips[i].shipId),
-      icon = "",
-      text = string.format("%s (%s): %s", pilotAcademy.formatName(candidateShips[i].shipName, 25), candidateShips[i].shipIdCode, pilotAcademy.formatName(candidateShips[i].pilotName, 20)),
-      text2 = string.format("%s", Helper.displaySkill(candidateShips[i].pilotSkill * 15 / 100)),
-      displayremoveoption = false,
-    }
+    potentialWingLeaders[#potentialWingLeaders + 1] = pilotAcademy.formatWingLeaderOption(
+      candidateShips[i].shipId,
+      candidateShips[i].shipName,
+      candidateShips[i].shipIdCode,
+      candidateShips[i].pilotName,
+      candidateShips[i].pilotSkill
+    )
   end
   return potentialWingLeaders
 end
@@ -791,6 +791,17 @@ function pilotAcademy.sortPotentialWingLeaders(a, b)
     return a.pilotName < b.pilotName
   end
   return a.pilotSkill < b.pilotSkill
+end
+
+function pilotAcademy.formatWingLeaderOption(shipId, shipName, shipIdCode, pilotName, pilotSkill)
+  return {
+    id = tostring(shipId),
+    icon = "",
+    text = string.format("%s (%s): %s", pilotAcademy.formatName(shipName, 25), shipIdCode,
+      pilotAcademy.formatName(pilotName, 20)),
+    text2 = string.format("%s", Helper.displaySkill(pilotSkill * 15 / 100)),
+    displayremoveoption = false,
+  }
 end
 
 function pilotAcademy.formatName(name, maxLength)
