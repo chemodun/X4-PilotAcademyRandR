@@ -1112,8 +1112,11 @@ function pilotAcademy.loadWings()
   end
 
   pilotAcademy.wings = savedData or {}
-  debug("loadWings: loaded " .. tostring(#pilotAcademy.wings) .. " wings from saved data")
-  -- Load wings data from saved data or initialize as needed
+  local wingsIds = ""
+  for wingId, _ in pairs(pilotAcademy.wings) do
+    wingsIds = wingsIds .. (wingsIds ~= "" and ", " or "") .. "'" .. tostring(wingId) .. "'"
+  end
+  debug("loadWings: loaded " .. (wingsIds ~= "" and ("wings: " .. wingsIds) or "no wings") .. " from saved data")
 end
 
 function pilotAcademy.saveWings()
