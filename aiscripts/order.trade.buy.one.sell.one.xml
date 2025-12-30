@@ -224,7 +224,7 @@
 
       <label name="prepareTrade" />
       <debug_text
-        text="'Pilot Academy [%s]: stored info to this.$pilotAcademyRandR.$tradeInfo: %s, (%s, %s)'.[this.assignedcontrolled.debugname, @this.$pilotAcademyRandR.$tradeInfo, this.$pilotAcademyRandR.$tradeInfo?, this.$pilotAcademyRandR.$tradeInfo.$timeStamp?]"
+        text="'Pilot Academy [%s]: check stored info in this.$pilotAcademyRandR.$tradeInfo: %s, (%s, %s)'.[this.assignedcontrolled.debugname, @this.$pilotAcademyRandR.$tradeInfo, this.$pilotAcademyRandR.$tradeInfo?, this.$pilotAcademyRandR.$tradeInfo.$timeStamp?]"
         chance="$debugchance" />
       <do_if value="this.$pilotAcademyRandR.$tradeInfo? and this.$pilotAcademyRandR.$tradeInfo.$timeStamp?">
         <set_value name="$lastTradeInfo" exact="this.$pilotAcademyRandR.$tradeInfo" />
