@@ -2,18 +2,11 @@
 <aiscript name="order.trade.buy.one.sell.one" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="1">
   <order id="BuyOneSellOneForSomething" name="BuySell One" description="BuySell One" category="trade" infinite="true" allowinloop="false">
     <params>
-      <param name="targetRankLevel" type="number" text="Rank target level" comment="Target level for pilot rank" advanced="true" default="3">
-        <input_param name="min" value="1" />
-        <input_param name="max" value="5" />
-      </param>
-      <param name="factionNames" type="list" default="[]" text="List of factions id's to consider for trading" advanced="true"
-        comment="List of factions id's to consider for trading">
-        <input_param name="type" value="string" />
-      </param>
+      <param name="wingId" type="internal" text="Wing ID" comment="Wing ID" default="''" />
+      <param name="runMode" type="internal" text="Run Mode" comment="Run Mode" default="false" />
       <param name="debugchance" type="bool" default="0" advanced="true" text="{1041, 10086}" comment="Print debug output">
         <input_param name="truevalue" value="100" />
       </param>
-      <param name="runMode" type="internal" text="Run Mode" comment="Run Mode" default="false" />
     </params>
     <requires>
       <match shiptype="shiptype.lasertower" negate="true" />
@@ -134,6 +127,8 @@
     </handler>
   </interrupts>
   <init>
+    <set_value name="$targetRankLevel" exact="3" />
+    <set_value name="$factionNames" exact="[]" />
     <set_value name="$enoughFactionsToCheck" exact="30" />
     <set_value name="$blacklistGroup" exact="blacklistgroup.civilian" />
     <set_value name="$tradeOfferTypes" exact="['buy', 'sell']" />
