@@ -30,17 +30,39 @@ ffi.cdef [[
 
 	uint32_t CreateOrder(UniverseID controllableid, const char* orderid, bool default);
 	bool EnablePlannedDefaultOrder(UniverseID controllableid, bool checkonly);
-	bool EnableOrder(UniverseID controllableid, size_t idx);
+
+  void SetFleetName(UniverseID controllableid, const char* fleetname);
 ]]
 
 local traceEnabled = true
+
+local texts = {
+  pilotAcademy = "Pilot Academy R&R",
+  noAvailablePrimaryGoals = "No available primary goals",
+  primaryGoal = "Primary Goal:",
+  factions = "Factions:",
+  targetRankLevel = "Target Rank:",
+  wingLeader = "Wing Leader:",
+  noAvailableWingLeaders = "No available wing leaders",
+  wing = "Wing %s",
+  wingFleetName = "Wing %s of Pilot Academy R&R",
+  addNewWing = "Add new Wing",
+  wingmans = "Wingmans:",
+  noAvailableWingmans = "No wingmans assigned",
+  dismissWing = "Dismiss",
+  cancelChanges = "Cancel",
+  saveWing = "Update",
+  createWing = "Create",
+  wingNames = { a = "Alpha", b = "Bravo", c = "Charlie", d = "Delta", e = "Echo", f = "Foxtrot", g = "Golf", h = "Hotel", i = "India" },
+}
+
 
 local pilotAcademy = {
   playerId = nil,
   menuMap = nil,
   menuMapConfig = {},
   academySideBarInfo = {
-    name = "Pilot Academy R&R",
+    name = texts.pilotAcademy,
     icon = "pa_icon_academy",
     mode = "pilot_academy_r_and_r",
     helpOverlayID = "pilot_academy_r_and_r",
@@ -54,26 +76,6 @@ local pilotAcademy = {
   wingsVariableId = "pilotAcademyRAndRWings",
   editData = {},
 }
-
-local texts = {
-  pilotAcademy = "Pilot Academy R&R",
-  noAvailablePrimaryGoals = "No available primary goals",
-  primaryGoal = "Primary Goal:",
-  factions = "Factions:",
-  targetRankLevel = "Target Rank:",
-  wingLeader = "Wing Leader:",
-  noAvailableWingLeaders = "No available wing leaders",
-  wing = "Wing %s",
-  addNewWing = "Add new Wing",
-  wingmans = "Wingmans:",
-  noAvailableWingmans = "No wingmans assigned",
-  dismissWing = "Dismiss",
-  cancelChanges = "Cancel",
-  saveWing = "Update",
-  createWing = "Create",
-  wingNames = { a = "Alpha", b = "Bravo", c = "Charlie", d = "Delta", e = "Echo", f = "Foxtrot", g = "Golf", h = "Hotel", i = "India" },
-}
-
 local function debug(message)
   local text = "Pilot Academy: " .. message
   if type(DebugError) == "function" then
@@ -1063,6 +1065,8 @@ function pilotAcademy.clearOrders(shipId)
   C.CreateOrder(shipId, "Wait", true)
   C.EnablePlannedDefaultOrder(shipId, false)
   C.SetOrderLoop(shipId, 0, false)
+  local name = GetComponentData(shipId, "name")
+  C.SetFleetName(shipId, name)
 end
 
 function pilotAcademy.setOrderForWingLeader(wingLeaderId, wingId)
@@ -1087,6 +1091,7 @@ function pilotAcademy.setOrderForWingLeader(wingLeaderId, wingId)
     SetOrderParam(wingLeaderId, "planneddefault", 4, nil, true)
     C.EnablePlannedDefaultOrder(wingLeaderId, false)
   end
+  C.SetFleetName(wingLeaderId, string.format(pilotAcademy.wingFleetName, texts.wingNames[wingId]))
 end
 
 function pilotAcademy.loadWings()
