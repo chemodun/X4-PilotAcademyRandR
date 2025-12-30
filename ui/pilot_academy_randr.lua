@@ -813,7 +813,8 @@ function pilotAcademy.fetchPotentialWingLeaders(existingWing, existingWingLeader
     local isUnit = C.IsUnit(shipId)
     if shipWare and (not isUnit) and (not isLasertower) and (not isDeployable) and Helper.isComponentClass(classId, "ship_s") and pilot and IsValidComponent(pilot) then
       local subordinates = GetSubordinates(shipId)
-      if #subordinates == 0 then
+      local commander = GetCommander(shipId)
+      if #subordinates == 0 and commander == nil then
         local candidate = {}
         candidate.shipId = shipId
         candidate.shipName = shipName
