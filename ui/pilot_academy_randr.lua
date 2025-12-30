@@ -676,9 +676,9 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
       local wingman = wingmans[i]
       if wingman ~= nil then
         local row = tableWing:addRow(true, { fixed = false })
-        local icon = row[2]:setColSpan(10):createIcon("order_assist", { halign = "left", height = config.mapRowHeight, width = config.mapRowHeight })
-        icon.setText(wingman.text, { halign = "left", color = Color["text_normal"] })
-        icon.setText2(wingman.text2, { halign = "right", color = Color["text_skills"] })
+        local icon = row[2]:setColSpan(10):createIcon("order_assist", { height = config.mapRowHeight, width = config.mapRowHeight })
+        icon:setText(wingman.text, { x = config.mapRowHeight, halign = "left", color = Color["text_normal"] })
+        icon:setText2(wingman.text2, { halign = "right", color = Color["text_skills"] })
         if i == 10 then
           tableWingMaxHeight = tableWing:getFullHeight()
         end
@@ -893,7 +893,7 @@ function pilotAcademy.fetchWingmans(wingLeaderId)
   local subordinates = GetSubordinates(wingLeaderId)
   local mimicGroupId = nil
   for i = 1, #subordinates do
-    local wingmanId = subordinates[i]
+    local wingmanId = ConvertStringTo64Bit(tostring(subordinates[i]))
     local groupId = GetComponentData(wingmanId, "subordinategroup")
     if mimicGroupId == nil then
       local group = ffi.string(C.GetSubordinateGroupAssignment(wingLeaderId, groupId))
