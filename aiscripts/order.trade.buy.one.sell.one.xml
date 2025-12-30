@@ -2,8 +2,9 @@
 <aiscript name="order.trade.buy.one.sell.one" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="1">
   <order id="BuyOneSellOneForSomething" name="BuySell One" description="BuySell One" category="trade" infinite="true" allowinloop="false">
     <params>
-      <param name="wingId" type="internal" text="Wing ID" comment="Wing ID" default="''" />
       <param name="runMode" type="internal" text="Run Mode" comment="Run Mode" default="false" />
+      <param name="wingId" type="internal" text="Wing ID" comment="Wing ID" default="''" />
+      <param name="wingData" type="internal" text="Wing Data" comment="Wing Data" default="null" />
       <param name="debugchance" type="bool" default="0" advanced="true" text="{1041, 10086}" comment="Print debug output">
         <input_param name="truevalue" value="100" />
       </param>
@@ -127,8 +128,18 @@
     </handler>
   </interrupts>
   <init>
-    <set_value name="$targetRankLevel" exact="3" />
-    <set_value name="$factionNames" exact="[]" />
+    <debug_text
+      text="'Pilot Academy [%s]: initialized order with wingId: %s, wingData: %s' .
+        [this.assignedcontrolled.debugname, @$wingId, @$wingData]"
+      chance="$debugchance" />
+    <do_if value="@$wingData != null">
+      <set_value name="$targetRankLevel" exact="if @$wingData.$targetRankLevel != null then @$wingData.$targetRankLevel else 3" />
+      <set_value name="$factionNames" exact="if @$wingData.$factions != null then @$wingData.$factions else []" />
+      <set_value name="$primaryGoal" exact="if @$wingData.$primaryGoal != null then @$wingData.$primaryGoal else 'rank'" />
+    </do_if>
+    <do_else>
+      <set_value name="$runMode" exact="false" />
+    </do_else>
     <set_value name="$enoughFactionsToCheck" exact="30" />
     <set_value name="$blacklistGroup" exact="blacklistgroup.civilian" />
     <set_value name="$tradeOfferTypes" exact="['buy', 'sell']" />
