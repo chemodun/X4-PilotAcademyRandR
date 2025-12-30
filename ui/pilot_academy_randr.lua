@@ -504,7 +504,7 @@ function pilotAcademy.setTableWingColumnWidths(tableHandle, menu, config, maxSho
     debug("TableWing or menu is nil; cannot set column widths")
     return
   end
-  tableHandle:setColWidth(1, Helper.scrollbarWidth, false)
+  tableHandle:setColWidth(1, Helper.scrollbarWidth + 1, false)
   for i = 2, 3 do
     tableHandle:setColWidth(i, config.mapRowHeight, false)
   end
@@ -518,7 +518,7 @@ function pilotAcademy.setTableWingColumnWidths(tableHandle, menu, config, maxSho
   tableHandle:setColWidth(10, maxRelationNameWidth + Helper.borderSize * 2)
   local relationWidth = C.GetTextWidth(string.format("(%+2d)", 30), Helper.standardFont, Helper.scaleFont(Helper.standardFont, config.mapFontSize))
   tableHandle:setColWidth(11, relationWidth + Helper.borderSize * 2, false)
-  tableHandle:setColWidth(12, Helper.scrollbarWidth, false)
+  tableHandle:setColWidth(12, Helper.scrollbarWidth + 1, false)
 end
 
 function pilotAcademy.displayWingInfo(frame, menu, config)
