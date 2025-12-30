@@ -216,8 +216,6 @@
           text="'Pilot Academy [%s]: evaluating %s factions for trade opportunities. Selected factions count: %s' . [this.assignedcontrolled.debugname, $factionsListAll.count, $factionNames.count]"
           chance="$debugchance" />
 
-        <sort_list list="$factionsListAll" sortbyvalue="loop.element.relationto.{faction.player}" sortdescending="false" />
-
         <create_list name="$filteredFactions" />
         <do_for_each name="$faction" in="$factionsListAll" counter="$i">
 
@@ -235,8 +233,8 @@
           </do_if>
 
           <debug_text
-            text="'Pilot Academy [%s]: faction Names count %s, evaluating faction id presence %s' .
-              [this.assignedcontrolled.debugname, @$factionNames.count, @$factionNames.indexof.{$faction.id}]"
+            text="'Pilot Academy [%s]: faction Names count %s, evaluating faction id %s presence %s with relation %s' .
+              [this.assignedcontrolled.debugname, @$factionNames.count, @$faction.id, @$factionNames.indexof.{$faction.id}, @$faction.relationto.{faction.player}]"
             chance="$debugchance" />
 
           <do_if value="$factionNames.count == 0">
