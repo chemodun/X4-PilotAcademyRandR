@@ -762,7 +762,9 @@ function pilotAcademy.onSelectFaction(factionId, isSelected)
     return
   end
   if pilotAcademy.editData.factions == nil or type(pilotAcademy.editData.factions) ~= "table" then
-    pilotAcademy.editData.factions = {}
+    local wings = pilotAcademy.wings or {}
+    local wingData = pilotAcademy.selectedWing ~= nil and wings[pilotAcademy.selectedWing] or {}
+    pilotAcademy.editData.factions = wingData.factions ~= nil and type(wingData.factions) == "table" and wingData.factions or {}
   end
   local factions = pilotAcademy.editData.factions
   if isSelected then
@@ -1091,7 +1093,7 @@ function pilotAcademy.setOrderForWingLeader(wingLeaderId, wingId)
     SetOrderParam(wingLeaderId, "planneddefault", 4, nil, true)
     C.EnablePlannedDefaultOrder(wingLeaderId, false)
   end
-  C.SetFleetName(wingLeaderId, string.format(pilotAcademy.wingFleetName, texts.wingNames[wingId]))
+  C.SetFleetName(wingLeaderId, string.format(texts.wingFleetName, texts.wingNames[wingId]))
 end
 
 function pilotAcademy.loadWings()
