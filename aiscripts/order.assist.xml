@@ -8,18 +8,21 @@
       </do_if>
       <do_if value="$createdefaultorder?">
         <create_order id="$orderdef.$id" object="this.assignedcontrolled" default="true">
-          <param name="targetRankLevel" value="$orderdef.$targetRankLevel" />
           <param name="runMode" value="$orderdef.$runMode" />
+          <param name="wingId" value="$orderdef.$wingId" />
+          <param name="wingData" value="$orderdef.$wingData" />
           <param name="debugchance" value="$orderdef.$debugchance" />
         </create_order>
       </do_if>
       <do_else>
-        <set_value name="$orderdef.$targetRankLevel" exact="$order.$targetRankLevel" />
         <set_value name="$orderdef.$runMode" exact="$order.$runMode" />
+        <set_value name="$orderdef.$wingId" exact="$order.$wingId" />
+        <set_value name="$orderdef.$wingData" exact="$order.$wingData" />
         <set_value name="$orderdef.$debugchance" exact="$debugchance" />
         <run_script name="$scriptname">
-          <param name="targetRankLevel" value="$order.$targetRankLevel" />
           <param name="runMode" value="$order.$runMode" />
+          <param name="wingId" value="$order.$wingId" />
+          <param name="wingData" value="$order.$wingData" />
           <param name="debugchance" value="$order.$debugchance" />
         </run_script>
       </do_else>
