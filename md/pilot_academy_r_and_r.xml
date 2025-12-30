@@ -25,7 +25,7 @@
           </actions>
         </cue>
 
-        <cue name="Refresh_Pilot_Academy_Pilots" instantiate="true" checkinterval="3s">
+        <cue name="Refresh_Pilot_Academy_Pilots" instantiate="true" checkinterval="300s">
           <actions>
             <debug_text text="'Pilot Academy: Refresh_Pilot_Academy_Pilots.'" chance="100" filter="scripts" />
           </actions>
