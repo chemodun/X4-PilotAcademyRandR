@@ -1046,10 +1046,10 @@ function pilotAcademy.buttonSaveWing()
     pilotAcademy.selectedWing = wingId
     pilotAcademy.tableFactionsTopRows[tostring(pilotAcademy.selectedWing)] = currentTopRow
   else
-    -- pilotAcademy.clearOrders(wingData.wingLeader)
+    pilotAcademy.clearOrders(wingData.wingLeader)
   end
   pilotAcademy.saveWings()
-  -- pilotAcademy.setOrderForWingLeader(wingData.wingLeader, pilotAcademy.selectedWing)
+  pilotAcademy.setOrderForWingLeader(wingData.wingLeader, pilotAcademy.selectedWing)
   pilotAcademy.editData = {}
   local menu = pilotAcademy.menuMap
   if menu == nil then
@@ -1081,13 +1081,8 @@ function pilotAcademy.setOrderForWingLeader(wingLeaderId, wingId)
   if C.GetPlannedDefaultOrder(buf, wingLeaderId) then
     local newOrderIdx = tonumber(buf.queueidx)
     local orderDef = ffi.string(buf.orderdef)
-    SetOrderParam(wingLeaderId, "planneddefault", 1, nil, wingData.targetRankLevel or 2)
-    if wingData.factions ~= nil and type(wingData.factions) == "table" and #wingData.factions > 0 then
-      for i = 1, #wingData.factions do
-        SetOrderParam(wingLeaderId, "planneddefault", 2, i, wingData.factions[i])
-      end
-    end
-    SetOrderParam(wingLeaderId, "planneddefault", 4, nil, true)
+    SetOrderParam(wingLeaderId, "planneddefault", 1, nil, wingId)
+    SetOrderParam(wingLeaderId, "planneddefault", 2, nil, true)
     C.EnablePlannedDefaultOrder(wingLeaderId, false)
   end
 end
