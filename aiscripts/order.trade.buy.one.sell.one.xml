@@ -145,15 +145,11 @@
     <set_value name="$tradeOfferTypes" exact="['buy', 'sell']" />
     <set_value name="$tradeRangeEnough" exact="10km" />
     <set_value name="$tradeVolumes" exact="[500000, 50000, 5000, 500, 50]" />
-    <do_if value="not $factionNames? or @$factionNames == null">
-      <create_list name="$factionNames" />
-    </do_if>
     <set_value name="$tradeOperation" exact="''" />
     <set_value name="$selectedFaction" exact="null" />
     <set_value name="$selectedBuyOffer" exact="null" />
     <set_value name="$selectedSellOffer" exact="null" />
     <set_value name="$targetCombinedSkill" exact="$targetRankLevel * 20" />
-    <!-- <append_to_list name="$factionNames" exact="'ministry'" /> -->
   </init>
   <attention min="unknown">
     <actions>
@@ -210,20 +206,20 @@
           <set_order_syncpoint_reached order="this.assignedcontrolled.order" />
         </do_if>
 
-        <set_value name="$factionsListAll" exact="lookup.faction.list" />
+        <get_factions_by_relation faction="faction.player" relation="neutral" result="$factionsListAll" />
+        <get_factions_by_relation faction="faction.player" relation="friend" result="$friendFactions" />
+        <append_list_elements name="$factionsListAll" other="$friendFactions" />
+        <get_factions_by_tag result="$hiddenFactions" tag="tag.hidden" />
+        <remove_from_list name="$factionsListAll" list="$hiddenFactions" />
+        <remove_from_list name="$factionsListAll" exact="faction.player" />
         <debug_text
-          text="'Pilot Academy [%s]: evaluating %s factions for trade opportunities.' . [this.assignedcontrolled.debugname, $factionsListAll.count]"
+          text="'Pilot Academy [%s]: evaluating %s factions for trade opportunities. Selected factions count: %s' . [this.assignedcontrolled.debugname, $factionsListAll.count, $factionNames.count]"
           chance="$debugchance" />
 
         <sort_list list="$factionsListAll" sortbyvalue="loop.element.relationto.{faction.player}" sortdescending="false" />
 
         <create_list name="$filteredFactions" />
         <do_for_each name="$faction" in="$factionsListAll" counter="$i">
-          <do_if value="$faction.hastag.hidden">
-            <debug_text text="'Pilot Academy [%s]: skipping faction %s due to hidden tag' . [this.assignedcontrolled.debugname, @$faction.name]"
-              chance="$debugchance" />
-            <continue />
-          </do_if>
 
           <do_if value="not ($faction.isactive and $faction.knowntoplayer) or $faction.isvisitor">
             <debug_text
@@ -238,6 +234,11 @@
             <continue />
           </do_if>
 
+          <debug_text
+            text="'Pilot Academy [%s]: faction Names count %s, evaluating faction id presence %s' .
+              [this.assignedcontrolled.debugname, @$factionNames.count, @$factionNames.indexof.{$faction.id}]"
+            chance="$debugchance" />
+
           <do_if value="$factionNames.count == 0">
             <append_to_list name="$filteredFactions" exact="$faction" />
           </do_if>
@@ -250,6 +251,13 @@
           </do_if>
 
         </do_for_each>
+
+        <sort_list list="$filteredFactions" sortbyvalue="loop.element.relationto.{faction.player}" sortdescending="false" />
+
+        <debug_text
+          text="'Pilot Academy [%s]: filtered factions count %s after applying active, known, visitor, docking rights and names filters' .
+          [this.assignedcontrolled.debugname, $filteredFactions.count]"
+          chance="$debugchance" />
 
         <set_value name="$bestDistance" exact="-1" />
         <set_value name="$bestGateDistance" exact="999" />
@@ -473,7 +481,9 @@
             <break />
           </do_if>
         </do_for_each>
-        <remove_value name="$sortedFactions" />
+        <do_if value="@$selectedFaction != null and @$selectedBuyOffer != null and @$selectedSellOffer != null">
+          <set_value name="$tradeFound" exact="true" />
+        </do_if>
         <do_if value="not $tradeFound">
           <debug_text text="'Pilot Academy [%s]: no qualifying trade found after evaluating all factions' .[this.assignedcontrolled.debugname]"
             chance="$debugchance" />
