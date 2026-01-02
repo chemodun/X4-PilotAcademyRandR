@@ -277,8 +277,10 @@ function pilotAcademy.resetData()
   else
     pilotAcademy.selectedWing = nil
   end
-  pilotAcademy.tableFactionsId = nil
-  pilotAcademy.tableFactionsTopRows = {}
+  pilotAcademy.topRows = {
+    tableFactions = {},
+    tableWingmans = {}
+  }
 end
 
 function pilotAcademy.createSideBar(config)
@@ -413,7 +415,7 @@ function pilotAcademy.createInfoFrame()
   -- if numdisplayed > 50 then
   --   table.properties.maxVisibleHeight = maxVisibleHeight + 50 * (Helper.scaleY(config.mapRowHeight) + Helper.borderSize)
   -- end
-  -- menu.numFixedRows = tableWing.numfixedrows
+  -- menu.numFixedRows = tableWingmans.numfixedrows
 
 
 
@@ -469,7 +471,7 @@ function pilotAcademy.buttonSelectWing(wingId)
     return
   end
   if wingId ~= pilotAcademy.selectedWing then
-    pilotAcademy.storeTableFactionsTopRow()
+    pilotAcademy.storeTopRows()
     pilotAcademy.selectedWing = wingId or nil
     pilotAcademy.editData = {}
 
@@ -477,8 +479,9 @@ function pilotAcademy.buttonSelectWing(wingId)
   end
 end
 
-function pilotAcademy.storeTableFactionsTopRow()
-  pilotAcademy.tableFactionsTopRows[tostring(pilotAcademy.selectedWing)] = nil
+function pilotAcademy.storeTopRows()
+  pilotAcademy.topRows.tableFactions[tostring(pilotAcademy.selectedWing)] = nil
+  pilotAcademy.topRows.tableWingmans[tostring(pilotAcademy.selectedWing)] = nil
   local menu = pilotAcademy.menuMap
   if menu == nil then
     trace("Menu is nil; cannot store table factions top row")
@@ -492,16 +495,20 @@ function pilotAcademy.storeTableFactionsTopRow()
   end
   for i = 1, #infoFrame.content do
     local item = infoFrame.content[i]
-    if type(item) == "table" and item.type == "table" and item.name == "table_wing_factions" and item.id ~= nil then
-      pilotAcademy.tableFactionsTopRows[tostring(pilotAcademy.selectedWing)] = GetTopRow(item.id)
-      break
+    if type(item) == "table" and item.type == "table" and item.id ~= nil then
+      if item.name == "table_wing_factions" then
+        pilotAcademy.topRows.tableFactions[tostring(pilotAcademy.selectedWing)] = GetTopRow(item.id)
+      end
+      if item.name == "table_wing_wingmans" then
+        pilotAcademy.topRows.tableWingmans[tostring(pilotAcademy.selectedWing)] = GetTopRow(item.id)
+      end
     end
   end
 end
 
-function pilotAcademy.setTableWingColumnWidths(tableHandle, menu, config, maxShortNameWidth, maxRelationNameWidth)
+function pilotAcademy.settableWingmansColumnWidths(tableHandle, menu, config, maxShortNameWidth, maxRelationNameWidth)
   if tableHandle == nil or menu == nil then
-    debug("TableWing or menu is nil; cannot set column widths")
+    debug("tableWingmans or menu is nil; cannot set column widths")
     return
   end
   tableHandle:setColWidth(1, Helper.scrollbarWidth + 1, false)
@@ -541,7 +548,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   local existingWing = wingId ~= nil and wings[wingId] ~= nil
   local factions, maxShortNameWidth, maxRelationNameWidth = pilotAcademy.getFactions(config)
   -- local factionsSorted =
-  pilotAcademy.setTableWingColumnWidths(tableTop, menu, config, maxShortNameWidth, maxRelationNameWidth)
+  pilotAcademy.settableWingmansColumnWidths(tableTop, menu, config, maxShortNameWidth, maxRelationNameWidth)
   local wingData = existingWing and wings[wingId] or {}
   local editData = pilotAcademy.editData or {}
   local primaryGoal = editData.primaryGoal or wingData.primaryGoal or "rank"
@@ -608,7 +615,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   tableFactions:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
   tableFactions:setDefaultCellProperties("button", { height = config.mapRowHeight })
   tableFactions:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-  pilotAcademy.setTableWingColumnWidths(tableFactions, menu, config, maxShortNameWidth, maxRelationNameWidth)
+  pilotAcademy.settableWingmansColumnWidths(tableFactions, menu, config, maxShortNameWidth, maxRelationNameWidth)
   local row = tableFactions:addRow(nil, { fixed = true })
   row[2]:setColSpan(10):createText(texts.factions, { halign = "left", titleColor = Color["row_title"] })
   local tableFactionMaxHeight = 0
@@ -636,22 +643,24 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   tables[#tables + 1] = { table = tableFactions, height = tableFactions.properties.maxVisibleHeight }
 
   local wingKey = tostring(pilotAcademy.selectedWing)
-  if pilotAcademy.tableFactionsTopRows[wingKey] ~= nil then
-    tableFactions:setTopRow(pilotAcademy.tableFactionsTopRows[wingKey])
+  if #factions  > 0 then
+    if pilotAcademy.topRows.tableFactions[wingKey] ~= nil then
+      tableFactions:setTopRow(pilotAcademy.topRows.tableFactions[wingKey])
+    end
   end
-  pilotAcademy.tableFactionsTopRows[wingKey] = nil
+  pilotAcademy.topRows.tableFactions[wingKey] = nil
 
-  local tableWing = frame:addTable(12, { tabOrder = 2, reserveScrollBar = false })
-  tableWing.name = "table_wing_wingmans"
-  tableWing:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
-  tableWing:setDefaultCellProperties("button", { height = config.mapRowHeight })
-  tableWing:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-  pilotAcademy.setTableWingColumnWidths(tableWing, menu, config, maxShortNameWidth, maxRelationNameWidth)
-  tableWing:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-  local row = tableWing:addRow(nil, { fixed = true })
+  local tableWingmans = frame:addTable(12, { tabOrder = 2, reserveScrollBar = false })
+  tableWingmans.name = "table_wing_wingmans"
+  tableWingmans:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
+  tableWingmans:setDefaultCellProperties("button", { height = config.mapRowHeight })
+  tableWingmans:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
+  pilotAcademy.settableWingmansColumnWidths(tableWingmans, menu, config, maxShortNameWidth, maxRelationNameWidth)
+  tableWingmans:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  local row = tableWingmans:addRow(nil, { fixed = true })
   local wingLeaderOptions = pilotAcademy.fetchPotentialWingLeaders(existingWing, wingLeader)
   row[2]:setColSpan(10):createText(texts.wingLeader, { halign = "left", titleColor = Color["row_title"] })
-  row = tableWing:addRow("wing_leader", { fixed = true })
+  row = tableWingmans:addRow("wing_leader", { fixed = true })
   row[1]:createText("", { halign = "left" })
   row[2]:setColSpan(10):createDropDown(
     wingLeaderOptions,
@@ -666,35 +675,42 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   row[2].handlers.onDropDownConfirmed = function(_, id)
     return pilotAcademy.onSelectWingLeader(id)
   end
-  tableWing:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-  local tableWingMaxHeight = 0
+  tableWingmans:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  local tableWingmansMaxHeight = 0
+  local wingmans = pilotAcademy.fetchWingmans(wingLeader)
   if existingWing then
-    row = tableWing:addRow("wingmans", { fixed = true })
+    row = tableWingmans:addRow("wingmans", { fixed = true })
     row[2]:setColSpan(10):createText(texts.wingmans, { halign = "left", titleColor = Color["row_title"] })
-    local wingmans = pilotAcademy.fetchWingmans(wingLeader)
     for i = 1, #wingmans do
       local wingman = wingmans[i]
       if wingman ~= nil then
-        local row = tableWing:addRow(true, { fixed = false })
+        local row = tableWingmans:addRow(true, { fixed = false })
         local icon = row[2]:setColSpan(10):createIcon("order_assist", { height = config.mapRowHeight, width = config.mapRowHeight })
         icon:setText(wingman.text, { x = config.mapRowHeight, halign = "left", color = Color["text_normal"] })
         icon:setText2(wingman.text2, { halign = "right", color = Color["text_skills"] })
         if i == 10 then
-          tableWingMaxHeight = tableWing:getFullHeight()
+          tableWingmansMaxHeight = tableWingmans:getFullHeight()
         end
       end
     end
     if #wingmans == 0 then
-      row = tableWing:addRow("noWingmans", { fixed = true })
+      row = tableWingmans:addRow("noWingmans", { fixed = true })
       row[2]:setColSpan(10):createText(texts.noAvailableWingmans, { halign = "left", color = Color["text_warning"] })
     end
   end
-  if tableWingMaxHeight == 0 then
-    tableWingMaxHeight = tableWing:getFullHeight()
+  if tableWingmansMaxHeight == 0 then
+    tableWingmansMaxHeight = tableWingmans:getFullHeight()
   end
 
-  tableWing.properties.maxVisibleHeight = math.min(tableWing:getFullHeight(), tableWingMaxHeight)
-  tables[#tables + 1] = { table = tableWing, height = tableWing.properties.maxVisibleHeight }
+  tableWingmans.properties.maxVisibleHeight = math.min(tableWingmans:getFullHeight(), tableWingmansMaxHeight)
+  tables[#tables + 1] = { table = tableWingmans, height = tableWingmans.properties.maxVisibleHeight }
+
+  if #wingmans > 0 then
+    if pilotAcademy.topRows.tableWingmans[wingKey] ~= nil then
+      tableFactions:setTopRow(pilotAcademy.topRows.tableWingmans[wingKey])
+    end
+  end
+  pilotAcademy.topRows.tableWingmans[wingKey] = nil
 
   local tableBottom = frame:addTable(7, { tabOrder = 2, reserveScrollBar = false })
   tableBottom.name = "table_wing_bottom"
@@ -742,7 +758,7 @@ function pilotAcademy.onSelectPrimaryGoal(id)
     trace("Menu is nil; cannot refresh info frame")
     return
   end
-  pilotAcademy.storeTableFactionsTopRow()
+  pilotAcademy.storeTopRows()
   menu.refreshInfoFrame()
 end
 
@@ -794,7 +810,7 @@ function pilotAcademy.onSelectFaction(factionId, isSelected)
     trace("Menu is nil; cannot refresh info frame")
     return
   end
-  pilotAcademy.storeTableFactionsTopRow()
+  pilotAcademy.storeTopRows()
   menu.refreshInfoFrame()
 end
 
@@ -935,7 +951,7 @@ function pilotAcademy.onSelectWingLeader(id)
     trace("Menu is nil; cannot refresh info frame")
     return
   end
-  pilotAcademy.storeTableFactionsTopRow()
+  pilotAcademy.storeTopRows()
   menu.refreshInfoFrame()
 end
 
@@ -951,7 +967,8 @@ function pilotAcademy.buttonDismissWing()
     trace("No wing selected or invalid index; cannot dismiss wing")
     return
   end
-  pilotAcademy.tableFactionsTopRows[wingId] = nil
+  pilotAcademy.topRows.tableFactions[wingId] = nil
+  pilotAcademy.topRows.tableWingmans[wingId] = nil
   if wings[wingId] and wings[wingId].wingLeader ~= nil then
     pilotAcademy.clearOrders(wings[wingId].wingLeader)
   end
@@ -1004,7 +1021,7 @@ function pilotAcademy.buttonCancelChanges()
     trace("Menu is nil; cannot refresh info frame")
     return
   end
-  pilotAcademy.storeTableFactionsTopRow()
+  pilotAcademy.storeTopRows()
   menu.refreshInfoFrame()
 end
 
@@ -1045,11 +1062,14 @@ function pilotAcademy.buttonSaveWing()
       end
     end
     wings[wingId] = wingData
-    pilotAcademy.storeTableFactionsTopRow()
-    local currentTopRow = pilotAcademy.tableFactionsTopRows[tostring(pilotAcademy.selectedWing)]
-    pilotAcademy.tableFactionsTopRows[tostring(pilotAcademy.selectedWing)] = nil
+    pilotAcademy.storeTopRows()
+    local currentTopRowFactions = pilotAcademy.topRows.tableFactions[tostring(pilotAcademy.selectedWing)]
+    local currentTopRowWingmans = pilotAcademy.topRows.tableWingmans[tostring(pilotAcademy.selectedWing)]
+    pilotAcademy.topRows.tableFactions[tostring(pilotAcademy.selectedWing)] = nil
+    pilotAcademy.topRows.tableWingmans[tostring(pilotAcademy.selectedWing)] = nil
     pilotAcademy.selectedWing = wingId
-    pilotAcademy.tableFactionsTopRows[tostring(pilotAcademy.selectedWing)] = currentTopRow
+    pilotAcademy.topRows.tableFactions[tostring(pilotAcademy.selectedWing)] = currentTopRowFactions
+    pilotAcademy.topRows.tableWingmans[tostring(pilotAcademy.selectedWing)] = currentTopRowWingmans
   else
     pilotAcademy.clearOrders(wingData.wingLeader)
   end
