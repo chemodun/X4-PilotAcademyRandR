@@ -263,6 +263,7 @@ function pilotAcademy.Init(menuMap, menuPlayerInfo)
     menuMap.registerCallback("createInfoFrame_on_menu_infoTableMode", pilotAcademy.createInfoFrame)
     -- menuMap.registerCallback("utRenaming_setupInfoSubmenuRows_on_end", fcm.setupInfoSubmenuRows)
     pilotAcademy.resetData()
+    AddUITriggeredEvent("PilotAcademyRAndR", "Reloaded")
   end
 end
 

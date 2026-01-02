@@ -6,22 +6,22 @@
         <debug_text text="'Pilot Academy: Main'" chance="100" filter="scripts" />
       </actions>
       <cues>
-        <!-- <cue name="On_Reload" instantiate="true">
+        <cue name="On_Reload" instantiate="true">
           <conditions>
-            <event_ui_triggered screen="'MimicRepeatOrders'" control="'Reloaded'" />
+            <event_ui_triggered screen="'PilotAcademyRAndR'" control="'Reloaded'" />
           </conditions>
           <actions>
             <debug_text text="'Pilot Academy: On_Reload'" chance="100" filter="scripts" />
             <signal_cue_instantly cue="Reloaded" />
           </actions>
-        </cue> -->
+        </cue>
 
         <cue name="Reloaded" instantiate="true" version="3">
           <conditions>
             <event_cue_signalled />
           </conditions>
           <actions>
-            <debug_text text="'Pilot Academy: Reloaded.: %s'" chance="100" filter="scripts" />
+            <debug_text text="'Pilot Academy: Reloaded. Variable: %s'. [player.entity.$pilotAcademyRAndRWings]" chance="100" filter="scripts" />
           </actions>
         </cue>
 
