@@ -663,18 +663,25 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   row[2]:setColSpan(10):createText(texts.wingLeader, { halign = "left", titleColor = Color["row_title"] })
   row = tableWingmans:addRow("wing_leader", { fixed = true })
   row[1]:createText("", { halign = "left" })
-  row[2]:setColSpan(10):createDropDown(
-    wingLeaderOptions,
-    {
-      startOption = wingLeaderId or -1,
-      active = not existingWing,
-      textOverride = (#wingLeaderOptions == 0) and texts.noAvailableWingLeaders or nil,
-    }
-  )
-  row[2]:setTextProperties({ halign = "left" })
-  row[2]:setText2Properties({ halign = "right", color = Color["text_skills"] })
-  row[2].handlers.onDropDownConfirmed = function(_, id)
-    return pilotAcademy.onSelectWingLeader(id)
+  if existingWing then
+    local leaderInfo = wingLeaderOptions[1] or {}
+    local icon = row[2]:setColSpan(10):createIcon("order_assist", { height = config.mapRowHeight, width = config.mapRowHeight })
+    icon:setText(leaderInfo.text, { x = config.mapRowHeight, halign = "left", color = Color["text_normal"] })
+    icon:setText2(leaderInfo.text2, { halign = "right", color = Color["text_skills"] })
+  else
+    row[2]:setColSpan(10):createDropDown(
+      wingLeaderOptions,
+      {
+        startOption = wingLeaderId or -1,
+        active = not existingWing,
+        textOverride = (#wingLeaderOptions == 0) and texts.noAvailableWingLeaders or nil,
+      }
+    )
+    row[2]:setTextProperties({ halign = "left" })
+    row[2]:setText2Properties({ halign = "right", color = Color["text_skills"] })
+    row[2].handlers.onDropDownConfirmed = function(_, id)
+      return pilotAcademy.onSelectWingLeader(id)
+    end
   end
   tableWingmans:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local tableWingmansMaxHeight = 0
