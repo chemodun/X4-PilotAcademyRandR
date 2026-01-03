@@ -565,7 +565,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
     end
   end
 
-  local wingLeader = editData.wingLeader or wingData.wingLeader or nil
+  local wingLeaderId = editData.wingLeaderId or wingData.wingLeaderId or nil
 
   local row = tableTop:addRow("wing_header", { fixed = true })
   local suffix = string.format(pilotAcademy.selectedWing ~= nil and texts.wing or texts.addNewWing,
@@ -659,14 +659,14 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   pilotAcademy.settableWingmansColumnWidths(tableWingmans, menu, config, maxShortNameWidth, maxRelationNameWidth)
   tableWingmans:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local row = tableWingmans:addRow(nil, { fixed = true })
-  local wingLeaderOptions = pilotAcademy.fetchPotentialWingLeaders(existingWing, wingLeader)
+  local wingLeaderOptions = pilotAcademy.fetchPotentialWingLeaders(existingWing, wingLeaderId)
   row[2]:setColSpan(10):createText(texts.wingLeader, { halign = "left", titleColor = Color["row_title"] })
   row = tableWingmans:addRow("wing_leader", { fixed = true })
   row[1]:createText("", { halign = "left" })
   row[2]:setColSpan(10):createDropDown(
     wingLeaderOptions,
     {
-      startOption = wingLeader or -1,
+      startOption = wingLeaderId or -1,
       active = not existingWing,
       textOverride = (#wingLeaderOptions == 0) and texts.noAvailableWingLeaders or nil,
     }
@@ -678,7 +678,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   end
   tableWingmans:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local tableWingmansMaxHeight = 0
-  local wingmans = pilotAcademy.fetchWingmans(wingLeader)
+  local wingmans = pilotAcademy.fetchWingmans(wingLeaderId)
   if existingWing then
     row = tableWingmans:addRow("wingmans", { fixed = true })
     row[2]:setColSpan(10):createText(texts.wingmans, { halign = "left", titleColor = Color["row_title"] })
@@ -738,7 +738,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   row[4]:createButton({ active = next(editData) ~= nil }):setText(texts.cancelChanges, { halign = "center" })
   row[4].handlers.onClick = function() return pilotAcademy.buttonCancelChanges() end
 
-  row[6]:createButton({ active = next(editData) ~= nil and wingLeader ~= nil }):setText(existingWing and texts.saveWing or texts.createWing,
+  row[6]:createButton({ active = next(editData) ~= nil and wingLeaderId ~= nil }):setText(existingWing and texts.saveWing or texts.createWing,
     { halign = "center" })
   row[6].handlers.onClick = function() return pilotAcademy.buttonSaveWing() end
 
@@ -869,7 +869,7 @@ function pilotAcademy.formatShipInfoOption(shipId, shipName, shipIdCode, pilotNa
     icon = "",
     text = string.format("%s (%s): %s", pilotAcademy.formatName(shipName, 25), shipIdCode,
       pilotAcademy.formatName(pilotName, 20)),
-    text2 = string.format("%s", Helper.displaySkill(pilotSkill * 15 / 100)),
+    text2 = string.format("%s", pilotSkill and Helper.displaySkill(pilotSkill * 15 / 100)) or 0,
     displayremoveoption = false,
   }
 end
@@ -945,7 +945,7 @@ function pilotAcademy.onSelectWingLeader(id)
     id = ConvertStringTo64Bit(id)
   end
 
-  pilotAcademy.editData.wingLeader = id
+  pilotAcademy.editData.wingLeaderId = id
 
   local menu = pilotAcademy.menuMap
   if menu == nil then
@@ -970,8 +970,8 @@ function pilotAcademy.buttonDismissWing()
   end
   pilotAcademy.topRows.tableFactions[wingId] = nil
   pilotAcademy.topRows.tableWingmans[wingId] = nil
-  if wings[wingId] and wings[wingId].wingLeader ~= nil then
-    pilotAcademy.clearOrders(wings[wingId].wingLeader)
+  if wings[wingId] and wings[wingId].wingLeaderId ~= nil then
+    pilotAcademy.clearOrders(wings[wingId].wingLeaderId)
   end
   wings[wingId] = nil
   if next(wings) == nil then
@@ -1052,8 +1052,9 @@ function pilotAcademy.buttonSaveWing()
   if editData.factions ~= nil then
     wingData.factions = editData.factions
   end
-  if editData.wingLeader ~= nil then
-    wingData.wingLeader = editData.wingLeader
+  if editData.wingLeaderId ~= nil then
+    wingData.wingLeaderId = editData.wingLeaderId
+    wingData.wingLeaderObject = ConvertStringToLuaID(tostring(editData.wingLeaderId))
   end
   if not existingWing then
     for i = 1, #pilotAcademy.wingIds do
@@ -1072,10 +1073,10 @@ function pilotAcademy.buttonSaveWing()
     pilotAcademy.topRows.tableFactions[tostring(pilotAcademy.selectedWing)] = currentTopRowFactions
     pilotAcademy.topRows.tableWingmans[tostring(pilotAcademy.selectedWing)] = currentTopRowWingmans
   else
-    pilotAcademy.clearOrders(wingData.wingLeader)
+    pilotAcademy.clearOrders(wingData.wingLeaderId)
   end
   pilotAcademy.saveWings()
-  pilotAcademy.setOrderForWingLeader(wingData.wingLeader, pilotAcademy.selectedWing)
+  pilotAcademy.setOrderForWingLeader(wingData.wingLeaderId, pilotAcademy.selectedWing)
   pilotAcademy.editData = {}
   local menu = pilotAcademy.menuMap
   if menu == nil then
@@ -1100,7 +1101,7 @@ function pilotAcademy.setOrderForWingLeader(wingLeaderId, wingId)
   local wings = pilotAcademy.wings or {}
   local existingWing = wingId ~= nil and wings[wingId] ~= nil
   local wingData = existingWing and wings[wingId] or {}
-  if wingData.wingLeader == nil or wingData.wingLeader ~= wingLeaderId then
+  if wingData.wingLeaderId == nil or wingData.wingLeaderId ~= wingLeaderId then
     trace("wingLeaderId does not match wing data; cannot set orders")
     return
   end
@@ -1135,8 +1136,9 @@ function pilotAcademy.loadWings()
 
   pilotAcademy.wings = savedData or {}
   local wingsIds = ""
-  for wingId, _ in pairs(pilotAcademy.wings) do
+  for wingId, wing in pairs(pilotAcademy.wings) do
     wingsIds = wingsIds .. (wingsIds ~= "" and ", " or "") .. "'" .. tostring(wingId) .. "'"
+    wing.wingLeaderId = ConvertStringTo64Bit(tostring(wing.wingLeaderObject))
   end
   debug("loadWings: loaded " .. (wingsIds ~= "" and ("wings: " .. wingsIds) or "no wings") .. " from saved data")
 end
