@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<diff>
+  <add sel="/language">
+    <page id="1972092412" voice="no" title="Pilot Academy: Ranks and Relations" descr="Pilot Academy: Ranks and Relations">
+      <t id="1">Pilot Academy: Ranks and Relations</t>
+      <t id="2">Pilot Academy: Ranks and Relations</t>
+      <t id="11">Pilot Academy R&amp;R</t>
+      <t id="101">Wing of Pilot Academy R&amp;R</t>
+      <t id="102">Wing of Pilot Academy R&amp;R</t>
+      <t id="111">Wing %s of Pilot Academy R&amp;R</t>
+      <t id="10011">Wing %s</t>
+      <t id="10021">Add new Wing</t>
+      <t id="10201">Primary Goal:</t>
+      <t id="10209">No available primary goals</t>
+      <t id="10211">Target Rank:</t>
+      <t id="10221">Factions:</t>
+      <t id="10231">Wing Leader:</t>
+      <t id="10239">No available wing leaders</t>
+      <t id="10241">Wingmans:</t>
+      <t id="10249">No wingmans assigned</t>
+      <t id="10291">Dismiss</t>
+      <t id="10292">Cancel</t>
+      <t id="10293">Update</t>
+      <t id="10294">Create</t>
+      <t id="100001">Alpha</t>
+      <t id="100002">Bravo</t>
+      <t id="100003">Charlie</t>
+      <t id="100004">Delta</t>
+      <t id="100005">Echo</t>
+      <t id="100006">Foxtrot</t>
+      <t id="100007">Golf</t>
+      <t id="100008">Hotel</t>
+      <t id="100009">India</t>
+    </page>
+  </add>
+</diff>
