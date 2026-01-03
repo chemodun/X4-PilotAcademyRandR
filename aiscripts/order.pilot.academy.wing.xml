@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<aiscript name="order.trade.buy.one.sell.one" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="1">
-  <order id="BuyOneSellOneForSomething" name="BuySell One" description="BuySell One" category="trade" infinite="true" allowinloop="false">
+<aiscript name="order.pilot.academy.wing" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="1">
+  <order id="PilotAcademyWing" name="{1972092412,101}" description="{1972092412,102}" category="trade" infinite="true" allowinloop="false">
     <params>
       <param name="runMode" type="internal" text="Run Mode" comment="Run Mode" default="false" />
       <param name="wingId" type="internal" text="Wing ID" comment="Wing ID" default="''" />
-      <param name="wingData" type="internal" text="Wing Data" comment="Wing Data" default="null" />
       <param name="debugchance" type="bool" default="0" advanced="true" text="{1041, 10086}" comment="Print debug output">
         <input_param name="truevalue" value="100" />
       </param>
@@ -191,6 +190,14 @@
       text="'Pilot Academy [%s]: initialized order with wingId: %s, wingData: %s' .
         [this.assignedcontrolled.debugname, @$wingId, @$wingData]"
       chance="$debugchance" />
+    <set_value name="$wingData" exact="null" />
+    <set_value name="$wingsData" exact="@player.entity.$pilotAcademyRAndRWings" />
+    <do_if value="typeof $wingsData == datatype.table">
+      <set_value name="$wingData" exact="@$wingsData.{'$%s'.[$wingId]}" />
+    </do_if>
+    <debug_text
+      text="'Pilot Academy [%s]: loaded wingData: %s for wingId: %s from wingsData: %s' . [this.assignedcontrolled.debugname, @$wingData, @$wingId, @$wingsData]"
+      chance="$debugchance" />
     <do_if value="@$wingData != null">
       <set_value name="$targetRankLevel" exact="if @$wingData.$targetRankLevel != null then @$wingData.$targetRankLevel else 3" />
       <set_value name="$factionNames" exact="if @$wingData.$factions != null then @$wingData.$factions else []" />
@@ -212,7 +219,7 @@
     <set_value name="$selectedFaction" exact="null" />
     <set_value name="$selectedBuyOffer" exact="null" />
     <set_value name="$selectedSellOffer" exact="null" />
-    <set_value name="$targetCombinedSkill" exact="$targetRankLevel * 20" />
+    <set_value name="$targetCombinedSkill" exact="@$targetRankLevel * 20" />
   </init>
   <attention min="unknown">
     <actions>
@@ -823,9 +830,11 @@
       <resume label="prepareTrade" />
 
       <label name="finish" />
+      <debug_text text="'Pilot Academy [%s]: finished order.pilot.academy.wing at %s' . [this.assignedcontrolled.debugname, player.age]" chance="$debugchance" />
+      <create_order object="this.assignedcontrolled" id="'Wait'" default="true" />
     </actions>
   </attention>
   <on_abort>
-    <debug_text text="'Pilot Academy [%s]: aborted order.trade.buy.one.sell.one at %s' . [this.assignedcontrolled.debugname, player.age]" chance="$debugchance" />
+    <debug_text text="'Pilot Academy [%s]: aborted order.pilot.academy.wing at %s' . [this.assignedcontrolled.debugname, player.age]" chance="$debugchance" />
   </on_abort>
 </aiscript>
