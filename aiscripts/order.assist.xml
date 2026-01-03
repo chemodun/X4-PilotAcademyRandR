@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <diff>
   <add sel="/aiscript/attention[@min='unknown']/actions/do_if[@value='$order.exists or (@$orderdef and $createdefaultorder?)']/do_if[@value='(@$orderdef and $createdefaultorder?) or not $order.requiredskill or (this.combinedskill ge $order.requiredskill)']">
-    <do_elseif value="$orderdef.$id == 'BuyOneSellOneForSomething'">
+    <do_elseif value="$orderdef.$id == 'PilotAcademyWing'">
       <set_value name="$added" />
       <do_if value="@this.assignedcontrolled.order.isrunning">
         <clear_order_failure order="this.assignedcontrolled.order" />
@@ -10,19 +10,16 @@
         <create_order id="$orderdef.$id" object="this.assignedcontrolled" default="true">
           <param name="runMode" value="$orderdef.$runMode" />
           <param name="wingId" value="$orderdef.$wingId" />
-          <param name="wingData" value="$orderdef.$wingData" />
           <param name="debugchance" value="$orderdef.$debugchance" />
         </create_order>
       </do_if>
       <do_else>
         <set_value name="$orderdef.$runMode" exact="$order.$runMode" />
         <set_value name="$orderdef.$wingId" exact="$order.$wingId" />
-        <set_value name="$orderdef.$wingData" exact="$order.$wingData" />
         <set_value name="$orderdef.$debugchance" exact="$debugchance" />
         <run_script name="$scriptname">
           <param name="runMode" value="$order.$runMode" />
           <param name="wingId" value="$order.$wingId" />
-          <param name="wingData" value="$order.$wingData" />
           <param name="debugchance" value="$order.$debugchance" />
         </run_script>
       </do_else>
