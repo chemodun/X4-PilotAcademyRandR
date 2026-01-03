@@ -37,23 +37,23 @@ ffi.cdef [[
 local traceEnabled = true
 
 local texts = {
-  pilotAcademy = "Pilot Academy R&R",
-  noAvailablePrimaryGoals = "No available primary goals",
-  primaryGoal = "Primary Goal:",
-  factions = "Factions:",
-  targetRankLevel = "Target Rank:",
-  wingLeader = "Wing Leader:",
-  noAvailableWingLeaders = "No available wing leaders",
-  wing = "Wing %s",
-  wingFleetName = "Wing %s of Pilot Academy R&R",
-  addNewWing = "Add new Wing",
-  wingmans = "Wingmans:",
-  noAvailableWingmans = "No wingmans assigned",
-  dismissWing = "Dismiss",
-  cancelChanges = "Cancel",
-  saveWing = "Update",
-  createWing = "Create",
-  wingNames = { a = "Alpha", b = "Bravo", c = "Charlie", d = "Delta", e = "Echo", f = "Foxtrot", g = "Golf", h = "Hotel", i = "India" },
+  pilotAcademy = ReadText(1972092412, 11), -- "Pilot Academy R&R"
+  wingFleetName = ReadText(1972092412, 111), -- "Wing %s of Pilot Academy R&R"
+  wing = ReadText(1972092412, 10011), -- "Wing %s"
+  addNewWing = ReadText(1972092412, 10021), -- "Add new Wing"
+  primaryGoal = ReadText(1972092412, 10201), -- "Primary Goal:"
+  noAvailablePrimaryGoals = ReadText(1972092412, 10209), -- "No available primary goals"
+  targetRankLevel = ReadText(1972092412, 10211), --"Target Rank:",
+  factions = ReadText(1972092412, 10221), -- "Factions:"
+  wingLeader = ReadText(1972092412, 10231), -- "Wing Leader:"
+  noAvailableWingLeaders = ReadText(1972092412, 10239), -- "No available wing leaders"
+  wingmans = ReadText(1972092412, 10241), -- "Wingmans:",
+  noAvailableWingmans = ReadText(1972092412, 10249), -- "No wingmans assigned"
+  dismissWing = ReadText(1972092412, 10291), -- "Dismiss"
+  cancelChanges = ReadText(1972092412, 10292), -- "Cancel"
+  saveWing = ReadText(1972092412, 10293), -- "Update"
+  createWing = ReadText(1972092412, 10294), -- "Create"
+  wingNames = { a = ReadText(1972092412, 100001), b = ReadText(1972092412, 100002), c = ReadText(1972092412, 100003), d = ReadText(1972092412, 100004), e = ReadText(1972092412, 100005), f = ReadText(1972092412, 100006), g = ReadText(1972092412, 100007), h = ReadText(1972092412, 100008), i = ReadText(1972092412, 100009) },
 }
 
 
@@ -665,7 +665,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   row[1]:createText("", { halign = "left" })
   if existingWing then
     local leaderInfo = wingLeaderOptions[1] or {}
-    local icon = row[2]:setColSpan(10):createIcon("order_assist", { height = config.mapRowHeight, width = config.mapRowHeight })
+    local icon = row[2]:setColSpan(10):createIcon("order_pilotacademywing", { height = config.mapRowHeight, width = config.mapRowHeight })
     icon:setText(leaderInfo.text, { x = config.mapRowHeight, halign = "left", color = Color["text_normal"] })
     icon:setText2(leaderInfo.text2, { halign = "right", color = Color["text_skills"] })
   else
@@ -1096,7 +1096,6 @@ end
 function pilotAcademy.clearOrders(shipId)
   C.CreateOrder(shipId, "Wait", true)
   C.EnablePlannedDefaultOrder(shipId, false)
-  C.SetOrderLoop(shipId, 0, false)
   local name = GetComponentData(shipId, "name")
   C.SetFleetName(shipId, name)
 end
@@ -1112,15 +1111,14 @@ function pilotAcademy.setOrderForWingLeader(wingLeaderId, wingId)
     trace("wingLeaderId does not match wing data; cannot set orders")
     return
   end
-  C.CreateOrder(wingLeaderId, "BuyOneSellOneForSomething", true)
+  C.CreateOrder(wingLeaderId, "PilotAcademyWing", true)
   local buf = ffi.new("Order")
   if C.GetPlannedDefaultOrder(buf, wingLeaderId) then
     local newOrderIdx = tonumber(buf.queueidx)
     local orderDef = ffi.string(buf.orderdef)
     SetOrderParam(wingLeaderId, "planneddefault", 1, nil, true)
     SetOrderParam(wingLeaderId, "planneddefault", 2, nil, wingId)
-    SetOrderParam(wingLeaderId, "planneddefault", 3, nil, wingData)
-    SetOrderParam(wingLeaderId, "planneddefault", 4, nil, true)
+    SetOrderParam(wingLeaderId, "planneddefault", 3, nil, true)
     C.EnablePlannedDefaultOrder(wingLeaderId, false)
   end
   C.SetFleetName(wingLeaderId, string.format(texts.wingFleetName, texts.wingNames[wingId]))
