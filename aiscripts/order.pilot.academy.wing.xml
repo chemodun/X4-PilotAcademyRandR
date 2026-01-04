@@ -28,7 +28,7 @@
       </actions>
       <actions name="PilotAcademyShareTradeInfo">
         <do_if value="@$shareInfoTarget != null and @$selectedFaction != null and @$selectedBuyOffer != null and @$selectedSellOffer != null">
-          <signal_objects object="$shareInfoTarget" param="'AcademyTradeInfoUpdated'" param2="this.assignedcontrolled"
+          <signal_objects object="$shareInfoTarget" param="'AcademyTradeInfoData'" param2="this.assignedcontrolled"
             param3="table[
               $selectedFaction = $selectedFaction,
               $selectedBuyOffer = $selectedBuyOffer,
@@ -129,7 +129,7 @@
     <handler ref="TideHandler" />
     <handler>
       <conditions>
-        <event_object_signalled object="this.assignedcontrolled" param="'AcademyTradeInfoUpdated'" param2="this.assignedcontrolled.commander" />
+        <event_object_signalled object="this.assignedcontrolled" param="'AcademyTradeInfoData'" param2="this.assignedcontrolled.commander" />
         <check_value value="@event.param3 != null" />
         <check_value value="@event.param3.$selectedFaction != null" />
         <check_value value="@event.param3.$selectedBuyOffer != null" />
@@ -184,6 +184,15 @@
         <signal_objects object="player.entity" param="'AcademyPilotShipDeregisterRequest'" param2="event.object" />
       </actions>
     </handler>
+    <handler>
+      <conditions>
+        <event_object_signalled object="this.assignedcontrolled" param="'AcademyDataIsUpdated'" />
+      </conditions>
+      <actions>
+        <set_value name="$dataIsUpdated" exact="true" />
+        <debug_text text="'Pilot Academy [%s]: received data update notification' . [this.assignedcontrolled.debugname]" chance="$debugchance" />
+      </actions>
+    </handler>
   </interrupts>
   <init>
     <debug_text
@@ -220,6 +229,7 @@
     <set_value name="$selectedBuyOffer" exact="null" />
     <set_value name="$selectedSellOffer" exact="null" />
     <set_value name="$targetCombinedSkill" exact="@$targetRankLevel * 20" />
+    <set_value name="$dataIsUpdated" exact="false" />
   </init>
   <attention min="unknown">
     <actions>
@@ -718,8 +728,7 @@
         <do_for_each name="$subordinate" in="this.assignedcontrolled.subordinates">
           <debug_text text="'Pilot Academy [%s]: going to share trade info with subordinate %s'.[this.assignedcontrolled.debugname, $subordinate.debugname]"
             chance="$debugchance" />
-          <set_value name="$shareInfoTarget" exact="$subordinate" />
-          <include_interrupt_actions ref="PilotAcademyShareTradeInfo" />
+          <signal_objects object="$subordinate" param="'AcademyDataIsUpdated'" />
         </do_for_each>
       </do_if>
       <debug_text
@@ -754,6 +763,14 @@
             chance="$debugchance" />
           <apply_experience entity="this" experience="'ship_trade_good'" factor="1" />
           <apply_experience object="this.assignedcontrolled" role="entityrole.service" experience="'ship_trade_good'" factor="1" />
+          <do_if value="$dataIsUpdated">
+            <debug_text text="'Pilot Academy [%s]: data is updated, going to re-init trade cycle' . [this.assignedcontrolled.debugname]" chance="$debugchance" />
+            <set_value name="$dataIsUpdated" exact="false" />
+            <set_value name="$selectedFaction" exact="null" />
+            <set_value name="$selectedBuyOffer" exact="null" />
+            <set_value name="$selectedSellOffer" exact="null" />
+            <resume label="prepareTrade" />
+          </do_if>
         </do_if>
         <set_value name="$tradeTarget" exact="$seller" />
         <set_value name="$targetType" exact="'seller'" />
@@ -822,11 +839,11 @@
       <resume label="proceedWithTrade" />
 
       <label name="waitInfoFromCommander" />
-      <set_value name="$i" exact="1" />
-      <signal_objects object="this.assignedcontrolled.commander" param="'AcademyTradeInfoRequest'" param2="this.assignedcontrolled" delay="$i * 300ms" />
+      <set_value name="$i" exact="[1,2,3,4,5].random" />
+      <signal_objects object="this.assignedcontrolled.commander" param="'AcademyTradeInfoRequest'" param2="this.assignedcontrolled" delay="$i * 150ms" />
       <debug_text text="'Pilot Academy [%s]: request was sent, waiting now for trade info update from commander' . [this.assignedcontrolled.debugname]"
         chance="$debugchance" />
-      <wait exact="5min" />
+      <wait exact="30s" />
       <resume label="prepareTrade" />
 
       <label name="finish" />
