@@ -240,6 +240,15 @@
         </do_else>
       </actions>
     </handler>
+    <handler>
+      <conditions>
+        <event_object_signalled object="this.assignedcontrolled" param="'AcademyOrderDismissWing'" />
+      </conditions>
+      <actions>
+        <debug_text text="'Pilot Academy [%s]: received dismiss wing order, finishing.' . [this.assignedcontrolled.debugname]" chance="$debugchance" />
+        <abort_called_scripts resume="finish" />
+      </actions>
+    </handler>
   </interrupts>
   <init>
     <debug_text
@@ -919,7 +928,16 @@
       <resume label="prepareTrade" />
 
       <label name="finish" />
-      <debug_text text="'Pilot Academy [%s]: finished order.pilot.academy.wing at %s' . [this.assignedcontrolled.debugname, player.age]" chance="$debugchance" />
+      <debug_text
+        text="'Pilot Academy [%s]: finished order.pilot.academy.wing at %s. Subordinates count: %s' . [this.assignedcontrolled.debugname, player.age, @this.assignedcontrolled.subordinates.count]"
+        chance="$debugchance" />
+      <do_for_each name="$subordinate" in="this.assignedcontrolled.subordinates">
+        <debug_text text="'Pilot Academy [%s]: going to dismiss subordinate %s'.[this.assignedcontrolled.debugname, $subordinate.debugname]"
+          chance="$debugchance" />
+        <signal_objects object="$subordinate" param="'AcademyOrderDismissWing'" />
+      </do_for_each>
+      <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
+      <remove_object_commander object="this.assignedcontrolled" />
       <create_order object="this.assignedcontrolled" id="'Wait'" default="true" />
     </actions>
   </attention>

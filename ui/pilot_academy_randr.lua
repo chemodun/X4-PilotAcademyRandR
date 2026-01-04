@@ -981,7 +981,7 @@ function pilotAcademy.buttonDismissWing()
   pilotAcademy.topRows.tableFactions[wingId] = nil
   pilotAcademy.topRows.tableWingmans[wingId] = nil
   if wings[wingId] and wings[wingId].wingLeaderId ~= nil then
-    pilotAcademy.clearOrders(wings[wingId].wingLeaderId)
+    SignalObject(wings[wingId].wingLeaderId, "AcademyOrderDismissWing")
   end
   wings[wingId] = nil
   if next(wings) == nil then
@@ -1092,13 +1092,6 @@ function pilotAcademy.buttonSaveWing()
     return
   end
   menu.refreshInfoFrame()
-end
-
-function pilotAcademy.clearOrders(shipId)
-  C.CreateOrder(shipId, "Wait", true)
-  C.EnablePlannedDefaultOrder(shipId, false)
-  local name = GetComponentData(shipId, "name")
-  C.SetFleetName(shipId, name)
 end
 
 function pilotAcademy.setOrderForWingLeader(wingLeaderId, wingId, existingWing)
