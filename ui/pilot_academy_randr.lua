@@ -41,6 +41,7 @@ local traceEnabled = true
 local texts = {
   pilotAcademy = ReadText(1972092412, 11), -- "Pilot Academy R&R"
   wingFleetName = ReadText(1972092412, 111), -- "Wing %s of Pilot Academy R&R"
+  academySettings = ReadText(1972092412, 10001), -- "Academy Settings"
   wing = ReadText(1972092412, 10011), -- "Wing %s"
   addNewWing = ReadText(1972092412, 10021), -- "Add new Wing"
   primaryGoal = ReadText(1972092412, 10201), -- "Primary Goal:"
