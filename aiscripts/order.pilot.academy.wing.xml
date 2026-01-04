@@ -15,10 +15,39 @@
   </order>
   <interrupts>
     <library>
+      <actions name="PilotAcademyProcessWingData">
+        <set_value name="$wingData" exact="null" />
+        <set_value name="$wingsData" exact="@player.entity.$pilotAcademyRAndRWings" />
+        <do_if value="typeof $wingsData == datatype.table">
+          <set_value name="$wingData" exact="@$wingsData.{'$%s'.[$wingId]}" />
+        </do_if>
+        <debug_text
+          text="'Pilot Academy [%s]: loaded wingData: %s for wingId: %s from wingsData: %s' . [this.assignedcontrolled.debugname, @$wingData, @$wingId, @$wingsData]"
+          chance="$debugchance" />
+        <do_if value="@$wingData != null">
+          <set_value name="$targetRankLevel" exact="if @$wingData.$targetRankLevel != null then @$wingData.$targetRankLevel else 3" />
+          <set_value name="$factionNames" exact="if @$wingData.$factions != null then @$wingData.$factions else []" />
+          <set_value name="$primaryGoal" exact="if @$wingData.$primaryGoal != null then @$wingData.$primaryGoal else 'rank'" />
+          <debug_text
+            text="'Pilot Academy [%s]: extracted from wingData: targetRankLevel: %s, factionNames count: %s, primaryGoal: %s' .
+              [this.assignedcontrolled.debugname, $targetRankLevel, $factionNames.count, $primaryGoal]"
+            chance="$debugchance" />
+        </do_if>
+        <do_else>
+          <set_value name="$runMode" exact="false" />
+        </do_else>
+      </actions>
       <actions name="PilotAcademyInitEntityVariables">
         <do_if value="not this.$pilotAcademyRandR? or @this.$pilotAcademyRandR == null">
           <set_value name="this.$pilotAcademyRandR" exact="table[]" />
         </do_if>
+      </actions>
+      <actions name="PilotAcademyResetCurrentTradeInfo">
+        <include_interrupt_actions ref="PilotAcademyInitEntityVariables" />
+        <remove_value name="this.$pilotAcademyRandR.$tradeInfo" />
+        <set_value name="$selectedFaction" exact="null" />
+        <set_value name="$selectedBuyOffer" exact="null" />
+        <set_value name="$selectedSellOffer" exact="null" />
       </actions>
       <actions name="PilotAcademyPrintStats">
         <debug_text
@@ -195,8 +224,20 @@
         <event_object_signalled object="this.assignedcontrolled" param="'AcademyOrderDataIsUpdated'" />
       </conditions>
       <actions>
-        <set_value name="$dataIsUpdated" exact="true" />
         <debug_text text="'Pilot Academy [%s]: received data update notification' . [this.assignedcontrolled.debugname]" chance="$debugchance" />
+        <include_interrupt_actions ref="PilotAcademyProcessWingData" />
+        <do_if value="$isMovingToTradeTarget == true and $tradeOperation == 'buy'">
+          <debug_text
+            text="'Pilot Academy [%s]: interrupted while moving to trade target %s for buying, going to reset trades.' .
+              [this.assignedcontrolled.debugname, $tradeTarget.debugname]"
+            chance="$debugchance" />
+          <set_value name="$isMovingToTradeTarget" exact="false" />
+          <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
+          <abort_called_scripts resume="prepareTrade" />
+        </do_if>
+        <do_else>
+          <set_value name="$dataIsUpdated" exact="true" />
+        </do_else>
       </actions>
     </handler>
   </interrupts>
@@ -205,26 +246,7 @@
       text="'Pilot Academy [%s]: initialized order with wingId: %s, wingData: %s' .
         [this.assignedcontrolled.debugname, @$wingId, @$wingData]"
       chance="$debugchance" />
-    <set_value name="$wingData" exact="null" />
-    <set_value name="$wingsData" exact="@player.entity.$pilotAcademyRAndRWings" />
-    <do_if value="typeof $wingsData == datatype.table">
-      <set_value name="$wingData" exact="@$wingsData.{'$%s'.[$wingId]}" />
-    </do_if>
-    <debug_text
-      text="'Pilot Academy [%s]: loaded wingData: %s for wingId: %s from wingsData: %s' . [this.assignedcontrolled.debugname, @$wingData, @$wingId, @$wingsData]"
-      chance="$debugchance" />
-    <do_if value="@$wingData != null">
-      <set_value name="$targetRankLevel" exact="if @$wingData.$targetRankLevel != null then @$wingData.$targetRankLevel else 3" />
-      <set_value name="$factionNames" exact="if @$wingData.$factions != null then @$wingData.$factions else []" />
-      <set_value name="$primaryGoal" exact="if @$wingData.$primaryGoal != null then @$wingData.$primaryGoal else 'rank'" />
-      <debug_text
-        text="'Pilot Academy [%s]: extracted from wingData: targetRankLevel: %s, factionNames count: %s, primaryGoal: %s' .
-        [this.assignedcontrolled.debugname, $targetRankLevel, $factionNames.count, $primaryGoal]"
-        chance="$debugchance" />
-    </do_if>
-    <do_else>
-      <set_value name="$runMode" exact="false" />
-    </do_else>
+    <include_interrupt_actions ref="PilotAcademyProcessWingData" />
     <set_value name="$enoughFactionsToCheck" exact="30" />
     <set_value name="$blacklistGroup" exact="blacklistgroup.civilian" />
     <set_value name="$tradeOfferTypes" exact="['buy', 'sell']" />
@@ -237,6 +259,7 @@
     <set_value name="$targetCombinedSkill" exact="@$targetRankLevel * 20" />
     <set_value name="$dataIsUpdated" exact="false" />
     <set_value name="$tradeIsUnderPreparation" exact="false" />
+    <set_value name="$isMovingToTradeTarget" exact="false" />
   </init>
   <attention min="unknown">
     <actions>
@@ -776,9 +799,7 @@
           <do_if value="$dataIsUpdated">
             <debug_text text="'Pilot Academy [%s]: data is updated, going to re-init trade cycle' . [this.assignedcontrolled.debugname]" chance="$debugchance" />
             <set_value name="$dataIsUpdated" exact="false" />
-            <set_value name="$selectedFaction" exact="null" />
-            <set_value name="$selectedBuyOffer" exact="null" />
-            <set_value name="$selectedSellOffer" exact="null" />
+            <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
             <resume label="prepareTrade" />
           </do_if>
         </do_if>
@@ -802,6 +823,7 @@
       </do_if>
 
       <label name="moveTo" />
+      <set_value name="$isMovingToTradeTarget" exact="true" />
       <do_if value="@this.assignedcontrolled.dock.container != $tradeTarget">
         <debug_text text="'Pilot Academy [%s]: moving to dock on %s %s' . [this.assignedcontrolled.debugname, $targetType, $tradeTarget.debugname]"
           chance="$debugchance" />
@@ -817,6 +839,7 @@
         <wait min="10ms" max="20ms" />
         <resume label="moveTo" />
       </do_if>
+      <set_value name="$isMovingToTradeTarget" exact="false" />
       <debug_text text="'Pilot Academy [%s]: reached %s %s' . [this.assignedcontrolled.debugname, $targetType, $tradeTarget.debugname]" chance="$debugchance" />
 
       <include_interrupt_actions ref="PilotAcademyInitEntityVariables" />
