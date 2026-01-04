@@ -28,6 +28,8 @@ ffi.cdef [[
 	uint32_t GetNumAllFactionShips(const char* factionid);
 	uint32_t GetAllFactionShips(UniverseID* result, uint32_t resultlen, const char* factionid);
 
+  bool GetDefaultOrder(Order* result, UniverseID controllableid);
+
 	uint32_t CreateOrder(UniverseID controllableid, const char* orderid, bool default);
 	bool EnablePlannedDefaultOrder(UniverseID controllableid, bool checkonly);
 
@@ -51,7 +53,7 @@ local texts = {
   noAvailableWingmans = ReadText(1972092412, 10249), -- "No wingmans assigned"
   dismissWing = ReadText(1972092412, 10291), -- "Dismiss"
   cancelChanges = ReadText(1972092412, 10292), -- "Cancel"
-  saveWing = ReadText(1972092412, 10293), -- "Update"
+  updateWing = ReadText(1972092412, 10293), -- "Update"
   createWing = ReadText(1972092412, 10294), -- "Create"
   wingNames = { a = ReadText(1972092412, 100001), b = ReadText(1972092412, 100002), c = ReadText(1972092412, 100003), d = ReadText(1972092412, 100004), e = ReadText(1972092412, 100005), f = ReadText(1972092412, 100006), g = ReadText(1972092412, 100007), h = ReadText(1972092412, 100008), i = ReadText(1972092412, 100009) },
 }
@@ -75,6 +77,7 @@ local pilotAcademy = {
   wingIds = { "a", "b", "c", "d", "e", "f", "g", "h", "i" },
   wingsVariableId = "pilotAcademyRAndRWings",
   editData = {},
+  orderId = "PilotAcademyWing",
 }
 local function debug(message)
   local text = "Pilot Academy: " .. message
@@ -745,7 +748,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   row[4]:createButton({ active = next(editData) ~= nil }):setText(texts.cancelChanges, { halign = "center" })
   row[4].handlers.onClick = function() return pilotAcademy.buttonCancelChanges() end
 
-  row[6]:createButton({ active = next(editData) ~= nil and wingLeaderId ~= nil }):setText(existingWing and texts.saveWing or texts.createWing,
+  row[6]:createButton({ active = next(editData) ~= nil and wingLeaderId ~= nil }):setText(existingWing and texts.updateWing or texts.createWing,
     { halign = "center" })
   row[6].handlers.onClick = function() return pilotAcademy.buttonSaveWing() end
 
@@ -1079,11 +1082,9 @@ function pilotAcademy.buttonSaveWing()
     pilotAcademy.selectedWing = wingId
     pilotAcademy.topRows.tableFactions[tostring(pilotAcademy.selectedWing)] = currentTopRowFactions
     pilotAcademy.topRows.tableWingmans[tostring(pilotAcademy.selectedWing)] = currentTopRowWingmans
-  else
-    pilotAcademy.clearOrders(wingData.wingLeaderId)
   end
   pilotAcademy.saveWings()
-  pilotAcademy.setOrderForWingLeader(wingData.wingLeaderId, pilotAcademy.selectedWing)
+  pilotAcademy.setOrderForWingLeader(wingData.wingLeaderId, pilotAcademy.selectedWing, existingWing)
   pilotAcademy.editData = {}
   local menu = pilotAcademy.menuMap
   if menu == nil then
@@ -1100,9 +1101,18 @@ function pilotAcademy.clearOrders(shipId)
   C.SetFleetName(shipId, name)
 end
 
-function pilotAcademy.setOrderForWingLeader(wingLeaderId, wingId)
+function pilotAcademy.setOrderForWingLeader(wingLeaderId, wingId, existingWing)
   if type(wingLeaderId) == "string" then
     wingLeaderId = ConvertStringTo64Bit(wingLeaderId)
+  end
+  local buf = ffi.new("Order")
+  if existingWing and C.GetDefaultOrder(buf, wingLeaderId) then
+    local currentOrderDef = ffi.string(buf.orderdef)
+    if currentOrderDef == pilotAcademy.orderId then
+      debug("Wing leader already has " .. pilotAcademy.orderId .. " order; sending appropriate signal")
+      SignalObject(wingLeaderId, "AcademyOrderDataIsUpdated")
+      return
+    end
   end
   local wings = pilotAcademy.wings or {}
   local existingWing = wingId ~= nil and wings[wingId] ~= nil
@@ -1111,7 +1121,7 @@ function pilotAcademy.setOrderForWingLeader(wingLeaderId, wingId)
     trace("wingLeaderId does not match wing data; cannot set orders")
     return
   end
-  C.CreateOrder(wingLeaderId, "PilotAcademyWing", true)
+  C.CreateOrder(wingLeaderId, pilotAcademy.orderId, true)
   local buf = ffi.new("Order")
   if C.GetPlannedDefaultOrder(buf, wingLeaderId) then
     local newOrderIdx = tonumber(buf.queueidx)

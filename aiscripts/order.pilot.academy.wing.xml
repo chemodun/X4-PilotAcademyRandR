@@ -186,7 +186,7 @@
     </handler>
     <handler>
       <conditions>
-        <event_object_signalled object="this.assignedcontrolled" param="'AcademyDataIsUpdated'" />
+        <event_object_signalled object="this.assignedcontrolled" param="'AcademyOrderDataIsUpdated'" />
       </conditions>
       <actions>
         <set_value name="$dataIsUpdated" exact="true" />
@@ -728,7 +728,7 @@
         <do_for_each name="$subordinate" in="this.assignedcontrolled.subordinates">
           <debug_text text="'Pilot Academy [%s]: going to share trade info with subordinate %s'.[this.assignedcontrolled.debugname, $subordinate.debugname]"
             chance="$debugchance" />
-          <signal_objects object="$subordinate" param="'AcademyDataIsUpdated'" />
+          <signal_objects object="$subordinate" param="'AcademyOrderDataIsUpdated'" />
         </do_for_each>
       </do_if>
       <debug_text
