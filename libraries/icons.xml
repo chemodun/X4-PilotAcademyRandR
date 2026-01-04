@@ -12,6 +12,6 @@
         <icon name="pa_icon_i" texture="extensions\pilot_academy_randr\assets\fx\gui\textures\pa_icons\icon_i.tga" height="128" width="128"/>
         <icon name="pa_icon_add" texture="extensions\pilot_academy_randr\assets\fx\gui\textures\pa_icons\icon_add.tga" height="128" width="128"/>
         <icon name="pa_icon_academy" texture="extensions\pilot_academy_randr\assets\fx\gui\textures\pa_icons\icon_academy.tga" height="128" width="128"/>
-	<icon name="order_pilotacademywing" texture="extensions\pilot_academy_randr\assets\fx\gui\textures\order\order_pilotacademywing.tga" height="64" width="64"></icon>
+	<icon name="order_pilotacademywing" texture="extensions\pilot_academy_randr\assets\fx\gui\textures\order\order_pilotacademywing.tga" height="32" width="32"></icon>
     </add>
 </diff>
