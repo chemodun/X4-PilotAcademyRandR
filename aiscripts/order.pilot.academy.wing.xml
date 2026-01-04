@@ -870,6 +870,13 @@
         <debug_text text="'Pilot Academy [%s]: still not reached %s %s' . [this.assignedcontrolled.debugname, $targetType, $tradeTarget.debugname]"
           chance="$debugchance" />
         <wait min="10ms" max="20ms" />
+        <do_if value="$tradeTarget.owner.hasrelation.dock.{faction.player} == false">
+          <debug_text
+            text="'Pilot Academy [%s]: unable to dock on %s %s due to bad relations' . [this.assignedcontrolled.debugname, $targetType, $tradeTarget.debugname]"
+            chance="$debugchance" />
+          <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
+          <resume label="prepareTrade" />
+        </do_if>
         <resume label="moveTo" />
       </do_if>
       <set_value name="$isMovingToTradeTarget" exact="false" />
