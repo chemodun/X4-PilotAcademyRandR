@@ -314,6 +314,11 @@
         </do_if>
 
         <set_value name="$tradeIsUnderPreparation" exact="true" />
+
+
+        <set_command command="command.searchtrades" />
+
+        <set_command_action commandaction="commandaction.searchingtrades" />
         <do_if value="this.assignedcontrolled.order" comment="Safety check in case the script is called from non-order script">
           <!-- Required for all infinite orders, no effect in case of finite timeout -->
           <set_order_syncpoint_reached order="this.assignedcontrolled.order" />
@@ -380,8 +385,9 @@
               text="'Pilot Academy [%s]: evaluating trade volume tier %s on factions count %s' . [this.assignedcontrolled.debugname, $tradeVolumeMin, $filteredFactions.count]"
               chance="$debugchance" />
             <do_for_each name="$faction" in="$filteredFactions">
+              <get_wares_illegal_to result="$illegalWares" faction="$faction" />
               <debug_text
-                text="'Pilot Academy [%s]: evaluating faction %s with relation %s' . [this.assignedcontrolled.debugname, @$faction.name, @$faction.relationto.{faction.player}]"
+                text="'Pilot Academy [%s]: evaluating faction %s with relation %s and illegal wares count: %s' . [this.assignedcontrolled.debugname, @$faction.name, @$faction.relationto.{faction.player}, $illegalWares.count]"
                 chance="$debugchance" />
 
               <do_for_each name="$offerType" in="$tradeOfferTypes">
@@ -395,11 +401,19 @@
                   <do_for_each name="$demandOffer" in="$demandOffers" counter="$j">
 
                     <debug_text
-                      text="'Pilot Academy [%s]: evaluating %s offer for %s of %s with volume %s from %s. Price %s, Quantity factor %s' .
-                      [this.assignedcontrolled.debugname, $offerType, $demandOffer.amount, $demandOffer.ware.id, $demandOffer.volume, $demandOffer.owner.debugname, $demandOffer.unitprice.formatted.default, $demandOffer.quantityfactor]"
+                      text="'Pilot Academy [%s]: evaluating %s offer for %s of %s with volume %s from %s. Price %s, Quantity factor %s. Is illegal: %s' .
+                      [this.assignedcontrolled.debugname, $offerType, $demandOffer.amount, $demandOffer.ware.id, $demandOffer.volume, $demandOffer.owner.debugname, $demandOffer.unitprice.formatted.default, $demandOffer.quantityfactor, $illegalWares.indexof.{$demandOffer.ware} gt 0]"
                       chance="$debugchance" />
 
                     <do_if value="$demandOffer.ware.waretransport != waretransport.container">
+                      <continue />
+                    </do_if>
+
+                    <do_if value="$illegalWares.indexof.{$demandOffer.ware} gt 0">
+                      <debug_text
+                        text="'Pilot Academy [%s]: skipping %s offer for %s of %s as ware is illegal for faction %s' .
+                        [this.assignedcontrolled.debugname, $offerType, $demandOffer.amount, $demandOffer.ware.id, $faction.name]"
+                        chance="$debugchance" />
                       <continue />
                     </do_if>
 
@@ -542,8 +556,9 @@
         </do_if>
         <do_else>
           <do_for_each name="$faction" in="$filteredFactions">
+            <get_wares_illegal_to result="$illegalWares" faction="$faction" />
             <debug_text
-              text="'Pilot Academy [%s]: evaluating faction %s with relation %s' . [this.assignedcontrolled.debugname, @$faction.name, @$faction.relationto.{faction.player}]"
+              text="'Pilot Academy [%s]: evaluating faction %s with relation %s and illegal wares count: %s' . [this.assignedcontrolled.debugname, @$faction.name, @$faction.relationto.{faction.player}, $illegalWares.count]"
               chance="$debugchance" />
             <do_for_each name="$tradeVolumeMin" in="$tradeVolumes">
               <debug_text
@@ -561,11 +576,19 @@
                   <do_for_each name="$demandOffer" in="$demandOffers" counter="$j">
 
                     <debug_text
-                      text="'Pilot Academy [%s]: evaluating %s offer for %s of %s with volume %s from %s. Price %s, Quantity factor %s' .
-                      [this.assignedcontrolled.debugname, $offerType, $demandOffer.amount, $demandOffer.ware.id, $demandOffer.volume, $demandOffer.owner.debugname, $demandOffer.unitprice.formatted.default, $demandOffer.quantityfactor]"
+                      text="'Pilot Academy [%s]: evaluating %s offer for %s of %s with volume %s from %s. Price %s, Quantity factor %s. Is illegal: %s' .
+                      [this.assignedcontrolled.debugname, $offerType, $demandOffer.amount, $demandOffer.ware.id, $demandOffer.volume, $demandOffer.owner.debugname, $demandOffer.unitprice.formatted.default, $demandOffer.quantityfactor, $illegalWares.indexof.{$demandOffer.ware} gt 0]"
                       chance="$debugchance" />
 
                     <do_if value="$demandOffer.ware.waretransport != waretransport.container">
+                      <continue />
+                    </do_if>
+
+                    <do_if value="$illegalWares.indexof.{$demandOffer.ware} gt 0">
+                      <debug_text
+                        text="'Pilot Academy [%s]: skipping %s offer for %s of %s as ware is illegal for faction %s' .
+                        [this.assignedcontrolled.debugname, $offerType, $demandOffer.amount, $demandOffer.ware.id, $faction.name]"
+                        chance="$debugchance" />
                       <continue />
                     </do_if>
 
@@ -786,6 +809,7 @@
         <set_value name="$targetType" exact="'buyer'" />
         <set_value name="$tradeOperation" exact="'sell'" />
         <set_value name="$tradeOffer" exact="$selectedBuyOffer" />
+        <wait min="50ms" max="100ms" />
         <clamp_trade_amount trade="$selectedBuyOffer" amount="$tradeAmountDefault" buyer="$selectedBuyOffer.owner"
           seller="this.assignedcontrolled" result="$tradeAmount" />
       </do_if>
@@ -856,7 +880,7 @@
         text="'Pilot Academy [%s]: store info to this.$pilotAcademyRandR.$tradeInfo: %s'.[this.assignedcontrolled.debugname, @this.$pilotAcademyRandR.$tradeInfo]"
         chance="$debugchance" />
 
-      <create_trade_order object="this.assignedcontrolled" tradeoffer="$tradeOffer" amount="$tradeAmount" immediate="true" internal="false" />
+      <create_trade_order object="this.assignedcontrolled" tradeoffer="$tradeOffer" amount="$tradeAmount" immediate="true" internal="true" />
       <debug_text
         text="'Pilot Academy [%s]: proceed to %s %s of %s from %s'.[this.assignedcontrolled.debugname, $tradeOperation, $tradeAmount, $tradeOffer.ware.id, $tradeTarget.debugname]"
         chance="$debugchance" />
@@ -872,6 +896,10 @@
       <resume label="proceedWithTrade" />
 
       <label name="waitInfoFromCommander" />
+
+
+      <set_command command="command.wait" />
+      <set_command_action commandaction="commandaction.calculating" />
       <set_value name="$i" exact="[1,2,3,4,5].random" />
       <signal_objects object="this.assignedcontrolled.commander" param="'AcademyTradeInfoRequest'" param2="this.assignedcontrolled" delay="$i * 150ms" />
       <debug_text text="'Pilot Academy [%s]: request was sent, waiting now for trade info update from commander' . [this.assignedcontrolled.debugname]"
