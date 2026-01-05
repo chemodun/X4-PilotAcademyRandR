@@ -1024,9 +1024,15 @@ function pilotAcademy.createWingmanContextMenu(contextFrame, contextMenuData)
     trace("Row data is nil; cannot create wingman context menu")
     return
   end
-  local wingmanId = rowData.id
-  if wingmanId == nil then
+
+  if rowData.id == nil then
     trace("Wingman id is nil; cannot create wingman context menu")
+    return
+  end
+  local wingmanId = ConvertStringTo64Bit(tostring(rowData.id))
+  local commander = GetCommander(wingmanId)
+  if commander == nil then
+    trace("Wingman has no commander; cannot create wingman context menu")
     return
   end
   local menu = pilotAcademy.menuInteractMenu
@@ -1035,13 +1041,77 @@ function pilotAcademy.createWingmanContextMenu(contextFrame, contextMenuData)
     trace("Menu or config is nil; cannot create wingman context menu")
     return
   end
+  local holomapColor = menu.holomapcolor or Helper.getHoloMapColors()
+  local commanderId = ConvertStringTo64Bit(tostring(commander))
+  local commanderShortName = ffi.string(C.GetComponentName(commanderId))
+  commanderShortName = Helper.convertColorToText(holomapColor.playercolor) .. commanderShortName
+  local commanderName = commanderShortName .. " (" .. ffi.string(C.GetObjectIDCode(commanderId)) .. ")"
   local x = 0
-  local ftable = contextFrame:addTable(5, { tabOrder = 2, x = x, width = menu.width or Helper.scaleX(config.width), backgroundID = "solid", backgroundColor = Color["frame_background_semitransparent"], highlightMode = "offnormalscroll" })
+  local menuWidth = menu.width or Helper.scaleX(config.width)
+  local text = ffi.string(C.GetComponentName(wingmanId))
+  local color = holomapColor.playercolor
+  local ftable = contextFrame:addTable(5, { tabOrder = 2, x = x, width = menuWidth, backgroundID = "solid", backgroundColor = Color["frame_background_semitransparent"], highlightMode = "offnormalscroll" })
   ftable:setDefaultCellProperties("text", { minRowHeight = config.rowHeight, fontsize = config.entryFontSize, x = config.entryX })
   ftable:setDefaultCellProperties("button", { height = config.rowHeight })
   ftable:setDefaultCellProperties("checkbox", { height = config.rowHeight, width = config.rowHeight })
   ftable:setDefaultComplexCellProperties("button", "text", { fontsize = config.entryFontSize, x = config.entryX })
   ftable:setDefaultComplexCellProperties("button", "text2", { fontsize = config.entryFontSize, x = config.entryX })
+
+  -- need a min width here, otherwise column 3 gets a negative width if the mode text would fit into column 2
+  local borderIconSize = Helper.scaleX(Helper.headerRow1Height)
+  local borderWidth = math.max(borderIconSize, Helper.scaleX(config.rowHeight) + Helper.borderSize + 1)
+
+  ftable:setColWidth(1, config.rowHeight)
+  ftable:setColWidth(2, borderWidth - Helper.scaleX(config.rowHeight) - Helper.borderSize, false)
+  ftable:setColWidth(4, math.ceil(0.4 * menuWidth - borderWidth - Helper.borderSize), false)
+  ftable:setColWidth(5, borderWidth, false)
+  ftable:setDefaultBackgroundColSpan(1, 4)
+  ftable:setDefaultColSpan(1, 3)
+  ftable:setDefaultColSpan(4, 2)
+
+  local height = 0
+  -- title
+  local row = ftable:addRow(false, {})
+  text = TruncateText(text, Helper.standardFontBold, Helper.scaleFont(Helper.standardFontBold, Helper.headerRow1FontSize), menuWidth - Helper.scaleX(Helper.standardButtonWidth) - 2 * config.entryX)
+  row[1]:setColSpan(5):createText(text, Helper.headerRowCenteredProperties)
+  row[1].properties.color = color
+  height = height + row:getHeight() + Helper.borderSize
+
+  row = ftable:addRow(false, {})
+  row[1]:createText(string.format(ReadText(1001, 7803), commanderShortName), { font = Helper.standardFontBold, mouseOverText = commanderName, titleColor = Color["row_title"] })
+  row[4]:createText("[" .. GetComponentData(wingmanId, "assignmentname") .. "]", { font = Helper.standardFontBold, halign = "right", height = Helper.subHeaderHeight, titleColor = Color["row_title"] })
+  height = height + row:getHeight() + Helper.borderSize
+  row = ftable:addRow(true, {})
+  local button = row[1]:setColSpan(5):createButton({
+    bgColor = Color["button_background_hidden"],
+    highlightColor = Color["button_highlight_default"],
+    mouseOverText = "",
+    -- helpOverlayID = entry.helpOverlayID,
+    -- helpOverlayText = entry.helpOverlayText,
+    -- helpOverlayHighlightOnly = entry.helpOverlayHighlightOnly,
+  }):setText(ReadText(1001, 7810), { color = Color["text_normal"] })
+  row[1].handlers.onClick = function() return pilotAcademy.wingmanRemoveAssignment(wingmanId) end
+  height = height + row:getHeight() + Helper.borderSize
+end
+
+function pilotAcademy.wingmanRemoveAssignment(wingmanId)
+  trace("wingmanRemoveAssignment called")
+  if wingmanId == nil then
+    trace("wingmanId is nil; cannot remove assignment")
+    return
+  end
+  if pilotAcademy.contextFrame ~= nil then
+    pilotAcademy.contextFrame:close()
+    pilotAcademy.contextFrame = nil
+  end
+  SignalObject(wingmanId, "AcademyOrderRemoveFromWing")
+  local menu = pilotAcademy.menuMap
+  if menu == nil then
+    trace("Menu is nil; cannot refresh info frame")
+    return
+  end
+  menu.closeContextMenu()
+  menu.refreshInfoFrame()
 end
 
 function pilotAcademy.formatName(name, maxLength)
