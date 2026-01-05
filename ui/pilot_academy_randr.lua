@@ -80,6 +80,8 @@ local pilotAcademy = {
   editData = {},
   orderId = "PilotAcademyWing",
 }
+
+local config = {}
 local function debug(message)
   local text = "Pilot Academy: " .. message
   if type(DebugError) == "function" then
@@ -263,11 +265,15 @@ function pilotAcademy.Init(menuMap, menuPlayerInfo)
   if menuMap ~= nil and type(menuMap.registerCallback) == "function" and type(menuMap.uix_getConfig) == "function" then
     pilotAcademy.menuMap = menuMap
     pilotAcademy.menuMapConfig = menuMap.uix_getConfig()
+    pilotAcademy.menuPlayerInfo = menuPlayerInfo
+    pilotAcademy.menuInteractMenu = Helper.getMenu("InteractMenu")
+    pilotAcademy.menuInteractMenuConfig = pilotAcademy.menuInteractMenu and pilotAcademy.menuInteractMenu.uix_getConfig() or nil
     menuMap.registerCallback("createSideBar_on_start", pilotAcademy.createSideBar)
     menuMap.registerCallback("createInfoFrame_on_menu_infoTableMode", pilotAcademy.createInfoFrame)
     -- menuMap.registerCallback("utRenaming_setupInfoSubmenuRows_on_end", fcm.setupInfoSubmenuRows)
     menuMap.registerCallback("ic_onSelectElement", pilotAcademy.onSelectElement)
     menuMap.registerCallback("ic_onTableRightMouseClick", pilotAcademy.onTableRightMouseClick)
+    menuMap.registerCallback("createContextFrame_on_end", pilotAcademy.createInfoFrameContext)
     pilotAcademy.resetData()
     AddUITriggeredEvent("PilotAcademyRAndR", "Reloaded")
   end
@@ -962,8 +968,44 @@ function pilotAcademy.onTableRightMouseClick(uiTable, row, posX, posY)
     trace("Menu is nil; cannot process onTableRightMouseClick")
     return
   end
+  local interactMenuConfig = pilotAcademy.menuInteractMenuConfig
+  if interactMenuConfig == nil then
+    trace("Interact menu is nil; cannot process onTableRightMouseClick")
+    return
+  end
+
   local selectedData = Helper.getCurrentRowData(menu, uiTable)
+
+  if selectedData == nil then
+    trace("Selected data is nil; cannot process onSelectElement")
+    return
+  end
+  local tableName = selectedData.tableName
+  local rowData = selectedData.rowData
+  if tableName == nil then
+    trace("Table name is nil; cannot process onSelectElement")
+    return
+  end
+  if rowData == nil then
+    trace("Row data is nil; cannot process onSelectElement")
+    return
+  end
+  if tableName == "table_wing_wingmans" then
+    config = pilotAcademy.menuMapConfig
+    menu.contextMenuMode = "academyWingman"
+    if posX == nil or posY == nil then
+      posX, posY = GetLocalMousePosition()
+    end
+    local offsetX = posX + Helper.viewWidth / 2
+    local offsetY = Helper.viewHeight / 2 - posY
+    menu.createContextFrame(Helper.scaleX(interactMenuConfig.width), nil, offsetX, offsetY)
+  end
 end
+
+function pilotAcademy.createInfoFrameContext(contextFrame, contextMenuData, contextMenuMode)
+  trace("createInfoFrameContext called with mode: " .. tostring(contextMenuMode))
+end
+
 function pilotAcademy.formatName(name, maxLength)
   if name == nil then
     return ""
