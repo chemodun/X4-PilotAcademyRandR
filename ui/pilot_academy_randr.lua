@@ -266,6 +266,8 @@ function pilotAcademy.Init(menuMap, menuPlayerInfo)
     menuMap.registerCallback("createSideBar_on_start", pilotAcademy.createSideBar)
     menuMap.registerCallback("createInfoFrame_on_menu_infoTableMode", pilotAcademy.createInfoFrame)
     -- menuMap.registerCallback("utRenaming_setupInfoSubmenuRows_on_end", fcm.setupInfoSubmenuRows)
+    menuMap.registerCallback("ic_onSelectElement", pilotAcademy.onSelectElement)
+    menuMap.registerCallback("ic_onTableRightMouseClick", pilotAcademy.onTableRightMouseClick)
     pilotAcademy.resetData()
     AddUITriggeredEvent("PilotAcademyRAndR", "Reloaded")
   end
@@ -660,24 +662,26 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   end
   pilotAcademy.topRows.tableFactions[wingKey] = nil
 
-  local tableWingmans = frame:addTable(12, { tabOrder = 2, reserveScrollBar = false })
-  tableWingmans.name = "table_wing_wingmans"
-  tableWingmans:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
-  tableWingmans:setDefaultCellProperties("button", { height = config.mapRowHeight })
-  tableWingmans:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-  pilotAcademy.settableWingmansColumnWidths(tableWingmans, menu, config, maxShortNameWidth, maxRelationNameWidth)
-  tableWingmans:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-  local row = tableWingmans:addRow(nil, { fixed = true })
+  local tableWingLeader = frame:addTable(12, { tabOrder = 2, reserveScrollBar = false })
+  tableWingLeader.name = "table_wing_wingmans"
+  tableWingLeader:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
+  tableWingLeader:setDefaultCellProperties("button", { height = config.mapRowHeight })
+  tableWingLeader:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
+  pilotAcademy.settableWingmansColumnWidths(tableWingLeader, menu, config, maxShortNameWidth, maxRelationNameWidth)
+  tableWingLeader:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  local row = tableWingLeader:addRow(nil, { fixed = true })
   local wingLeaderOptions = pilotAcademy.fetchPotentialWingLeaders(existingWing, wingLeaderId)
   row[2]:setColSpan(10):createText(texts.wingLeader, { halign = "left", titleColor = Color["row_title"] })
-  row = tableWingmans:addRow("wing_leader", { fixed = true })
-  row[1]:createText("", { halign = "left" })
   if existingWing then
     local leaderInfo = wingLeaderOptions[1] or {}
+    row = tableWingLeader:addRow(leaderInfo, { fixed = false })
+    row[1]:createText("", { halign = "left" })
     local icon = row[2]:setColSpan(10):createIcon("order_pilotacademywing", { height = config.mapRowHeight, width = config.mapRowHeight })
     icon:setText(leaderInfo.text, { x = config.mapRowHeight, halign = "left", color = Color["text_normal"] })
     icon:setText2(leaderInfo.text2, { halign = "right", color = Color["text_skills"] })
   else
+    row = tableWingLeader:addRow("wing_leader", { fixed = true})
+    row[1]:createText("", { halign = "left" })
     row[2]:setColSpan(10):createDropDown(
       wingLeaderOptions,
       {
@@ -692,6 +696,14 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
       return pilotAcademy.onSelectWingLeader(id)
     end
   end
+  tables[#tables + 1] = { table = tableWingLeader, height = tableWingLeader:getFullHeight() }
+
+  local tableWingmans = frame:addTable(12, { tabOrder = 2, reserveScrollBar = false })
+  tableWingmans.name = "table_wing_wingmans"
+  tableWingmans:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
+  tableWingmans:setDefaultCellProperties("button", { height = config.mapRowHeight })
+  tableWingmans:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
+  pilotAcademy.settableWingmansColumnWidths(tableWingmans, menu, config, maxShortNameWidth, maxRelationNameWidth)
   tableWingmans:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local tableWingmansMaxHeight = 0
   local wingmans = pilotAcademy.fetchWingmans(wingLeaderId)
@@ -701,7 +713,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
     for i = 1, #wingmans do
       local wingman = wingmans[i]
       if wingman ~= nil then
-        local row = tableWingmans:addRow(true, { fixed = false })
+        local row = tableWingmans:addRow(wingman, { fixed = false })
         local icon = row[2]:setColSpan(10):createIcon("order_assist", { height = config.mapRowHeight, width = config.mapRowHeight })
         icon:setText(wingman.text, { x = config.mapRowHeight, halign = "left", color = Color["text_normal"] })
         icon:setText2(wingman.text2, { halign = "right", color = Color["text_skills"] })
@@ -906,6 +918,40 @@ function pilotAcademy.wingLeaderToOption(wingLeaderId)
   )
 end
 
+function pilotAcademy.onSelectElement(uitable, modified, row, isdblclick, input)
+  trace("onSelectElement called with dblclick: " .. tostring(isdblclick) .. " at row " .. tostring(row))
+  local menu = pilotAcademy.menuMap
+  if menu == nil then
+    trace("Menu is nil; cannot process onSelectElement")
+    return
+  end
+  local rowdata = Helper.getCurrentRowData(menu, uitable)
+  if rowdata == nil then
+    trace("Row data is nil; cannot process onSelectElement")
+    return
+  end
+  if rowdata.id == nil then
+    trace("Row data id is nil; cannot process onSelectElement")
+    return
+  end
+  if isdblclick or (input ~= "mouse") then
+    C.SetFocusMapComponent(menu.holomap, ConvertStringTo64Bit(tostring(rowdata.id)), true)
+  else
+    menu.addSelectedComponent(rowdata.id, true, true)
+    menu.setSelectedMapComponents()
+    menu.selectedcomponents = {}
+  end
+end
+
+function pilotAcademy.onTableRightMouseClick(uitable, row, posx, posy)
+  trace("onTableRightMouseClick called at row " .. tostring(row))
+  local menu = pilotAcademy.menuMap
+  if menu == nil then
+    trace("Menu is nil; cannot process onTableRightMouseClick")
+    return
+  end
+  local rowdata = Helper.getCurrentRowData(menu, uitable)
+end
 function pilotAcademy.formatName(name, maxLength)
   if name == nil then
     return ""
