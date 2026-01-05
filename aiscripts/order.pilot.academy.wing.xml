@@ -249,6 +249,15 @@
         <abort_called_scripts resume="finish" />
       </actions>
     </handler>
+    <handler>
+      <conditions>
+        <event_object_signalled object="this.assignedcontrolled" param="'AcademyOrderRemoveFromWing'" />
+      </conditions>
+      <actions>
+        <debug_text text="'Pilot Academy [%s]: received remove from wing order, finishing.' . [this.assignedcontrolled.debugname]" chance="$debugchance" />
+        <abort_called_scripts resume="finish" />
+      </actions>
+    </handler>
   </interrupts>
   <init>
     <debug_text
