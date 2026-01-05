@@ -663,7 +663,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   pilotAcademy.topRows.tableFactions[wingKey] = nil
 
   local tableWingLeader = frame:addTable(12, { tabOrder = 2, reserveScrollBar = false })
-  tableWingLeader.name = "table_wing_wingmans"
+  tableWingLeader.name = "table_wing_wing_leader"
   tableWingLeader:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
   tableWingLeader:setDefaultCellProperties("button", { height = config.mapRowHeight })
   tableWingLeader:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
@@ -674,7 +674,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   row[2]:setColSpan(10):createText(texts.wingLeader, { halign = "left", titleColor = Color["row_title"] })
   if existingWing then
     local leaderInfo = wingLeaderOptions[1] or {}
-    row = tableWingLeader:addRow(leaderInfo, { fixed = false })
+    row = tableWingLeader:addRow({ tableName = tableWingLeader.name, rowData = leaderInfo }, { fixed = false })
     row[1]:createText("", { halign = "left" })
     local icon = row[2]:setColSpan(10):createIcon("order_pilotacademywing", { height = config.mapRowHeight, width = config.mapRowHeight })
     icon:setText(leaderInfo.text, { x = config.mapRowHeight, halign = "left", color = Color["text_normal"] })
@@ -713,7 +713,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
     for i = 1, #wingmans do
       local wingman = wingmans[i]
       if wingman ~= nil then
-        local row = tableWingmans:addRow(wingman, { fixed = false })
+        local row = tableWingmans:addRow({ tableName = tableWingmans.name, rowData = wingman }, { fixed = false })
         local icon = row[2]:setColSpan(10):createIcon("order_assist", { height = config.mapRowHeight, width = config.mapRowHeight })
         icon:setText(wingman.text, { x = config.mapRowHeight, halign = "left", color = Color["text_normal"] })
         icon:setText2(wingman.text2, { halign = "right", color = Color["text_skills"] })
@@ -918,39 +918,51 @@ function pilotAcademy.wingLeaderToOption(wingLeaderId)
   )
 end
 
-function pilotAcademy.onSelectElement(uitable, modified, row, isdblclick, input)
-  trace("onSelectElement called with dblclick: " .. tostring(isdblclick) .. " at row " .. tostring(row))
+function pilotAcademy.onSelectElement(uiTable, modified, row, isDoubleClick, input)
+  trace("onSelectElement called with double click: " .. tostring(isDoubleClick) .. " at row " .. tostring(row))
   local menu = pilotAcademy.menuMap
   if menu == nil then
     trace("Menu is nil; cannot process onSelectElement")
     return
   end
-  local rowdata = Helper.getCurrentRowData(menu, uitable)
-  if rowdata == nil then
+  local selectedData = Helper.getCurrentRowData(menu, uiTable)
+  if selectedData == nil then
+    trace("Selected data is nil; cannot process onSelectElement")
+    return
+  end
+  local tableName = selectedData.tableName
+  local rowData = selectedData.rowData
+  if tableName == nil then
+    trace("Table name is nil; cannot process onSelectElement")
+    return
+  end
+  if rowData == nil then
     trace("Row data is nil; cannot process onSelectElement")
     return
   end
-  if rowdata.id == nil then
-    trace("Row data id is nil; cannot process onSelectElement")
-    return
-  end
-  if isdblclick or (input ~= "mouse") then
-    C.SetFocusMapComponent(menu.holomap, ConvertStringTo64Bit(tostring(rowdata.id)), true)
-  else
-    menu.addSelectedComponent(rowdata.id, true, true)
-    menu.setSelectedMapComponents()
-    menu.selectedcomponents = {}
+  if tableName == "table_wing_wing_leader" or tableName == "table_wing_wingmans" then
+    if rowData.id == nil then
+      trace("Row data id is nil; cannot process onSelectElement")
+      return
+    end
+    if isDoubleClick or (input ~= "mouse") then
+      C.SetFocusMapComponent(menu.holomap, ConvertStringTo64Bit(tostring(rowData.id)), true)
+    else
+      menu.addSelectedComponent(rowData.id, true, true)
+      menu.setSelectedMapComponents()
+      menu.selectedcomponents = {}
+    end
   end
 end
 
-function pilotAcademy.onTableRightMouseClick(uitable, row, posx, posy)
+function pilotAcademy.onTableRightMouseClick(uiTable, row, posX, posY)
   trace("onTableRightMouseClick called at row " .. tostring(row))
   local menu = pilotAcademy.menuMap
   if menu == nil then
     trace("Menu is nil; cannot process onTableRightMouseClick")
     return
   end
-  local rowdata = Helper.getCurrentRowData(menu, uitable)
+  local selectedData = Helper.getCurrentRowData(menu, uiTable)
 end
 function pilotAcademy.formatName(name, maxLength)
   if name == nil then
