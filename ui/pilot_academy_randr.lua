@@ -996,14 +996,52 @@ function pilotAcademy.onTableRightMouseClick(uiTable, row, posX, posY)
     if posX == nil or posY == nil then
       posX, posY = GetLocalMousePosition()
     end
-    local offsetX = posX + Helper.viewWidth / 2
-    local offsetY = Helper.viewHeight / 2 - posY
-    menu.createContextFrame(Helper.scaleX(interactMenuConfig.width), nil, offsetX, offsetY)
+    menu.contextMenuData = { width = Helper.scaleX(interactMenuConfig.width), xoffset = posX + Helper.viewWidth / 2, yoffset = Helper.viewHeight / 2 - posY, instance = menu.instance, tableName = tableName, rowData = rowData }
+    menu.createContextFrame()
   end
 end
 
 function pilotAcademy.createInfoFrameContext(contextFrame, contextMenuData, contextMenuMode)
   trace("createInfoFrameContext called with mode: " .. tostring(contextMenuMode))
+  if contextFrame == nil then
+    trace("Context frame is nil; cannot create wingman context menu")
+    return
+  end
+  if contextMenuMode == "academyWingman" then
+    pilotAcademy.createWingmanContextMenu(contextFrame, contextMenuData)
+  end
+end
+
+function pilotAcademy.createWingmanContextMenu(contextFrame, contextMenuData)
+  trace("createWingmanContextMenu called")
+
+  if contextMenuData == nil or type(contextMenuData) ~= "table" then
+    trace("Context menu data is nil or invalid; cannot create wingman context menu")
+    return
+  end
+  local rowData = contextMenuData.rowData
+  if rowData == nil then
+    trace("Row data is nil; cannot create wingman context menu")
+    return
+  end
+  local wingmanId = rowData.id
+  if wingmanId == nil then
+    trace("Wingman id is nil; cannot create wingman context menu")
+    return
+  end
+  local menu = pilotAcademy.menuInteractMenu
+  local config = pilotAcademy.menuInteractMenuConfig
+  if menu == nil or config == nil then
+    trace("Menu or config is nil; cannot create wingman context menu")
+    return
+  end
+  local x = 0
+  local ftable = contextFrame:addTable(5, { tabOrder = 2, x = x, width = menu.width or Helper.scaleX(config.width), backgroundID = "solid", backgroundColor = Color["frame_background_semitransparent"], highlightMode = "offnormalscroll" })
+  ftable:setDefaultCellProperties("text", { minRowHeight = config.rowHeight, fontsize = config.entryFontSize, x = config.entryX })
+  ftable:setDefaultCellProperties("button", { height = config.rowHeight })
+  ftable:setDefaultCellProperties("checkbox", { height = config.rowHeight, width = config.rowHeight })
+  ftable:setDefaultComplexCellProperties("button", "text", { fontsize = config.entryFontSize, x = config.entryX })
+  ftable:setDefaultComplexCellProperties("button", "text2", { fontsize = config.entryFontSize, x = config.entryX })
 end
 
 function pilotAcademy.formatName(name, maxLength)
