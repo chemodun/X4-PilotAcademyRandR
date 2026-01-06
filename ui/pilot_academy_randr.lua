@@ -49,11 +49,13 @@ local texts = {
   noAvailableLocations = ReadText(1972092412, 10109), -- "No available locations"
   targetRankLevel = ReadText(1972092412, 10111), --"Target Rank:",
   autoHire = ReadText(1972092412, 10121), -- "Auto hire:"
-  autoAssign = ReadText(1972092412, 10141), -- "Auto assign:"
-  priority = ReadText(1972092412, 10141), -- "Priority:"
-  priorityMilitaryShips = ReadText(1972092412, 10142), -- "Military ships"
-  priorityMiners = ReadText(1972092412, 10143), -- "Miners"
-  priorityTraders = ReadText(1972092412, 10144), -- "Traders"
+  assign = ReadText(1972092412, 10131), -- "Assign:"
+  military = ReadText(1972092412, 10132), -- "Military"
+  miners = ReadText(1972092412, 10133), -- "Miners"
+  traders = ReadText(1972092412, 10134), -- "Traders"
+  manual = ReadText(1972092412, 10139), -- "Manual"
+  cadets = ReadText(1972092412, 10141), -- "Cadets:"
+  pilots = ReadText(1972092412, 10151), -- "Pilots:"
   primaryGoal = ReadText(1972092412, 10201), -- "Primary Goal:"
   noAvailablePrimaryGoals = ReadText(1972092412, 10209), -- "No available primary goals"
   factions = ReadText(1972092412, 10211), -- "Factions:"
@@ -112,6 +114,15 @@ local function bind(obj, methodName)
   return function(...)
     return obj[methodName](obj, ...)
   end
+end
+
+local function hasItemsExcept(table, excludedKey)
+  for k, v in pairs(table) do
+    if k ~= excludedKey then
+      return true   -- found at least one other entry
+    end
+  end
+  return false
 end
 
 local function preAddRowToMapMenuContext(contextMenuData, contextMenuMode, menu)
@@ -536,10 +547,11 @@ function pilotAcademy.setAcademyContentColumnWidths(tableHandle, menu, config)
     return
   end
 
-  local contentWidth = menu.infoTableWidth - Helper.scrollbarWidth * 2 - 10
+  local contentWidth = menu.infoTableWidth - Helper.scrollbarWidth * 2 - config.mapRowHeight - Helper.borderSize * 5
   tableHandle:setColWidth(1, Helper.scrollbarWidth + 1, false)
-  tableHandle:setColWidth(2, contentWidth, true)
-  tableHandle:setColWidth(3, Helper.scrollbarWidth + 1, false)
+  tableHandle:setColWidth(2, config.mapRowHeight, false)
+  tableHandle:setColWidth(3, contentWidth, true)
+  tableHandle:setColWidth(4, Helper.scrollbarWidth + 1, false)
 end
 
 function pilotAcademy.displayAcademyInfo(frame, menu, config)
@@ -555,24 +567,24 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
   local academyData = pilotAcademy.commonData or {}
   local editData = pilotAcademy.editData or {}
   local tables = {}
-  local tableTop = frame:addTable(3, { tabOrder = 2, reserveScrollBar = false })
+  local tableTop = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
   tableTop.name = "table_academy_top"
   tableTop:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
   tableTop:setDefaultCellProperties("button", { height = config.mapRowHeight })
   tableTop:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
   pilotAcademy.setAcademyContentColumnWidths(tableTop, menu, config)
   local row = tableTop:addRow(nil, { fixed = true })
-  row[1]:setColSpan(3):createText(texts.pilotAcademyFull, Helper.headerRowCenteredProperties)
+  row[1]:setColSpan(4):createText(texts.pilotAcademyFull, Helper.headerRowCenteredProperties)
   tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local locationId = editData.locationId or academyData.locationId or nil
   local locationSelectable = locationId == nil or editData.locationId ~= academyData.locationId or editData.toChangeLocation == true
   local locationOptions = pilotAcademy.fetchPotentialLocations(locationSelectable, academyData.locationId)
   row = tableTop:addRow(nil, { fixed = true })
-  row[2]:createText(texts.location, { halign = "left", titleColor = Color["row_title"] })
+  row[2]:setColSpan(2):createText(texts.location, { halign = "left", titleColor = Color["row_title"] })
   row = tableTop:addRow("location", { fixed = true })
   row[1]:createText("", { halign = "left" })
   if locationSelectable then
-    row[2]:createDropDown(
+    row[2]:setColSpan(2):createDropDown(
       locationOptions,
       {
         startOption = locationId or -1,
@@ -586,15 +598,15 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
       return pilotAcademy.onSelectLocation(id)
     end
   else
-    row[2]:createButton({ active = true }):setText(locationOptions[1].text, { halign = "left" }):setText2(locationOptions[1].text2, { halign = "right", color = Color["text_positive"] })
+    row[2]:setColSpan(10):createButton({ active = true }):setText(locationOptions[1].text, { halign = "left" }):setText2(locationOptions[1].text2, { halign = "right", color = Color["text_positive"] })
     row[2].handlers.onClick = function() return pilotAcademy.onToChangeLocation() end
   end
   tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local targetRankLevel = editData.targetRankLevel or academyData.targetRankLevel or 2
-  local row = tableTop:addRow(nil, { fixed = true })
-  row[2]:createText(texts.targetRankLevel, { halign = "left", titleColor = Color["row_title"] })
-  local row = tableTop:addRow("target_rank_level", { fixed = true })
-  row[2]:createSliderCell({
+  row = tableTop:addRow(nil, { fixed = true })
+  row[2]:setColSpan(2):createText(texts.targetRankLevel, { halign = "left", titleColor = Color["row_title"] })
+  row = tableTop:addRow("target_rank_level", { fixed = true })
+  row[2]:setColSpan(2):createSliderCell({
     height = config.mapRowHeight,
     bgColor = Color["slider_background_transparent"],
     min = 2,
@@ -603,13 +615,81 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
     maxSelect = 5,
     start = targetRankLevel,
     step = 1,
-    -- mouseOverText = ffi.string(C.GetDisplayedModifierKey("shift")) .. " - " .. ReadText(1026, 3279),
   })
   row[2].handlers.onSliderCellChanged = function(_, val) return pilotAcademy.onSelectTargetRankLevel(val) end
   row[2].handlers.onSliderCellConfirm = function() return menu.refreshInfoFrame() end
   row[2].handlers.onSliderCellActivated = function() menu.noupdate = true end
   row[2].handlers.onSliderCellDeactivated = function() menu.noupdate = false end
+
+  tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+
+  local autoHire = editData.autoHire
+  if autoHire == nil then
+    autoHire = academyData.autoHire or false
+  end
+
+  local factions, maxShortNameWidth, maxRelationNameWidth = pilotAcademy.getFactions(config)
+
+  row = tableTop:addRow("auto_hire", { fixed = true })
+  row[2]:createCheckBox(autoHire, { active = #factions > 0, titleColor = Color["row_title"] }) -- To Do: add check on own stations with hiring possibility
+  row[2].handlers.onClick = function(_, checked) return pilotAcademy.onToggleAutoHire(checked) end
+  row[3]:createText(texts.autoHire, { halign = "left", titleColor = Color["row_title"] })
+  tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   tables[#tables + 1] = { table = tableTop, height = tableTop:getFullHeight() }
+
+  if #factions > 0 and autoHire then
+    local tableFactionsMaxHeight = 0
+
+    local tableFactions = frame:addTable(12, { tabOrder = 2, reserveScrollBar = false })
+    tableFactions.name = "table_academy_factions"
+    tableFactions:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
+    tableFactions:setDefaultCellProperties("button", { height = config.mapRowHeight })
+    tableFactions:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
+    pilotAcademy.setInfoContentColumnWidths(tableFactions, menu, config, maxShortNameWidth, maxRelationNameWidth)
+    local selectedFactions = pilotAcademy.combineFactionsSelections(editData, academyData)
+    for i = 1, #factions do
+      local faction = factions[i]
+      if faction ~= nil then
+        local row = tableFactions:addRow(faction.id, { fixed = false })
+        row[2]:createCheckBox(selectedFactions[faction.id] == true, { scaling = false })
+        row[2].handlers.onClick = function(_, checked) return pilotAcademy.onSelectFaction(faction.id,  checked, academyData) end
+        row[3]:createIcon(faction.icon, { height = config.mapRowHeight, width = config.mapRowHeight, color = Color[faction.colorId] or Color["text_normal"] })
+        row[4]:createText(string.format("[%s]", faction.shortName), { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
+        row[5]:createText("-", { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
+        row[6]:setColSpan(4):createText(faction.name, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
+        row[10]:createText(faction.relationName, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
+        row[11]:createText(string.format("(%+2d)", faction.uiRelation), { halign = "right", color = Color[faction.colorId] or Color["text_normal"] })
+        if i == 10 then
+          tableFactionsMaxHeight = tableFactions:getFullHeight()
+        end
+      end
+    end
+    if tableFactionsMaxHeight == 0 then
+      tableFactionsMaxHeight = tableFactions:getFullHeight()
+    end
+    tableFactions.properties.maxVisibleHeight = math.min(tableFactions:getFullHeight(), tableFactionsMaxHeight)
+    tables[#tables + 1] = { table = tableFactions, height = tableFactions.properties.maxVisibleHeight }
+  end
+
+
+  local tableBottom = frame:addTable(7, { tabOrder = 2, reserveScrollBar = false })
+  tableBottom.name = "table_wing_bottom"
+  tableBottom:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
+  tableBottom:setDefaultCellProperties("button", { height = config.mapRowHeight })
+  tableBottom:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
+  pilotAcademy.setButtonsColumnWidths(tableBottom, menu, config)
+  tableBottom:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  row = tableBottom:addRow("buttons", { fixed = true })
+
+  row[4]:createButton({ active = next(editData) ~= nil }):setText(texts.cancel, { halign = "center" })
+  row[4].handlers.onClick = function() return pilotAcademy.buttonCancelAcademyChanges() end
+
+  row[6]:createButton({ active = hasItemsExcept(editData, "toChangeLocation") and locationId ~= nil }):setText(academyData.locationId ~= nil and texts.update or texts.create,
+    { halign = "center" })
+  row[6].handlers.onClick = function() return pilotAcademy.buttonSaveAcademy() end
+
+  tableBottom:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  tables[#tables + 1] = { table = tableBottom, height = tableBottom:getFullHeight() }
   return tables
 end
 function pilotAcademy.fetchPotentialLocations(selectable, currentLocationId)
@@ -629,7 +709,7 @@ function pilotAcademy.onSelectLocation(locationId)
 end
 
 function pilotAcademy.onToChangeLocation()
-  trace("Changing location")
+  trace("Changing academy location")
   pilotAcademy.editData.toChangeLocation = true
   local menu = pilotAcademy.menuMap
   if menu ~= nil then
@@ -637,8 +717,40 @@ function pilotAcademy.onToChangeLocation()
   end
 end
 
+function pilotAcademy.onToggleAutoHire(checked)
+  trace("Toggled auto hire: " .. tostring(checked))
+  pilotAcademy.editData.autoHire = checked
+  local menu = pilotAcademy.menuMap
+  if menu ~= nil then
+    menu.refreshInfoFrame()
+  end
+end
 
-function pilotAcademy.setWingInfoColumnWidths(tableHandle, menu, config, maxShortNameWidth, maxRelationNameWidth)
+function pilotAcademy.buttonCancelAcademyChanges()
+  trace("Cancelling academy changes")
+  pilotAcademy.editData = {}
+  local menu = pilotAcademy.menuMap
+  if menu ~= nil then
+    menu.refreshInfoFrame()
+  end
+end
+
+function pilotAcademy.combineFactionsSelections(editData, savedData)
+  local selectedFactions = {}
+  if editData.factions ~= nil and type(editData.factions) == "table" then
+    for _, factionId in ipairs(editData.factions) do
+      selectedFactions[factionId] = true
+    end
+  elseif savedData.factions ~= nil and type(savedData.factions) == "table" then
+    for _, factionId in ipairs(savedData.factions) do
+      selectedFactions[factionId] = true
+    end
+  end
+  return selectedFactions
+end
+
+
+function pilotAcademy.setInfoContentColumnWidths(tableHandle, menu, config, maxShortNameWidth, maxRelationNameWidth)
   if tableHandle == nil or menu == nil then
     debug("tableWingmans or menu is nil; cannot set column widths")
     return
@@ -698,21 +810,12 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   local existingWing = wingId ~= nil and wings[wingId] ~= nil
   local factions, maxShortNameWidth, maxRelationNameWidth = pilotAcademy.getFactions(config)
   -- local factionsSorted =
-  pilotAcademy.setWingInfoColumnWidths(tableTop, menu, config, maxShortNameWidth, maxRelationNameWidth)
+  pilotAcademy.setInfoContentColumnWidths(tableTop, menu, config, maxShortNameWidth, maxRelationNameWidth)
   local wingData = existingWing and wings[wingId] or {}
   local editData = pilotAcademy.editData or {}
   local primaryGoal = editData.primaryGoal or wingData.primaryGoal or "rank"
   local targetRankLevel = editData.targetRankLevel or wingData.targetRankLevel or 2
-  local selectedFactions = {}
-  if editData.factions ~= nil and type(editData.factions) == "table" then
-    for _, factionId in ipairs(editData.factions) do
-      selectedFactions[factionId] = true
-    end
-  elseif wingData.factions ~= nil and type(wingData.factions) == "table" then
-    for _, factionId in ipairs(wingData.factions) do
-      selectedFactions[factionId] = true
-    end
-  end
+  local selectedFactions = pilotAcademy.combineFactionsSelections(editData, wingData)
 
   local wingLeaderId = editData.wingLeaderId or wingData.wingLeaderId or nil
 
@@ -765,7 +868,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   tableFactions:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
   tableFactions:setDefaultCellProperties("button", { height = config.mapRowHeight })
   tableFactions:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-  pilotAcademy.setWingInfoColumnWidths(tableFactions, menu, config, maxShortNameWidth, maxRelationNameWidth)
+  pilotAcademy.setInfoContentColumnWidths(tableFactions, menu, config, maxShortNameWidth, maxRelationNameWidth)
   local row = tableFactions:addRow(nil, { fixed = true })
   row[2]:setColSpan(10):createText(texts.factions, { halign = "left", titleColor = Color["row_title"] })
   local tableFactionMaxHeight = 0
@@ -774,7 +877,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
     if faction ~= nil then
       local row = tableFactions:addRow(faction.id, { fixed = false })
       row[2]:createCheckBox(selectedFactions[faction.id] == true, { scaling = false })
-      row[2].handlers.onClick = function(_, checked) return pilotAcademy.onSelectFaction(faction.id, checked) end
+      row[2].handlers.onClick = function(_, checked) return pilotAcademy.onSelectFaction(faction.id, checked, wingData) end
       row[3]:createIcon(faction.icon, { height = config.mapRowHeight, width = config.mapRowHeight, color = Color[faction.colorId] or Color["text_normal"] })
       row[4]:createText(string.format("[%s]", faction.shortName), { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
       row[5]:createText("-", { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
@@ -805,7 +908,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   tableWingLeader:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
   tableWingLeader:setDefaultCellProperties("button", { height = config.mapRowHeight })
   tableWingLeader:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-  pilotAcademy.setWingInfoColumnWidths(tableWingLeader, menu, config, maxShortNameWidth, maxRelationNameWidth)
+  pilotAcademy.setInfoContentColumnWidths(tableWingLeader, menu, config, maxShortNameWidth, maxRelationNameWidth)
   tableWingLeader:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local row = tableWingLeader:addRow(nil, { fixed = true })
   local wingLeaderOptions = pilotAcademy.fetchPotentialWingmans(existingWing, wingLeaderId)
@@ -841,7 +944,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   tableWingmans:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
   tableWingmans:setDefaultCellProperties("button", { height = config.mapRowHeight })
   tableWingmans:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-  pilotAcademy.setWingInfoColumnWidths(tableWingmans, menu, config, maxShortNameWidth, maxRelationNameWidth)
+  pilotAcademy.setInfoContentColumnWidths(tableWingmans, menu, config, maxShortNameWidth, maxRelationNameWidth)
   tableWingmans:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local tableWingmansMaxHeight = 0
   local wingmans = {}
@@ -950,16 +1053,14 @@ function pilotAcademy.onSelectTargetRankLevel(level)
   pilotAcademy.editData.targetRankLevel = level
 end
 
-function pilotAcademy.onSelectFaction(factionId, isSelected)
+function pilotAcademy.onSelectFaction(factionId, isSelected, savedData)
   trace("onSelectFaction called with factionId: " .. tostring(factionId) .. ", isSelected: " .. tostring(isSelected))
   if factionId == nil then
     trace("factionId is nil; cannot process")
     return
   end
   if pilotAcademy.editData.factions == nil or type(pilotAcademy.editData.factions) ~= "table" then
-    local wings = pilotAcademy.wings or {}
-    local wingData = pilotAcademy.selectedTab ~= nil and wings[pilotAcademy.selectedTab] or {}
-    pilotAcademy.editData.factions = wingData.factions ~= nil and type(wingData.factions) == "table" and wingData.factions or {}
+    pilotAcademy.editData.factions = savedData.factions ~= nil and type(savedData.factions) == "table" and savedData.factions or {}
   end
   local factions = pilotAcademy.editData.factions
   if isSelected then
