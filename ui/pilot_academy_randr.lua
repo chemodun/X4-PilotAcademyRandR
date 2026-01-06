@@ -52,6 +52,8 @@ local texts = {
   noAvailableWingLeaders = ReadText(1972092412, 10239), -- "No available wing leaders"
   wingmans = ReadText(1972092412, 10241), -- "Wingmans:",
   noAvailableWingmans = ReadText(1972092412, 10249), -- "No wingmans assigned"
+  addWingman = ReadText(1972092412, 10251), -- "Add Wingman"
+  noAvailableWingmanCandidates = ReadText(1972092412, 10259), -- "No available wingman candidates"
   dismissWing = ReadText(1972092412, 10291), -- "Dismiss"
   cancelChanges = ReadText(1972092412, 10292), -- "Cancel"
   updateWing = ReadText(1972092412, 10293), -- "Update"
@@ -676,7 +678,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   pilotAcademy.settableWingmansColumnWidths(tableWingLeader, menu, config, maxShortNameWidth, maxRelationNameWidth)
   tableWingLeader:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local row = tableWingLeader:addRow(nil, { fixed = true })
-  local wingLeaderOptions = pilotAcademy.fetchPotentialWingLeaders(existingWing, wingLeaderId)
+  local wingLeaderOptions = pilotAcademy.fetchPotentialWingmans(existingWing, wingLeaderId)
   row[2]:setColSpan(10):createText(texts.wingLeader, { halign = "left", titleColor = Color["row_title"] })
   if existingWing then
     local leaderInfo = wingLeaderOptions[1] or {}
@@ -712,9 +714,30 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   pilotAcademy.settableWingmansColumnWidths(tableWingmans, menu, config, maxShortNameWidth, maxRelationNameWidth)
   tableWingmans:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local tableWingmansMaxHeight = 0
-  local wingmans = pilotAcademy.fetchWingmans(wingLeaderId)
+  local wingmans = {}
+  local mimicGroupId = nil
   if existingWing then
-    row = tableWingmans:addRow("wingmans", { fixed = true })
+    row = tableWingmans:addRow(nil, { fixed = true })
+    row[2]:setColSpan(10):createText(texts.addWingman, { halign = "left", titleColor = Color["row_title"] })
+    local addWingmanOptions = pilotAcademy.fetchPotentialWingmans(existingWing, nil)
+    mimicGroupId, wingmans = pilotAcademy.fetchWingmans(wingLeaderId)
+    row = tableWingmans:addRow("add_wingman", { fixed = true })
+    row[1]:createText("", { halign = "left" })
+    row[2]:setColSpan(10):createDropDown(
+      addWingmanOptions,
+      {
+        startOption = wingLeaderId or -1,
+        active = existingWing,
+        textOverride = (#addWingmanOptions == 0) and texts.noAvailableWingmanCandidates or nil,
+      }
+    )
+    row[2]:setTextProperties({ halign = "left" })
+    row[2]:setText2Properties({ halign = "right", color = Color["text_skills"] })
+    row[2].handlers.onDropDownConfirmed = function(_, id)
+      return pilotAcademy.onSelectWingman(id, wingLeaderId, mimicGroupId)
+    end
+    tableWingmans:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+    row = tableWingmans:addRow(nil, { fixed = true })
     row[2]:setColSpan(10):createText(texts.wingmans, { halign = "left", titleColor = Color["row_title"] })
     for i = 1, #wingmans do
       local wingman = wingmans[i]
@@ -849,7 +872,7 @@ function pilotAcademy.onSelectFaction(factionId, isSelected)
   menu.refreshInfoFrame()
 end
 
-function pilotAcademy.fetchPotentialWingLeaders(existingWing, existingWingLeader)
+function pilotAcademy.fetchPotentialWingmans(existingWing, existingWingLeader)
   if existingWing and existingWingLeader ~= nil then
     return { pilotAcademy.wingLeaderToOption(existingWingLeader) }
   end
@@ -866,13 +889,20 @@ function pilotAcademy.fetchPotentialWingLeaders(existingWing, existingWingLeader
       local subordinates = GetSubordinates(shipId)
       local commander = GetCommander(shipId)
       if #subordinates == 0 and commander == nil then
-        local candidate = {}
-        candidate.shipId = shipId
-        candidate.shipName = shipName
-        candidate.shipIdCode = ffi.string(C.GetObjectIDCode(shipId))
-        candidate.pilotId = pilot
-        candidate.pilotName, candidate.pilotSkill = GetComponentData(pilot, "name", "combinedskill")
-        candidateShips[#candidateShips + 1] = candidate
+        local buf = ffi.new("Order")
+        local currentOrderDef = ""
+        if C.GetDefaultOrder(buf, shipId) then
+          currentOrderDef = ffi.string(buf.orderdef)
+        end
+        if currentOrderDef ~= pilotAcademy.orderId then
+          local candidate = {}
+          candidate.shipId = shipId
+          candidate.shipName = shipName
+          candidate.shipIdCode = ffi.string(C.GetObjectIDCode(shipId))
+          candidate.pilotId = pilot
+          candidate.pilotName, candidate.pilotSkill = GetComponentData(pilot, "name", "combinedskill")
+          candidateShips[#candidateShips + 1] = candidate
+        end
       end
     end
   end
@@ -1156,7 +1186,7 @@ function pilotAcademy.fetchWingmans(wingLeaderId)
       )
     end
   end
-  return wingmans
+  return mimicGroupId, wingmans
 end
 
 function pilotAcademy.onSelectWingLeader(id)
@@ -1177,6 +1207,33 @@ function pilotAcademy.onSelectWingLeader(id)
     return
   end
   pilotAcademy.storeTopRows()
+  menu.refreshInfoFrame()
+end
+
+
+function pilotAcademy.onSelectWingman(id, wingLeaderId, mimicGroupId)
+  trace("onSelectWingman called with id: " .. tostring(id))
+  if id == nil then
+    trace("id is nil; cannot process")
+    return
+  end
+  if type(id) == "string" then
+    id = ConvertStringTo64Bit(id)
+  end
+
+  local menu = pilotAcademy.menuInteractMenu
+  if menu == nil then
+    trace("Menu is nil; cannot refresh info frame")
+    return
+  end
+  C.ResetOrderLoop(id)
+  menu.orderAssignCommander(id, wingLeaderId, "assist", mimicGroupId or 1)
+
+  menu = pilotAcademy.menuMap
+  if menu == nil then
+    trace("Menu is nil; cannot refresh info frame")
+    return
+  end
   menu.refreshInfoFrame()
 end
 
