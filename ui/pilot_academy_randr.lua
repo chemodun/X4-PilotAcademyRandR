@@ -39,25 +39,34 @@ ffi.cdef [[
 local traceEnabled = true
 
 local texts = {
+  pilotAcademyFull = ReadText(1972092412, 1), -- "Pilot Academy: Ranks and Relations"
   pilotAcademy = ReadText(1972092412, 11), -- "Pilot Academy R&R"
   wingFleetName = ReadText(1972092412, 111), -- "Wing %s of Pilot Academy R&R"
   academySettings = ReadText(1972092412, 10001), -- "Academy Settings"
   wing = ReadText(1972092412, 10011), -- "Wing %s"
   addNewWing = ReadText(1972092412, 10021), -- "Add new Wing"
+  location = ReadText(1972092412, 10101), -- "Location:"
+  noAvailableLocations = ReadText(1972092412, 10109), -- "No available locations"
+  targetRankLevel = ReadText(1972092412, 10111), --"Target Rank:",
+  autoHire = ReadText(1972092412, 10121), -- "Auto hire:"
+  autoAssign = ReadText(1972092412, 10141), -- "Auto assign:"
+  priority = ReadText(1972092412, 10141), -- "Priority:"
+  priorityMilitaryShips = ReadText(1972092412, 10142), -- "Military ships"
+  priorityMiners = ReadText(1972092412, 10143), -- "Miners"
+  priorityTraders = ReadText(1972092412, 10144), -- "Traders"
   primaryGoal = ReadText(1972092412, 10201), -- "Primary Goal:"
   noAvailablePrimaryGoals = ReadText(1972092412, 10209), -- "No available primary goals"
-  targetRankLevel = ReadText(1972092412, 10211), --"Target Rank:",
-  factions = ReadText(1972092412, 10221), -- "Factions:"
-  wingLeader = ReadText(1972092412, 10231), -- "Wing Leader:"
-  noAvailableWingLeaders = ReadText(1972092412, 10239), -- "No available wing leaders"
+  factions = ReadText(1972092412, 10211), -- "Factions:"
+  wingLeader = ReadText(1972092412, 10221), -- "Wing Leader:"
+  noAvailableWingLeaders = ReadText(1972092412, 10229), -- "No available wing leaders"
+  addWingman = ReadText(1972092412, 10231), -- "Add Wingman"
+  noAvailableWingmanCandidates = ReadText(1972092412, 10239), -- "No available wingman candidates"
   wingmans = ReadText(1972092412, 10241), -- "Wingmans:",
   noAvailableWingmans = ReadText(1972092412, 10249), -- "No wingmans assigned"
-  addWingman = ReadText(1972092412, 10251), -- "Add Wingman"
-  noAvailableWingmanCandidates = ReadText(1972092412, 10259), -- "No available wingman candidates"
-  dismissWing = ReadText(1972092412, 10291), -- "Dismiss"
-  cancelChanges = ReadText(1972092412, 10292), -- "Cancel"
-  updateWing = ReadText(1972092412, 10293), -- "Update"
-  createWing = ReadText(1972092412, 10294), -- "Create"
+  dismissWing = ReadText(1972092412, 10901), -- "Dismiss"
+  cancel = ReadText(1972092412, 10902), -- "Cancel"
+  update = ReadText(1972092412, 10903), -- "Update"
+  create = ReadText(1972092412, 10904), -- "Create"
   wingNames = { a = ReadText(1972092412, 100001), b = ReadText(1972092412, 100002), c = ReadText(1972092412, 100003), d = ReadText(1972092412, 100004), e = ReadText(1972092412, 100005), f = ReadText(1972092412, 100006), g = ReadText(1972092412, 100007), h = ReadText(1972092412, 100008), i = ReadText(1972092412, 100009) },
 }
 
@@ -78,6 +87,7 @@ local pilotAcademy = {
   wings = {},
   wingsCountMax = 9,
   wingIds = { "a", "b", "c", "d", "e", "f", "g", "h", "i" },
+  variableId = "pilotAcademyRAndRData",
   wingsVariableId = "pilotAcademyRAndRWings",
   editData = {},
   orderId = "PilotAcademyWing",
@@ -342,6 +352,7 @@ function pilotAcademy.createInfoFrame()
   pilotAcademy.loadWings()
   local tables = {}
   if pilotAcademy.selectedTab == "settings" then
+    tables = pilotAcademy.displayAcademyInfo(frame, menu, config) or {}
   else
     tables = pilotAcademy.displayWingInfo(frame, menu, config) or {}
   end
@@ -427,13 +438,6 @@ function pilotAcademy.createInfoFrame()
       end
     end
   end
-
-  -- if numdisplayed > 50 then
-  --   table.properties.maxVisibleHeight = maxVisibleHeight + 50 * (Helper.scaleY(config.mapRowHeight) + Helper.borderSize)
-  -- end
-  -- menu.numFixedRows = tableWingmans.numfixedrows
-
-
 
   local topY = tabsTable.properties.y + tabsTable:getFullHeight() + Helper.borderSize
   for i = 1, #tables do
@@ -526,7 +530,115 @@ function pilotAcademy.storeTopRows()
   end
 end
 
-function pilotAcademy.settableWingmansColumnWidths(tableHandle, menu, config, maxShortNameWidth, maxRelationNameWidth)
+function pilotAcademy.setAcademyContentColumnWidths(tableHandle, menu, config)
+  if tableHandle == nil or menu == nil then
+    debug("tableWingmans or menu is nil; cannot set column widths")
+    return
+  end
+
+  local contentWidth = menu.infoTableWidth - Helper.scrollbarWidth * 2 - 10
+  tableHandle:setColWidth(1, Helper.scrollbarWidth + 1, false)
+  tableHandle:setColWidth(2, contentWidth, true)
+  tableHandle:setColWidth(3, Helper.scrollbarWidth + 1, false)
+end
+
+function pilotAcademy.displayAcademyInfo(frame, menu, config)
+  if frame == nil then
+    trace("Frame is nil; cannot display wing info")
+    return nil
+  end
+  if menu == nil or config == nil then
+    trace("Menu or config is nil; cannot display wing info")
+    return nil
+  end
+
+  local academyData = pilotAcademy.commonData or {}
+  local editData = pilotAcademy.editData or {}
+  local tables = {}
+  local tableTop = frame:addTable(3, { tabOrder = 2, reserveScrollBar = false })
+  tableTop.name = "table_academy_top"
+  tableTop:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
+  tableTop:setDefaultCellProperties("button", { height = config.mapRowHeight })
+  tableTop:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
+  pilotAcademy.setAcademyContentColumnWidths(tableTop, menu, config)
+  local row = tableTop:addRow(nil, { fixed = true })
+  row[1]:setColSpan(3):createText(texts.pilotAcademyFull, Helper.headerRowCenteredProperties)
+  tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  local locationId = editData.locationId or academyData.locationId or nil
+  local locationSelectable = locationId == nil or editData.locationId ~= academyData.locationId or editData.toChangeLocation == true
+  local locationOptions = pilotAcademy.fetchPotentialLocations(locationSelectable, academyData.locationId)
+  row = tableTop:addRow(nil, { fixed = true })
+  row[2]:createText(texts.location, { halign = "left", titleColor = Color["row_title"] })
+  row = tableTop:addRow("location", { fixed = true })
+  row[1]:createText("", { halign = "left" })
+  if locationSelectable then
+    row[2]:createDropDown(
+      locationOptions,
+      {
+        startOption = locationId or -1,
+        active = true,
+        textOverride = (#locationOptions == 0) and texts.noAvailableLocations or nil,
+      }
+    )
+    row[2]:setTextProperties({ halign = "left" })
+    row[2]:setText2Properties({ halign = "right", color = Color["text_positive"] })
+    row[2].handlers.onDropDownConfirmed = function(_, id)
+      return pilotAcademy.onSelectLocation(id)
+    end
+  else
+    row[2]:createButton({ active = true }):setText(locationOptions[1].text, { halign = "left" }):setText2(locationOptions[1].text2, { halign = "right", color = Color["text_positive"] })
+    row[2].handlers.onClick = function() return pilotAcademy.onToChangeLocation() end
+  end
+  tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  local targetRankLevel = editData.targetRankLevel or academyData.targetRankLevel or 2
+  local row = tableTop:addRow(nil, { fixed = true })
+  row[2]:createText(texts.targetRankLevel, { halign = "left", titleColor = Color["row_title"] })
+  local row = tableTop:addRow("target_rank_level", { fixed = true })
+  row[2]:createSliderCell({
+    height = config.mapRowHeight,
+    bgColor = Color["slider_background_transparent"],
+    min = 2,
+    minSelect = 2,
+    max = 5,
+    maxSelect = 5,
+    start = targetRankLevel,
+    step = 1,
+    -- mouseOverText = ffi.string(C.GetDisplayedModifierKey("shift")) .. " - " .. ReadText(1026, 3279),
+  })
+  row[2].handlers.onSliderCellChanged = function(_, val) return pilotAcademy.onSelectTargetRankLevel(val) end
+  row[2].handlers.onSliderCellConfirm = function() return menu.refreshInfoFrame() end
+  row[2].handlers.onSliderCellActivated = function() menu.noupdate = true end
+  row[2].handlers.onSliderCellDeactivated = function() menu.noupdate = false end
+  tables[#tables + 1] = { table = tableTop, height = tableTop:getFullHeight() }
+  return tables
+end
+function pilotAcademy.fetchPotentialLocations(selectable, currentLocationId)
+  local locations = {}
+  return locations
+end
+
+function pilotAcademy.onSelectLocation(locationId)
+  trace("Selected location ID: " .. tostring(locationId))
+  pilotAcademy.editData.locationId = locationId
+  pilotAcademy.editData.toChangeLocation = false
+  local menu = pilotAcademy.menuMap
+  if menu ~= nil then
+    menu.refreshInfoFrame()
+  end
+
+end
+
+function pilotAcademy.onToChangeLocation()
+  trace("Changing location")
+  pilotAcademy.editData.toChangeLocation = true
+  local menu = pilotAcademy.menuMap
+  if menu ~= nil then
+    menu.refreshInfoFrame()
+  end
+end
+
+
+function pilotAcademy.setWingInfoColumnWidths(tableHandle, menu, config, maxShortNameWidth, maxRelationNameWidth)
   if tableHandle == nil or menu == nil then
     debug("tableWingmans or menu is nil; cannot set column widths")
     return
@@ -546,6 +658,24 @@ function pilotAcademy.settableWingmansColumnWidths(tableHandle, menu, config, ma
   local relationWidth = C.GetTextWidth(string.format("(%+2d)", 30), Helper.standardFont, Helper.scaleFont(Helper.standardFont, config.mapFontSize))
   tableHandle:setColWidth(11, relationWidth + Helper.borderSize * 2, false)
   tableHandle:setColWidth(12, Helper.scrollbarWidth + 1, false)
+end
+
+function pilotAcademy.setButtonsColumnWidths(tableHandle, menu, config)
+  if tableHandle == nil or menu == nil then
+    debug("tableWingmans or menu is nil; cannot set column widths")
+    return
+  end
+
+  local buttonWidth = math.floor((menu.infoTableWidth - Helper.scrollbarWidth * 5 - 2) / 3)
+  tableHandle:setColWidth(1, Helper.scrollbarWidth + 1, true)
+  for i = 2, 6 do
+    if i % 2 == 0 then
+      tableHandle:setColWidth(i, buttonWidth, false)
+    else
+      tableHandle:setColWidth(i, Helper.scrollbarWidth, false)
+    end
+  end
+  tableHandle:setColWidth(7, Helper.scrollbarWidth + 1, true)
 end
 
 function pilotAcademy.displayWingInfo(frame, menu, config)
@@ -568,7 +698,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   local existingWing = wingId ~= nil and wings[wingId] ~= nil
   local factions, maxShortNameWidth, maxRelationNameWidth = pilotAcademy.getFactions(config)
   -- local factionsSorted =
-  pilotAcademy.settableWingmansColumnWidths(tableTop, menu, config, maxShortNameWidth, maxRelationNameWidth)
+  pilotAcademy.setWingInfoColumnWidths(tableTop, menu, config, maxShortNameWidth, maxRelationNameWidth)
   local wingData = existingWing and wings[wingId] or {}
   local editData = pilotAcademy.editData or {}
   local primaryGoal = editData.primaryGoal or wingData.primaryGoal or "rank"
@@ -586,7 +716,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
 
   local wingLeaderId = editData.wingLeaderId or wingData.wingLeaderId or nil
 
-  local row = tableTop:addRow("wing_header", { fixed = true })
+  local row = tableTop:addRow(nil, { fixed = true })
   local suffix = string.format(pilotAcademy.selectedTab ~= nil and texts.wing or texts.addNewWing,
     existingWing and texts.wingNames[pilotAcademy.selectedTab] or "")
   row[1]:setColSpan(12):createText(string.format("%s: %s", texts.pilotAcademy, suffix), Helper.headerRowCenteredProperties)
@@ -635,7 +765,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   tableFactions:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
   tableFactions:setDefaultCellProperties("button", { height = config.mapRowHeight })
   tableFactions:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-  pilotAcademy.settableWingmansColumnWidths(tableFactions, menu, config, maxShortNameWidth, maxRelationNameWidth)
+  pilotAcademy.setWingInfoColumnWidths(tableFactions, menu, config, maxShortNameWidth, maxRelationNameWidth)
   local row = tableFactions:addRow(nil, { fixed = true })
   row[2]:setColSpan(10):createText(texts.factions, { halign = "left", titleColor = Color["row_title"] })
   local tableFactionMaxHeight = 0
@@ -675,7 +805,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   tableWingLeader:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
   tableWingLeader:setDefaultCellProperties("button", { height = config.mapRowHeight })
   tableWingLeader:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-  pilotAcademy.settableWingmansColumnWidths(tableWingLeader, menu, config, maxShortNameWidth, maxRelationNameWidth)
+  pilotAcademy.setWingInfoColumnWidths(tableWingLeader, menu, config, maxShortNameWidth, maxRelationNameWidth)
   tableWingLeader:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local row = tableWingLeader:addRow(nil, { fixed = true })
   local wingLeaderOptions = pilotAcademy.fetchPotentialWingmans(existingWing, wingLeaderId)
@@ -711,7 +841,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   tableWingmans:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
   tableWingmans:setDefaultCellProperties("button", { height = config.mapRowHeight })
   tableWingmans:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-  pilotAcademy.settableWingmansColumnWidths(tableWingmans, menu, config, maxShortNameWidth, maxRelationNameWidth)
+  pilotAcademy.setWingInfoColumnWidths(tableWingmans, menu, config, maxShortNameWidth, maxRelationNameWidth)
   tableWingmans:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local tableWingmansMaxHeight = 0
   local wingmans = {}
@@ -775,16 +905,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   tableBottom:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
   tableBottom:setDefaultCellProperties("button", { height = config.mapRowHeight })
   tableBottom:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-  local buttonWidth = math.floor((menu.infoTableWidth - Helper.scrollbarWidth * 5) / 3)
-  tableBottom:setColWidth(1, Helper.scrollbarWidth, true)
-  for i = 2, 6 do
-    if i % 2 == 0 then
-      tableBottom:setColWidth(i, buttonWidth, false)
-    else
-      tableBottom:setColWidth(i, Helper.scrollbarWidth, false)
-    end
-  end
-  tableBottom:setColWidth(7, Helper.scrollbarWidth, true)
+  pilotAcademy.setButtonsColumnWidths(tableBottom, menu, config)
   tableBottom:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   row = tableBottom:addRow("buttons", { fixed = true })
   if existingWing then
@@ -792,10 +913,10 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
     row[2].handlers.onClick = function() return pilotAcademy.buttonDismissWing() end
   end
 
-  row[4]:createButton({ active = next(editData) ~= nil }):setText(texts.cancelChanges, { halign = "center" })
+  row[4]:createButton({ active = next(editData) ~= nil }):setText(texts.cancel, { halign = "center" })
   row[4].handlers.onClick = function() return pilotAcademy.buttonCancelChanges() end
 
-  row[6]:createButton({ active = next(editData) ~= nil and wingLeaderId ~= nil }):setText(existingWing and texts.updateWing or texts.createWing,
+  row[6]:createButton({ active = next(editData) ~= nil and wingLeaderId ~= nil }):setText(existingWing and texts.update or texts.create,
     { halign = "center" })
   row[6].handlers.onClick = function() return pilotAcademy.buttonSaveWing() end
 
