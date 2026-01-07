@@ -16,9 +16,12 @@
       <t id="10111">Target Rank:</t>
       <t id="10121">Auto hire:</t>
       <t id="10131">Assign:</t>
-      <t id="10132">Military</t>
-      <t id="10133">Miners</t>
-      <t id="10134">Traders</t>
+      <t id="10132">Military - Miners - Traders</t>
+      <t id="10133">Military - Traders - Miners</t>
+      <t id="10134">Miners - Traders - Military</t>
+      <t id="10135">Miners - Military - Traders</t>
+      <t id="10136">Traders - Military - Miners</t>
+      <t id="10137">Traders - Miners - Military</t>
       <t id="10139">Manual</t>
       <t id="10141">Cadets:</t>
       <t id="10151">Pilots:</t>

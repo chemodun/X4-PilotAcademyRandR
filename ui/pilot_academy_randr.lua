@@ -50,9 +50,12 @@ local texts = {
   targetRankLevel = ReadText(1972092412, 10111), --"Target Rank:",
   autoHire = ReadText(1972092412, 10121), -- "Auto hire:"
   assign = ReadText(1972092412, 10131), -- "Assign:"
-  military = ReadText(1972092412, 10132), -- "Military"
-  miners = ReadText(1972092412, 10133), -- "Miners"
-  traders = ReadText(1972092412, 10134), -- "Traders"
+  militaryMinersTraders = ReadText(1972092412, 10132), -- "Military - Miners - Traders"
+  militaryTradersMiners = ReadText(1972092412, 10133), -- "Military - Traders - Miners"
+  minersTradersMilitary = ReadText(1972092412, 10134), -- "Miners - Traders - Military"
+  minersMilitaryTraders = ReadText(1972092412, 10135), -- "Miners - Military - Traders"
+  tradersMilitaryMiners = ReadText(1972092412, 10136), -- "Traders - Military - Miners"
+  tradersMinersMilitary = ReadText(1972092412, 10137), -- "Traders - Miners - Military"
   manual = ReadText(1972092412, 10139), -- "Manual"
   cadets = ReadText(1972092412, 10141), -- "Cadets:"
   pilots = ReadText(1972092412, 10151), -- "Pilots:"
@@ -748,7 +751,6 @@ function pilotAcademy.combineFactionsSelections(editData, savedData)
   end
   return selectedFactions
 end
-
 
 function pilotAcademy.setInfoContentColumnWidths(tableHandle, menu, config, maxShortNameWidth, maxRelationNameWidth)
   if tableHandle == nil or menu == nil then
