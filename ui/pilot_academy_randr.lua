@@ -43,31 +43,35 @@ local texts = {
   pilotAcademy = ReadText(1972092412, 11), -- "Pilot Academy R&R"
   wingFleetName = ReadText(1972092412, 111), -- "Wing %s of Pilot Academy R&R"
   academySettings = ReadText(1972092412, 10001), -- "Academy Settings"
-  wing = ReadText(1972092412, 10011), -- "Wing %s"
-  addNewWing = ReadText(1972092412, 10021), -- "Add new Wing"
+  cadetsAndPilots = ReadText(1972092412, 10011), -- "Cadets and Pilots"
+  wing = ReadText(1972092412, 10021), -- "Wing %s"
+  addNewWing = ReadText(1972092412, 10029), -- "Add new Wing"
   location = ReadText(1972092412, 10101), -- "Location:"
   noAvailableLocations = ReadText(1972092412, 10109), -- "No available locations"
   targetRankLevel = ReadText(1972092412, 10111), --"Target Rank:",
   autoHire = ReadText(1972092412, 10121), -- "Auto hire:"
   assign = ReadText(1972092412, 10131), -- "Assign:"
-  militaryMinersTraders = ReadText(1972092412, 10132), -- "Military - Miners - Traders"
-  militaryTradersMiners = ReadText(1972092412, 10133), -- "Military - Traders - Miners"
-  minersTradersMilitary = ReadText(1972092412, 10134), -- "Miners - Traders - Military"
-  minersMilitaryTraders = ReadText(1972092412, 10135), -- "Miners - Military - Traders"
-  tradersMilitaryMiners = ReadText(1972092412, 10136), -- "Traders - Military - Miners"
-  tradersMinersMilitary = ReadText(1972092412, 10137), -- "Traders - Miners - Military"
+  military_miners_traders = ReadText(1972092412, 10132), -- "Military - Miners - Traders"
+  military_traders_miners = ReadText(1972092412, 10133), -- "Military - Traders - Miners"
+  miners_traders_military = ReadText(1972092412, 10134), -- "Miners - Traders - Military"
+  miners_military_traders = ReadText(1972092412, 10135), -- "Miners - Military - Traders"
+  traders_military_miners = ReadText(1972092412, 10136), -- "Traders - Military - Miners"
+  traders_miners_military = ReadText(1972092412, 10137), -- "Traders - Miners - Military"
   manual = ReadText(1972092412, 10139), -- "Manual"
-  cadets = ReadText(1972092412, 10141), -- "Cadets:"
-  pilots = ReadText(1972092412, 10151), -- "Pilots:"
-  primaryGoal = ReadText(1972092412, 10201), -- "Primary Goal:"
-  noAvailablePrimaryGoals = ReadText(1972092412, 10209), -- "No available primary goals"
-  factions = ReadText(1972092412, 10211), -- "Factions:"
-  wingLeader = ReadText(1972092412, 10221), -- "Wing Leader:"
-  noAvailableWingLeaders = ReadText(1972092412, 10229), -- "No available wing leaders"
-  addWingman = ReadText(1972092412, 10231), -- "Add Wingman"
-  noAvailableWingmanCandidates = ReadText(1972092412, 10239), -- "No available wingman candidates"
-  wingmans = ReadText(1972092412, 10241), -- "Wingmans:",
-  noAvailableWingmans = ReadText(1972092412, 10249), -- "No wingmans assigned"
+  priority = ReadText(1972092412, 10141), -- "Priority:"
+  priority_small_to_large = ReadText(1972092412, 10142), -- "Small to Large"
+  priority_large_to_small = ReadText(1972092412, 10143), -- "Large to Small"
+  cadets = ReadText(1972092412, 10201), -- "Cadets:"
+  pilots = ReadText(1972092412, 10202), -- "Pilots:"
+  primaryGoal = ReadText(1972092412, 10301), -- "Primary Goal:"
+  noAvailablePrimaryGoals = ReadText(1972092412, 10309), -- "No available primary goals"
+  factions = ReadText(1972092412, 10311), -- "Factions:"
+  wingLeader = ReadText(1972092412, 10321), -- "Wing Leader:"
+  noAvailableWingLeaders = ReadText(1972092412, 10329), -- "No available wing leaders"
+  addWingman = ReadText(1972092412, 10331), -- "Add Wingman"
+  noAvailableWingmanCandidates = ReadText(1972092412, 10339), -- "No available wingman candidates"
+  wingmans = ReadText(1972092412, 10341), -- "Wingmans:"
+  noAvailableWingmans = ReadText(1972092412, 10349), -- "No wingmans assigned"
   dismissWing = ReadText(1972092412, 10901), -- "Dismiss"
   cancel = ReadText(1972092412, 10902), -- "Cancel"
   update = ReadText(1972092412, 10903), -- "Update"
@@ -96,6 +100,19 @@ local pilotAcademy = {
   wingsVariableId = "pilotAcademyRAndRWings",
   editData = {},
   orderId = "PilotAcademyWing",
+  assignOptions = {
+    "manual",
+    "military_miners_traders",
+    "military_traders_miners",
+    "miners_traders_military",
+    "miners_military_traders",
+    "traders_military_miners",
+    "traders_miners_military",
+  },
+  assignPriority = {
+    "priority_small_to_large",
+    "priority_large_to_small",
+  },
 }
 
 local config = {}
@@ -674,6 +691,57 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
     tables[#tables + 1] = { table = tableFactions, height = tableFactions.properties.maxVisibleHeight }
   end
 
+  local tableAssign = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
+  tableAssign.name = "table_academy_top"
+  tableAssign:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
+  tableAssign:setDefaultCellProperties("button", { height = config.mapRowHeight })
+  tableAssign:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
+  pilotAcademy.setAcademyContentColumnWidths(tableAssign, menu, config)
+  tableAssign:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+
+  local assign = editData.assign or academyData.assign or "manual"
+  local assignOptions = pilotAcademy.getAssignOptions()
+
+  row = tableAssign:addRow(nil, { fixed = true })
+  row[2]:setColSpan(2):createText(texts.assign, { halign = "left", titleColor = Color["row_title"] })
+  row = tableAssign:addRow("location", { fixed = true })
+  row[1]:createText("", { halign = "left" })
+  row[2]:setColSpan(2):createDropDown(
+    assignOptions,
+    {
+      startOption = assign or "manual",
+      active = true,
+      textOverride = (#locationOptions == 0) and "" or nil,
+    }
+  )
+  row[2]:setTextProperties({ halign = "left" })
+  row[2].handlers.onDropDownConfirmed = function(_, id)
+    return pilotAcademy.onSelectAssign(id)
+  end
+
+  if assign ~= "manual" then
+    local assignPriority = editData.assignPriority or academyData.assignPriority or "priority_small_to_large"
+    local priorityOptions = pilotAcademy.getAssignPriorityOptions()
+    tableAssign:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+    row = tableAssign:addRow(nil, { fixed = true })
+    row[2]:setColSpan(2):createText(texts.priority, { halign = "left", titleColor = Color["row_title"] })
+    row = tableAssign:addRow("assign_priority", { fixed = true })
+    row[1]:createText("", { halign = "left" })
+    row[2]:setColSpan(2):createDropDown(
+      priorityOptions,
+      {
+        startOption = assignPriority or "priority_small_to_large",
+        active = true,
+        textOverride = (#priorityOptions == 0) and "" or nil,
+      }
+    )
+    row[2]:setTextProperties({ halign = "left" })
+    row[2].handlers.onDropDownConfirmed = function(_, id)
+      return pilotAcademy.onSelectAssignPriority(id)
+    end
+  end
+
+  tables[#tables + 1] = { table = tableAssign, height = tableAssign:getFullHeight() }
 
   local tableBottom = frame:addTable(7, { tabOrder = 2, reserveScrollBar = false })
   tableBottom.name = "table_wing_bottom"
@@ -723,6 +791,42 @@ end
 function pilotAcademy.onToggleAutoHire(checked)
   trace("Toggled auto hire: " .. tostring(checked))
   pilotAcademy.editData.autoHire = checked
+  local menu = pilotAcademy.menuMap
+  if menu ~= nil then
+    menu.refreshInfoFrame()
+  end
+end
+
+function pilotAcademy.getAssignOptions()
+  local options = {}
+  for i = 1, #pilotAcademy.assignOptions do
+    local priority = pilotAcademy.assignOptions[i]
+    options[#options + 1] = { id = priority, icon = "", text = texts[priority], text2 = "", displayremoveoption = false }
+  end
+  return options
+end
+
+function pilotAcademy.onSelectAssign(priority)
+  trace("Selected assign priority: " .. tostring(priority))
+  pilotAcademy.editData.assign = priority
+  local menu = pilotAcademy.menuMap
+  if menu ~= nil then
+    menu.refreshInfoFrame()
+  end
+end
+
+function pilotAcademy.getAssignPriorityOptions()
+  local options = {}
+  for i = 1, #pilotAcademy.assignPriority do
+    local shipClass = pilotAcademy.assignPriority[i]
+    options[#options + 1] = { id = shipClass, icon = "", text = texts[shipClass], text2 = "", displayremoveoption = false }
+  end
+  return options
+end
+
+function pilotAcademy.onSelectAssignPriority(priority)
+  trace("Selected assign priority: " .. tostring(priority))
+  pilotAcademy.editData.assignPriority = priority
   local menu = pilotAcademy.menuMap
   if menu ~= nil then
     menu.refreshInfoFrame()
