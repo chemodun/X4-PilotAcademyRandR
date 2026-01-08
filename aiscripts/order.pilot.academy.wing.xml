@@ -15,6 +15,17 @@
   </order>
   <interrupts>
     <library>
+      <actions name="GetTargetRankLevel">
+        <set_value name="$targetRankLevel" exact="3" />
+        <set_value name="$commonData" exact="@player.entity.$pilotAcademyRAndRData" />
+        <debug_text text="'Pilot Academy [%s]: loaded commonData: %s' . [this.assignedcontrolled.debugname, @$commonData]" chance="$debugchance" />
+        <do_if value="@$commonData != null and @$commonData.$targetRankLevel != null">
+          <set_value name="$targetRankLevel" exact="@$commonData.$targetRankLevel" />
+        </do_if>
+        <debug_text
+          text="'Pilot Academy [%s]: determined targetRankLevel: %s' . [this.assignedcontrolled.debugname, $targetRankLevel]"
+          chance="$debugchance" />
+      </actions>
       <actions name="PilotAcademyProcessWingData">
         <set_value name="$wingData" exact="null" />
         <set_value name="$wingsData" exact="@player.entity.$pilotAcademyRAndRWings" />
@@ -25,13 +36,13 @@
           text="'Pilot Academy [%s]: loaded wingData: %s for wingId: %s from wingsData: %s' . [this.assignedcontrolled.debugname, @$wingData, @$wingId, @$wingsData]"
           chance="$debugchance" />
         <do_if value="@$wingData != null">
-          <set_value name="$targetRankLevel" exact="if @$wingData.$targetRankLevel != null then @$wingData.$targetRankLevel else 3" />
           <set_value name="$factionNames" exact="if @$wingData.$factions != null then @$wingData.$factions else []" />
           <set_value name="$primaryGoal" exact="if @$wingData.$primaryGoal != null then @$wingData.$primaryGoal else 'rank'" />
           <debug_text
-            text="'Pilot Academy [%s]: extracted from wingData: targetRankLevel: %s, factionNames count: %s, primaryGoal: %s' .
-              [this.assignedcontrolled.debugname, $targetRankLevel, $factionNames.count, $primaryGoal]"
+            text="'Pilot Academy [%s]: extracted from wingData: factionNames count: %s, primaryGoal: %s' .
+              [this.assignedcontrolled.debugname, $factionNames.count, $primaryGoal]"
             chance="$debugchance" />
+          <include_interrupt_actions ref="GetTargetRankLevel" />
         </do_if>
         <do_else>
           <set_value name="$runMode" exact="false" />
@@ -256,6 +267,15 @@
       <actions>
         <debug_text text="'Pilot Academy [%s]: received remove from wing order, finishing.' . [this.assignedcontrolled.debugname]" chance="$debugchance" />
         <abort_called_scripts resume="finish" />
+      </actions>
+    </handler>
+    <handler>
+      <conditions>
+        <event_object_signalled object="player.entity" param="'AcademyTargetRankLevelChanged'" />
+      </conditions>
+      <actions>
+        <debug_text text="'Pilot Academy [%s]: received target rank level change notification' . [this.assignedcontrolled.debugname]" chance="$debugchance" />
+        <include_interrupt_actions ref="GetTargetRankLevel" />
       </actions>
     </handler>
   </interrupts>
