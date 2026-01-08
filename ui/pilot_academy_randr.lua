@@ -98,6 +98,7 @@ local pilotAcademy = {
   },
   sideBarIsCreated = false,
   selectedTab = nil,
+  minRelationForAcademyStation = 5, -- Neutral
   commonData = {},
   wings = {},
   wingsCountMax = 9,
@@ -495,14 +496,21 @@ function pilotAcademy.createInfoFrame()
   end
 end
 
-function pilotAcademy.sortFactions(a, b)
+function pilotAcademy.sortFactionsAscending(a, b)
   if a.uiRelation == b.uiRelation then
     return a.shortName < b.shortName
   end
   return a.uiRelation < b.uiRelation
 end
 
-function pilotAcademy.getFactions(config)
+function pilotAcademy.sortFactionsDescending(a, b)
+  if a.uiRelation == b.uiRelation then
+    return a.shortName < b.shortName
+  end
+  return a.uiRelation > b.uiRelation
+end
+
+function pilotAcademy.getFactions(config, sortAscending)
   local factionsAll = GetLibrary("factions")
   local factions = {}
   local maxShortNameWidth = 0
@@ -529,7 +537,11 @@ function pilotAcademy.getFactions(config)
       end
     end
   end
-  table.sort(factions, pilotAcademy.sortFactions)
+  if sortAscending then
+    table.sort(factions, pilotAcademy.sortFactionsAscending)
+  else
+    table.sort(factions, pilotAcademy.sortFactionsDescending)
+  end
   return factions, maxShortNameWidth, maxRelationNameWidth
 end
 
@@ -626,7 +638,10 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
   tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local locationId = editData.locationId or academyData.locationId or nil
   local locationSelectable = locationId == nil or editData.locationId ~= nil and editData.locationId ~= academyData.locationId or editData.toChangeLocation == true
-  local locationOptions = pilotAcademy.fetchPotentialLocations(locationSelectable, academyData.locationId)
+
+  local factions, maxShortNameWidth, maxRelationNameWidth = pilotAcademy.getFactions(config, false)
+  local locationOptions = pilotAcademy.fetchPotentialLocations(locationSelectable, academyData.locationId, factions)
+
   row = tableTop:addRow(nil, { fixed = true })
   row[2]:setColSpan(2):createText(texts.location, { halign = "left", titleColor = Color["row_title"] })
   row = tableTop:addRow("location", { fixed = true })
@@ -679,8 +694,6 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
   if autoHire == nil then
     autoHire = false
   end
-
-  local factions, maxShortNameWidth, maxRelationNameWidth = pilotAcademy.getFactions(config)
 
   row = tableTop:addRow("auto_hire", { fixed = true })
   row[2]:createCheckBox(autoHire == true, { active = #factions > 0 }) -- To Do: add check on own stations with hiring possibility
@@ -802,7 +815,7 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
 end
 
 
-function pilotAcademy.fetchPotentialLocations(selectable, currentLocationId)
+function pilotAcademy.fetchPotentialLocations(selectable, currentLocationId, factions)
   local locations = {}
   local stations = {}
   if selectable then
@@ -818,17 +831,42 @@ function pilotAcademy.fetchPotentialLocations(selectable, currentLocationId)
         end
       end
     end
+    if #stations == 0 and #factions > 0 then
+      for i = 1, #factions do
+        local faction = factions[i]
+        local relation = GetUIRelation(faction.id)
+        if relation < pilotAcademy.minRelationForAcademyStation then
+          break
+        end
+        local numOwnedStations = C.GetNumAllFactionStations(faction.id)
+        local allOwnedStations = ffi.new("UniverseID[?]", numOwnedStations)
+        numOwnedStations = C.GetAllFactionStations(allOwnedStations, numOwnedStations, faction.id)
+        if numOwnedStations > 0 then
+          for i = 0, numOwnedStations - 1 do
+            local stationId = ConvertStringTo64Bit(tostring(allOwnedStations[i]))
+            local isUnderConstruction = IsComponentConstruction(stationId)
+            if not isUnderConstruction then
+              local name, isShipyard, isWharf, isEquipmentDock, isTradeStation = GetComponentData(stationId, "name", "isshipyard", "iswharf", "isequipmentdock", "istradestation")
+              if name ~= nil and (isShipyard == true or isWharf == true or isEquipmentDock == true or isTradeStation == true) then
+                stations[#stations + 1] = pilotAcademy.getStationInfo(stationId)
+              end
+            end
+          end
+        end
+      end
+    end
   else
     local station = pilotAcademy.getStationInfo(currentLocationId)
     stations = { station }
   end
+  table.sort(stations, pilotAcademy.sortStationsDescending)
   for i = 1, #stations do
     local station = stations[i]
     if station ~= nil then
       locations[#locations + 1] = {
         id = station.id,
         icon = "",
-        text = string.format("%s\027[%s] %s %s (%s)", station.factionColor, station.icon, station.factionShortName, pilotAcademy.formatName(station.name, 25), station.idCode),
+        text = string.format("%s\027[%s] %s (%s)", station.color, station.icon, pilotAcademy.formatName(station.name, 40), station.idCode),
         text2 = station.sector,
         displayremoveoption = false,
       }
@@ -839,19 +877,23 @@ end
 
 function pilotAcademy.getStationInfo(stationId)
   local name, faction, icon, idCode, sector = GetComponentData(stationId, "name", "owner", "icon", "idcode", "sector")
-  local factionColor, factionShortName = GetFactionData(faction, "color", "shortname")
-  factionColor = Helper.convertColorToText(factionColor)
+  local color = Helper.convertColorToText(GetFactionData(faction, "color"))
   return {
     id = stationId,
-    faction = faction,
-    factionShortName = factionShortName,
-    factionColor = factionColor,
-    factionRelation = GetUIRelation(faction),
+    color = color,
+    uiRelation = GetUIRelation(faction),
     name = name,
     idCode = idCode,
     sector = sector,
     icon = icon,
   }
+end
+
+function pilotAcademy.sortStationsDescending(a, b)
+  if a.uiRelation == b.uiRelation then
+    return a.name < b.name
+  end
+  return a.uiRelation > b.uiRelation
 end
 
 function pilotAcademy.onSelectLocation(locationId)
@@ -1270,7 +1312,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   local wings = pilotAcademy.wings or {}
   local wingId = pilotAcademy.selectedTab
   local existingWing = wingId ~= nil and wings[wingId] ~= nil
-  local factions, maxShortNameWidth, maxRelationNameWidth = pilotAcademy.getFactions(config)
+  local factions, maxShortNameWidth, maxRelationNameWidth = pilotAcademy.getFactions(config, true)
   -- local factionsSorted =
   pilotAcademy.setInfoContentColumnWidths(tableTop, menu, config, maxShortNameWidth, maxRelationNameWidth)
   local wingData = existingWing and wings[wingId] or {}
