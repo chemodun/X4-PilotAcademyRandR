@@ -1539,7 +1539,7 @@ function pilotAcademy.fetchPotentialWingmans(existingWing, existingWingLeader)
   allShipsCount = C.GetAllFactionShips(allShips, allShipsCount, "player")
   for i = 0, allShipsCount - 1 do
     local shipId = ConvertStringTo64Bit(tostring(allShips[i]))
-    local shipMacro, isDeployable, shipName, pilot, classId = GetComponentData(shipId, "macro", "isdeployable", "name", "assignedaipilot", "classid")
+    local shipMacro, isDeployable, shipName, pilot, classId, idcode, icon = GetComponentData(shipId, "macro", "isdeployable", "name", "assignedaipilot", "classid", "idcode", "icon")
     local isLasertower, shipWare = GetMacroData(shipMacro, "islasertower", "ware")
     local isUnit = C.IsUnit(shipId)
     if shipWare and (not isUnit) and (not isLasertower) and (not isDeployable) and Helper.isComponentClass(classId, "ship_s") and pilot and IsValidComponent(pilot) then
@@ -1555,7 +1555,8 @@ function pilotAcademy.fetchPotentialWingmans(existingWing, existingWingLeader)
           local candidate = {}
           candidate.shipId = shipId
           candidate.shipName = shipName
-          candidate.shipIdCode = ffi.string(C.GetObjectIDCode(shipId))
+          candidate.shipIdCode = idcode
+          candidate.shipIcon = icon
           candidate.pilotId = pilot
           candidate.pilotName, candidate.pilotSkill = GetComponentData(pilot, "name", "combinedskill")
           candidateShips[#candidateShips + 1] = candidate
@@ -1566,13 +1567,7 @@ function pilotAcademy.fetchPotentialWingmans(existingWing, existingWingLeader)
   table.sort(candidateShips, pilotAcademy.sortPotentialWingLeaders)
   local potentialWingLeaders = {}
   for i = 1, #candidateShips do
-    potentialWingLeaders[#potentialWingLeaders + 1] = pilotAcademy.formatShipInfoOption(
-      candidateShips[i].shipId,
-      candidateShips[i].shipName,
-      candidateShips[i].shipIdCode,
-      candidateShips[i].pilotName,
-      candidateShips[i].pilotSkill
-    )
+    potentialWingLeaders[#potentialWingLeaders + 1] = pilotAcademy.formatShipInfoOption(candidateShips[i])
   end
   return potentialWingLeaders
 end
@@ -1584,13 +1579,13 @@ function pilotAcademy.sortPotentialWingLeaders(a, b)
   return a.pilotSkill < b.pilotSkill
 end
 
-function pilotAcademy.formatShipInfoOption(shipId, shipName, shipIdCode, pilotName, pilotSkill)
+function pilotAcademy.formatShipInfoOption(shipInfo)
   return {
-    id = tostring(shipId),
+    id = tostring(shipInfo.shipId),
     icon = "",
-    text = string.format("%s (%s): %s", pilotAcademy.formatName(shipName, 25), shipIdCode,
-      pilotAcademy.formatName(pilotName, 20)),
-    text2 = string.format("%s", pilotSkill and Helper.displaySkill(pilotSkill * 15 / 100)) or 0,
+    text = string.format("\027[%s] %s (%s): %s", shipInfo.shipIcon, pilotAcademy.formatName(shipInfo.shipName, 25), shipInfo.shipIdCode,
+      pilotAcademy.formatName(shipInfo.pilotName, 20)),
+    text2 = string.format("%s", shipInfo.pilotSkill and Helper.displaySkill(shipInfo.pilotSkill * 15 / 100)) or 0,
     displayremoveoption = false,
   }
 end
@@ -1599,16 +1594,16 @@ function pilotAcademy.wingLeaderToOption(wingLeaderId)
   if type(wingLeaderId) == "string" then
     wingLeaderId = ConvertStringTo64Bit(wingLeaderId)
   end
-  local shipName, pilot = GetComponentData(wingLeaderId, "name", "assignedaipilot")
+  local shipName, pilot, shipIdCode, shipIcon = GetComponentData(wingLeaderId, "name", "assignedaipilot", "idcode", "icon")
   local pilotName, pilotSkill = GetComponentData(pilot, "name", "combinedskill")
-  local shipIdCode = ffi.string(C.GetObjectIDCode(wingLeaderId))
-  return pilotAcademy.formatShipInfoOption(
-    wingLeaderId,
-    shipName,
-    shipIdCode,
-    pilotName,
-    pilotSkill
-  )
+  return pilotAcademy.formatShipInfoOption({
+    shipId = wingLeaderId,
+    shipName = shipName,
+    shipIdCode = shipIdCode,
+    pilotName = pilotName,
+    pilotSkill = pilotSkill,
+    shipIcon = shipIcon,
+  })
 end
 
 function pilotAcademy.onSelectElement(uiTable, modified, row, isDoubleClick, input)
