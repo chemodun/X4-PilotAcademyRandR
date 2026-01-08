@@ -10,6 +10,7 @@
       <t id="111">Wing %s of Pilot Academy R&amp;R</t>
       <t id="10001">Academy Settings</t>
       <t id="10011">Cadets and Pilots</t>
+      <t id="10019">Pilot Academy: Cadets and Pilots</t>
       <t id="10021">Wing %s</t>
       <t id="10029">Add new Wing</t>
       <t id="10101">Location:</t>
@@ -28,8 +29,12 @@
       <t id="10142">Small to Large</t>
       <t id="10143">Large to Small</t>
       <t id="10201">Cadets:</t>
-      <t id="10202">Pilots:</t>
+      <t id="10209">No cadets assigned</t>
+      <t id="10211">Pilots:</t>
+      <t id="10219">No pilots available</t>
       <t id="10301">Primary Goal:</t>
+      <t id="10302">Increase Rank</t>
+      <t id="10303">Gain Reputation</t>
       <t id="10309">No available primary goals</t>
       <t id="10311">Factions:</t>
       <t id="10321">Wing Leader:</t>

@@ -44,6 +44,7 @@ local texts = {
   wingFleetName = ReadText(1972092412, 111), -- "Wing %s of Pilot Academy R&R"
   academySettings = ReadText(1972092412, 10001), -- "Academy Settings"
   cadetsAndPilots = ReadText(1972092412, 10011), -- "Cadets and Pilots"
+  cadetsAndPilotsTitle = ReadText(1972092412, 10019), -- "Pilot Academy: Cadets and Pilots"
   wing = ReadText(1972092412, 10021), -- "Wing %s"
   addNewWing = ReadText(1972092412, 10029), -- "Add new Wing"
   location = ReadText(1972092412, 10101), -- "Location:"
@@ -62,8 +63,12 @@ local texts = {
   priority_small_to_large = ReadText(1972092412, 10142), -- "Small to Large"
   priority_large_to_small = ReadText(1972092412, 10143), -- "Large to Small"
   cadets = ReadText(1972092412, 10201), -- "Cadets:"
-  pilots = ReadText(1972092412, 10202), -- "Pilots:"
+  noCadetsAssigned = ReadText(1972092412, 10209), -- "No cadets assigned"
+  pilots = ReadText(1972092412, 10211), -- "Pilots:"
+  noPilotsAvailable = ReadText(1972092412, 10219), -- "No pilots available"
   primaryGoal = ReadText(1972092412, 10301), -- "Primary Goal:"
+  increaseRank = ReadText(1972092412, 10302), -- "Increase Rank"
+  gainReputation = ReadText(1972092412, 10303), -- "Gain Reputation"
   noAvailablePrimaryGoals = ReadText(1972092412, 10309), -- "No available primary goals"
   factions = ReadText(1972092412, 10311), -- "Factions:"
   wingLeader = ReadText(1972092412, 10321), -- "Wing Leader:"
@@ -384,6 +389,8 @@ function pilotAcademy.createInfoFrame()
   local tables = {}
   if pilotAcademy.selectedTab == "settings" then
     tables = pilotAcademy.displayAcademyInfo(frame, menu, config) or {}
+  elseif pilotAcademy.selectedTab == "personnel" then
+    tables = pilotAcademy.displayPersonnelInfo(frame, menu, config) or {}
   else
     tables = pilotAcademy.displayWingInfo(frame, menu, config) or {}
   end
@@ -403,15 +410,15 @@ function pilotAcademy.createInfoFrame()
     local rowCount = 1
     local placesCount = 1
     if wingsCount == pilotAcademy.wingsCountMax then
-      placesCount = wingsCount + 2
+      placesCount = wingsCount + 3
     elseif wingsCount == 0 then
-      placesCount = 3
+      placesCount = 4
     else
-      placesCount = wingsCount + 4
+      placesCount = wingsCount + 5
     end
     for i = 1, maxNumCategoryColumns do
       local columnWidth = menu.sideBarWidth
-      if i == 2 or wingsCount > 0 and i == wingsCount + 3 and wingsCount + 3 < maxNumCategoryColumns then
+      if i == 3 or wingsCount > 0 and i == wingsCount + 4 and wingsCount + 4 < maxNumCategoryColumns then
         columnWidth = math.floor(columnWidth / 2)
       end
       tabsTable:setColWidth(i, columnWidth, false)
@@ -427,7 +434,7 @@ function pilotAcademy.createInfoFrame()
         row = tabsTable:addRow("pilot_academy_r_and_r_tabs", { fixed = true })
         rowCount = rowCount + 1
       end
-      if i == 1 or (i > 2 and i <= wingsCount + 2) or i == placesCount then
+      if i <= 2 or (i > 3 and i <= wingsCount + 3) or i == placesCount then
         local name = texts.addNewWing
         local icon = "pa_icon_add"
         selector = nil
@@ -435,7 +442,11 @@ function pilotAcademy.createInfoFrame()
           name = texts.academySettings
           icon = "pa_icon_tools"
           selector = "settings"
-        elseif (i > 2 and i <= wingsCount + 2) then
+        elseif i == 2 then
+          name = texts.cadetsAndPilots
+          icon = "pa_icon_personnel"
+          selector = "personnel"
+        elseif (i > 3 and i <= wingsCount + 3) then
           for j = wingIdIndex, #pilotAcademy.wingIds do
             selector = tostring(pilotAcademy.wingIds[j])
             if pilotAcademy.wings[selector] ~= nil then
@@ -856,6 +867,108 @@ function pilotAcademy.combineFactionsSelections(editData, savedData)
   return selectedFactions
 end
 
+function pilotAcademy.displayPersonnelInfo(frame, menu, config)
+  if frame == nil then
+    trace("Frame is nil; cannot display wing info")
+    return nil
+  end
+  if menu == nil or config == nil then
+    trace("Menu or config is nil; cannot display wing info")
+    return nil
+  end
+
+  local tables = {}
+  local tableTop = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
+  tableTop.name = "table_academy_top"
+  tableTop:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
+  tableTop:setDefaultCellProperties("button", { height = config.mapRowHeight })
+  tableTop:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
+  pilotAcademy.setAcademyContentColumnWidths(tableTop, menu, config)
+  local row = tableTop:addRow(nil, { fixed = true })
+  row[1]:setColSpan(4):createText(texts.cadetsAndPilotsTitle, Helper.headerRowCenteredProperties)
+
+  tables[#tables + 1] = { table = tableTop, height = tableTop:getFullHeight() }
+
+  local tableCadets = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
+  tableCadets.name = "table_academy_cadets"
+  tableCadets:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
+  tableCadets:setDefaultCellProperties("button", { height = config.mapRowHeight })
+  tableCadets:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
+  pilotAcademy.setAcademyContentColumnWidths(tableCadets, menu, config)
+  tableCadets:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  local row = tableCadets:addRow(nil, { fixed = true })
+  row[2]:setColSpan(2):createText(texts.cadets, Helper.headerRowCenteredProperties)
+
+  local tableCadetsMaxHeight = 0
+  local cadets = pilotAcademy.getCadetsList()
+  for i = 1, #cadets do
+    local cadet = cadets[i]
+    if cadet ~= nil then
+      local row = tableCadets:addRow(cadet.id, { fixed = false })
+      row[2]:createIcon(cadet.icon, { height = config.mapRowHeight, width = config.mapRowHeight, color = Color["text_normal"] })
+      row[3]:setColSpan(2):createText(cadet.name, { halign = "left", color = Color["text_normal"] })
+      if i == 15 then
+        tableCadetsMaxHeight = tableCadets:getFullHeight()
+      end
+    end
+  end
+  if #cadets == 0 then
+    local row = tableCadets:addRow(nil, { fixed = false })
+    row[2]:setColSpan(2):createText(texts.noCadetsAssigned, { halign = "center", color = Color["text_warning"] })
+  end
+  if tableCadetsMaxHeight == 0 then
+    tableCadetsMaxHeight = tableCadets:getFullHeight()
+  end
+  tableCadets.properties.maxVisibleHeight = math.min(tableCadets:getFullHeight(), tableCadetsMaxHeight)
+  tables[#tables + 1] = { table = tableCadets, height = tableCadets.properties.maxVisibleHeight }
+
+  local tablePilots = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
+  tablePilots.name = "table_academy_pilots"
+  tablePilots:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
+  tablePilots:setDefaultCellProperties("button", { height = config.mapRowHeight })
+  tablePilots:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
+  pilotAcademy.setAcademyContentColumnWidths(tablePilots, menu, config)
+  tablePilots:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  local row = tablePilots:addRow(nil, { fixed = true })
+  row[2]:setColSpan(2):createText(texts.pilots, Helper.headerRowCenteredProperties)
+  local tablePilotsMaxHeight = 0
+  local pilots = pilotAcademy.getPilotsList()
+  for i = 1, #pilots do
+    local pilot = pilots[i]
+    if pilot ~= nil then
+      local row = tablePilots:addRow(pilot.id, { fixed = false })
+      row[2]:createIcon(pilot.icon, { height = config.mapRowHeight, width = config.mapRowHeight, color = Color["text_normal"] })
+      row[3]:setColSpan(2):createText(pilot.name, { halign = "left", color = Color["text_normal"] })
+      if i == 15 then
+        tablePilotsMaxHeight = tablePilots:getFullHeight()
+      end
+    end
+  end
+
+  if #pilots == 0 then
+    local row = tablePilots:addRow(nil, { fixed = false })
+    row[2]:setColSpan(2):createText(texts.noPilotsAvailable, { halign = "center", color = Color["text_warning"] })
+  end
+
+  if tablePilotsMaxHeight == 0 then
+    tablePilotsMaxHeight = tablePilots:getFullHeight()
+  end
+  tablePilots.properties.maxVisibleHeight = math.min(tablePilots:getFullHeight(), tablePilotsMaxHeight)
+  tables[#tables + 1] = { table = tablePilots, height = tablePilots.properties.maxVisibleHeight }
+
+  return tables
+end
+
+function pilotAcademy.getCadetsList()
+  local cadets = {}
+  return cadets
+end
+
+function pilotAcademy.getPilotsList()
+  local pilots = {}
+  return pilots
+end
+
 function pilotAcademy.setInfoContentColumnWidths(tableHandle, menu, config, maxShortNameWidth, maxRelationNameWidth)
   if tableHandle == nil or menu == nil then
     debug("tableWingmans or menu is nil; cannot set column widths")
@@ -932,8 +1045,8 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local row = tableTop:addRow("wing_primary_goal", { fixed = true })
   local primaryGoalOptions = {
-    { id = "rank",     icon = "", text = "Increase Rank",     text2 = "", displayremoveoption = false },
-    { id = "relation", icon = "", text = "Improve Relations", text2 = "", displayremoveoption = false },
+    { id = "rank",     icon = "", text = texts.increaseRank,     text2 = "", displayremoveoption = false },
+    { id = "relation", icon = "", text = texts.gainReputation,   text2 = "", displayremoveoption = false },
   }
   row[2]:setColSpan(5):createText(texts.primaryGoal, { halign = "left", titleColor = Color["row_title"] })
   row[7]:setColSpan(5):createDropDown(
