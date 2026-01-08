@@ -336,8 +336,8 @@ function pilotAcademy.resetData()
     tableWingsFactions = {},
     tableWingsWingmans = {},
     tableAcademyFactions = nil,
-    tableAcademyCadets = nil,
-    tableAcademyPilots = nil,
+    tablePersonnelCadets = nil,
+    tablePersonnelPilots = nil,
   }
 end
 
@@ -559,21 +559,31 @@ function pilotAcademy.storeTopRows()
     return
   end
 
-  if pilotAcademy.selectedTab ~= "settings" then
-    local infoFrame = menu.infoFrame
-    if infoFrame == nil or type(infoFrame.content) ~= "table" or #infoFrame.content == 0 then
-      trace("Info frame is nil or has no content; cannot store table factions top row")
-      return
-    end
-    for i = 1, #infoFrame.content do
-      local item = infoFrame.content[i]
-      if type(item) == "table" and item.type == "table" and item.id ~= nil then
-        if item.name == "table_wing_factions" then
-          pilotAcademy.topRows.tableWingsFactions[tostring(pilotAcademy.selectedTab)] = GetTopRow(item.id)
-        end
-        if item.name == "table_wing_wingmans" then
-          pilotAcademy.topRows.tableWingsWingmans[tostring(pilotAcademy.selectedTab)] = GetTopRow(item.id)
-        end
+  local infoFrame = menu.infoFrame
+  if infoFrame == nil or type(infoFrame.content) ~= "table" or #infoFrame.content == 0 then
+    trace("Info frame is nil or has no content; cannot store table factions top row")
+    return
+  end
+  for i = 1, #infoFrame.content do
+    local item = infoFrame.content[i]
+    if type(item) == "table" and item.type == "table" and item.id ~= nil then
+      if item.name == "table_wing_factions" then
+        pilotAcademy.topRows.tableWingsFactions[tostring(pilotAcademy.selectedTab)] = GetTopRow(item.id)
+      end
+      if item.name == "table_wing_wingmans" then
+        pilotAcademy.topRows.tableWingsWingmans[tostring(pilotAcademy.selectedTab)] = GetTopRow(item.id)
+      end
+
+      if item.name == "table_academy_factions" then
+        pilotAcademy.topRows.tableAcademyFactions = GetTopRow(item.id)
+      end
+
+      if item.name == "table_personnel_cadets" then
+        pilotAcademy.topRows.tablePersonnelCadets = GetTopRow(item.id)
+      end
+
+      if item.name == "table_personnel_pilots" then
+        pilotAcademy.topRows.tablePersonnelPilots = GetTopRow(item.id)
       end
     end
   end
@@ -707,7 +717,12 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
     end
     tableFactions.properties.maxVisibleHeight = math.min(tableFactions:getFullHeight(), tableFactionsMaxHeight)
     tables[#tables + 1] = { table = tableFactions, height = tableFactions.properties.maxVisibleHeight }
+
+    if pilotAcademy.topRows.tableAcademyFactions ~= nil then
+      tableFactions:setTopRow(pilotAcademy.topRows.tableAcademyFactions)
+    end
   end
+  pilotAcademy.topRows.tableAcademyFactions = nil
 
   local tableAssign = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
   tableAssign.name = "table_academy_top"
@@ -996,7 +1011,7 @@ function pilotAcademy.displayPersonnelInfo(frame, menu, config)
 
   local tables = {}
   local tableTop = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
-  tableTop.name = "table_academy_top"
+  tableTop.name = "table_personnel_top"
   tableTop:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
   tableTop:setDefaultCellProperties("button", { height = config.mapRowHeight })
   tableTop:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
@@ -1007,7 +1022,7 @@ function pilotAcademy.displayPersonnelInfo(frame, menu, config)
   tables[#tables + 1] = { table = tableTop, height = tableTop:getFullHeight() }
 
   local tableCadets = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
-  tableCadets.name = "table_academy_cadets"
+  tableCadets.name = "table_personnel_cadets"
   tableCadets:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
   tableCadets:setDefaultCellProperties("button", { height = config.mapRowHeight })
   tableCadets:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
@@ -1032,7 +1047,12 @@ function pilotAcademy.displayPersonnelInfo(frame, menu, config)
   if #cadets == 0 then
     local row = tableCadets:addRow(nil, { fixed = false })
     row[2]:setColSpan(2):createText(texts.noCadetsAssigned, { halign = "center", color = Color["text_warning"] })
+  else
+    if pilotAcademy.topRows.tablePersonnelCadets ~= nil then
+      tableCadets:setTopRow(pilotAcademy.topRows.tablePersonnelCadets)
+    end
   end
+  pilotAcademy.topRows.tablePersonnelCadets = nil
   if tableCadetsMaxHeight == 0 then
     tableCadetsMaxHeight = tableCadets:getFullHeight()
   end
@@ -1040,7 +1060,7 @@ function pilotAcademy.displayPersonnelInfo(frame, menu, config)
   tables[#tables + 1] = { table = tableCadets, height = tableCadets.properties.maxVisibleHeight }
 
   local tablePilots = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
-  tablePilots.name = "table_academy_pilots"
+  tablePilots.name = "table_personnel_pilots"
   tablePilots:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
   tablePilots:setDefaultCellProperties("button", { height = config.mapRowHeight })
   tablePilots:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
@@ -1065,8 +1085,12 @@ function pilotAcademy.displayPersonnelInfo(frame, menu, config)
   if #pilots == 0 then
     local row = tablePilots:addRow(nil, { fixed = false })
     row[2]:setColSpan(2):createText(texts.noPilotsAvailable, { halign = "center", color = Color["text_warning"] })
+  else
+    if pilotAcademy.topRows.tablePersonnelPilots ~= nil then
+      tablePilots:setTopRow(pilotAcademy.topRows.tablePersonnelPilots)
+    end
   end
-
+  pilotAcademy.topRows.tablePersonnelPilots = nil
   if tablePilotsMaxHeight == 0 then
     tablePilotsMaxHeight = tablePilots:getFullHeight()
   end
