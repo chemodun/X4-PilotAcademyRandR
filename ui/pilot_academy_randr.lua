@@ -625,7 +625,7 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
   row[1]:setColSpan(4):createText(texts.pilotAcademyFull, Helper.headerRowCenteredProperties)
   tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local locationId = editData.locationId or academyData.locationId or nil
-  local locationSelectable = locationId == nil or editData.locationId ~= academyData.locationId or editData.toChangeLocation == true
+  local locationSelectable = locationId == nil or editData.locationId ~= nil and editData.locationId ~= academyData.locationId or editData.toChangeLocation == true
   local locationOptions = pilotAcademy.fetchPotentialLocations(locationSelectable, academyData.locationId)
   row = tableTop:addRow(nil, { fixed = true })
   row[2]:setColSpan(2):createText(texts.location, { halign = "left", titleColor = Color["row_title"] })
@@ -641,12 +641,12 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
       }
     )
     row[2]:setTextProperties({ halign = "left" })
-    row[2]:setText2Properties({ halign = "right", color = Color["text_positive"] })
+    row[2]:setText2Properties({ halign = "right" })
     row[2].handlers.onDropDownConfirmed = function(_, id)
       return pilotAcademy.onSelectLocation(id)
     end
   else
-    row[2]:setColSpan(10):createButton({ active = true }):setText(locationOptions[1].text, { halign = "left" }):setText2(locationOptions[1].text2, { halign = "right", color = Color["text_positive"] })
+    row[2]:setColSpan(2):createButton({ active = true }):setText(locationOptions[1].text, { halign = "left" }):setText2(locationOptions[1].text2, { halign = "right" })
     row[2].handlers.onClick = function() return pilotAcademy.onToChangeLocation() end
   end
   tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
@@ -673,19 +673,23 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
 
   local autoHire = editData.autoHire
   if autoHire == nil then
-    autoHire = academyData.autoHire or false
+    autoHire = academyData.autoHire
+  end
+
+  if autoHire == nil then
+    autoHire = false
   end
 
   local factions, maxShortNameWidth, maxRelationNameWidth = pilotAcademy.getFactions(config)
 
   row = tableTop:addRow("auto_hire", { fixed = true })
-  row[2]:createCheckBox(autoHire, { active = #factions > 0, titleColor = Color["row_title"] }) -- To Do: add check on own stations with hiring possibility
+  row[2]:createCheckBox(autoHire == true, { active = #factions > 0 }) -- To Do: add check on own stations with hiring possibility
   row[2].handlers.onClick = function(_, checked) return pilotAcademy.onToggleAutoHire(checked) end
   row[3]:createText(texts.autoHire, { halign = "left", titleColor = Color["row_title"] })
   tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   tables[#tables + 1] = { table = tableTop, height = tableTop:getFullHeight() }
 
-  if #factions > 0 and autoHire then
+  if #factions > 0 and autoHire == true then
     local tableFactionsMaxHeight = 0
 
     local tableFactions = frame:addTable(12, { tabOrder = 2, reserveScrollBar = false })
@@ -796,9 +800,58 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
   tables[#tables + 1] = { table = tableBottom, height = tableBottom:getFullHeight() }
   return tables
 end
+
+
 function pilotAcademy.fetchPotentialLocations(selectable, currentLocationId)
   local locations = {}
+  local stations = {}
+  if selectable then
+    local numOwnedStations = C.GetNumAllFactionStations("player")
+    local allOwnedStations = ffi.new("UniverseID[?]", numOwnedStations)
+    numOwnedStations = C.GetAllFactionStations(allOwnedStations, numOwnedStations, "player")
+    if numOwnedStations > 0 then
+      for i = 0, numOwnedStations - 1 do
+        local stationId = ConvertStringTo64Bit(tostring(allOwnedStations[i]))
+        local isUnderConstruction = IsComponentConstruction(stationId)
+        if not isUnderConstruction then
+          stations[#stations + 1] = pilotAcademy.getStationInfo(stationId)
+        end
+      end
+    end
+  else
+    local station = pilotAcademy.getStationInfo(currentLocationId)
+    stations = { station }
+  end
+  for i = 1, #stations do
+    local station = stations[i]
+    if station ~= nil then
+      locations[#locations + 1] = {
+        id = station.id,
+        icon = "",
+        text = string.format("%s\027[%s] %s %s (%s)", station.factionColor, station.icon, station.factionShortName, pilotAcademy.formatName(station.name, 25), station.idCode),
+        text2 = station.sector,
+        displayremoveoption = false,
+      }
+    end
+  end
   return locations
+end
+
+function pilotAcademy.getStationInfo(stationId)
+  local name, faction, icon, idCode, sector = GetComponentData(stationId, "name", "owner", "icon", "idcode", "sector")
+  local factionColor, factionShortName = GetFactionData(faction, "color", "shortname")
+  factionColor = Helper.convertColorToText(factionColor)
+  return {
+    id = stationId,
+    faction = faction,
+    factionShortName = factionShortName,
+    factionColor = factionColor,
+    factionRelation = GetUIRelation(faction),
+    name = name,
+    idCode = idCode,
+    sector = sector,
+    icon = icon,
+  }
 end
 
 function pilotAcademy.onSelectLocation(locationId)
@@ -939,6 +992,9 @@ function pilotAcademy.buttonSaveAcademy()
 
   if editData.locationId ~= nil then
     academyData.locationId = editData.locationId
+  end
+  if academyData.locationId ~= nil then
+    academyData.locationObject = ConvertStringToLuaID(tostring(academyData.locationId))
   end
   if editData.targetRankLevel ~= nil then
     if editData.targetRankLevel ~= academyData.targetRankLevel then
@@ -1128,6 +1184,12 @@ function pilotAcademy.loadCommonData()
   debug("loadCommonData: loaded common data from saved data")
   if pilotAcademy.commonData.locationObject ~= nil then
     pilotAcademy.commonData.locationId = ConvertStringTo64Bit(tostring(pilotAcademy.commonData.locationObject))
+  end
+
+  if pilotAcademy.commonData.autoHire == 0 then
+    pilotAcademy.commonData.autoHire = false
+  elseif pilotAcademy.commonData.autoHire == 1 then
+    pilotAcademy.commonData.autoHire = true
   end
 
   debug("loadCommonData: locationId is " .. tostring(pilotAcademy.commonData.locationId))
