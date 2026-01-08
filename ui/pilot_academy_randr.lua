@@ -1038,10 +1038,11 @@ function pilotAcademy.buttonSaveAcademy()
   if academyData.locationId ~= nil then
     academyData.locationObject = ConvertStringToLuaID(tostring(academyData.locationId))
   end
+  local rankLevelChanged = false
   if editData.targetRankLevel ~= nil then
     if editData.targetRankLevel ~= academyData.targetRankLevel then
       trace("Setting target rank level to " .. tostring(editData.targetRankLevel))
-      SignalObject(pilotAcademy.playerId, "AcademyTargetRankLevelChanged")
+      rankLevelChanged = true
     end
     academyData.targetRankLevel = editData.targetRankLevel
   end
@@ -1080,6 +1081,9 @@ function pilotAcademy.buttonSaveAcademy()
   pilotAcademy.editData = {}
 
   pilotAcademy.saveCommonData()
+  if rankLevelChanged then
+    SignalObject(pilotAcademy.playerId, "AcademyTargetRankLevelChanged")
+  end
   menu.refreshInfoFrame()
 end
 
