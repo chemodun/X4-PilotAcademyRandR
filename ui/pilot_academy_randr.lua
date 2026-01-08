@@ -98,6 +98,7 @@ local pilotAcademy = {
   },
   sideBarIsCreated = false,
   selectedTab = nil,
+  commonData = {},
   wings = {},
   wingsCountMax = 9,
   wingIds = { "a", "b", "c", "d", "e", "f", "g", "h", "i" },
@@ -332,8 +333,11 @@ function pilotAcademy.resetData()
   pilotAcademy.loadWings()
   pilotAcademy.selectedTab = "settings"
   pilotAcademy.topRows = {
-    tableFactions = {},
-    tableWingmans = {}
+    tableWingsFactions = {},
+    tableWingsWingmans = {},
+    tableAcademyFactions = nil,
+    tableAcademyCadets = nil,
+    tableAcademyPilots = nil,
   }
 end
 
@@ -385,7 +389,9 @@ function pilotAcademy.createInfoFrame()
   local instance = "left"
   local infoTableMode = menu.infoTableMode[instance]
 
+  pilotAcademy.loadCommonData()
   pilotAcademy.loadWings()
+
   local tables = {}
   if pilotAcademy.selectedTab == "settings" then
     tables = pilotAcademy.displayAcademyInfo(frame, menu, config) or {}
@@ -405,6 +411,7 @@ function pilotAcademy.createInfoFrame()
   tabsTable:setDefaultCellProperties("button", { height = config.mapRowHeight })
   tabsTable:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
 
+  local academyExists = pilotAcademy.commonData.locationId ~= nil
   if maxNumCategoryColumns > 0 then
     local wingsCount = pilotAcademy.wingsCount()
     local rowCount = 1
@@ -412,7 +419,7 @@ function pilotAcademy.createInfoFrame()
     if wingsCount == pilotAcademy.wingsCountMax then
       placesCount = wingsCount + 3
     elseif wingsCount == 0 then
-      placesCount = 4
+      placesCount = academyExists and 4 or 1
     else
       placesCount = wingsCount + 5
     end
@@ -543,8 +550,8 @@ end
 
 function pilotAcademy.storeTopRows()
   if pilotAcademy.selectedTab ~= "settings" then
-    pilotAcademy.topRows.tableFactions[tostring(pilotAcademy.selectedTab)] = nil
-    pilotAcademy.topRows.tableWingmans[tostring(pilotAcademy.selectedTab)] = nil
+    pilotAcademy.topRows.tableWingsFactions[tostring(pilotAcademy.selectedTab)] = nil
+    pilotAcademy.topRows.tableWingsWingmans[tostring(pilotAcademy.selectedTab)] = nil
   end
   local menu = pilotAcademy.menuMap
   if menu == nil then
@@ -562,10 +569,10 @@ function pilotAcademy.storeTopRows()
       local item = infoFrame.content[i]
       if type(item) == "table" and item.type == "table" and item.id ~= nil then
         if item.name == "table_wing_factions" then
-          pilotAcademy.topRows.tableFactions[tostring(pilotAcademy.selectedTab)] = GetTopRow(item.id)
+          pilotAcademy.topRows.tableWingsFactions[tostring(pilotAcademy.selectedTab)] = GetTopRow(item.id)
         end
         if item.name == "table_wing_wingmans" then
-          pilotAcademy.topRows.tableWingmans[tostring(pilotAcademy.selectedTab)] = GetTopRow(item.id)
+          pilotAcademy.topRows.tableWingsWingmans[tostring(pilotAcademy.selectedTab)] = GetTopRow(item.id)
         end
       end
     end
@@ -799,6 +806,57 @@ function pilotAcademy.onToChangeLocation()
   end
 end
 
+
+function pilotAcademy.onSelectTargetRankLevel(level)
+  trace("onSelectTargetRankLevel called with level: " .. tostring(level))
+  if level == nil then
+    trace("level is nil; cannot process")
+    return
+  end
+  pilotAcademy.editData.targetRankLevel = level
+end
+
+function pilotAcademy.onSelectFaction(factionId, isSelected, savedData)
+  trace("onSelectFaction called with factionId: " .. tostring(factionId) .. ", isSelected: " .. tostring(isSelected))
+  if factionId == nil then
+    trace("factionId is nil; cannot process")
+    return
+  end
+  if pilotAcademy.editData.factions == nil or type(pilotAcademy.editData.factions) ~= "table" then
+    pilotAcademy.editData.factions = savedData.factions ~= nil and type(savedData.factions) == "table" and savedData.factions or {}
+  end
+  local factions = pilotAcademy.editData.factions
+  if isSelected then
+    -- Add faction if not already present
+    local found = false
+    for i = 1, #factions do
+      if factions[i] == factionId then
+        found = true
+        break
+      end
+    end
+    if not found then
+      factions[#factions + 1] = factionId
+    end
+  else
+    -- Remove faction if present
+    for i = 1, #factions do
+      if factions[i] == factionId then
+        table.remove(factions, i)
+        break
+      end
+    end
+  end
+
+  local menu = pilotAcademy.menuMap
+  if menu == nil then
+    trace("Menu is nil; cannot refresh info frame")
+    return
+  end
+  pilotAcademy.storeTopRows()
+  menu.refreshInfoFrame()
+end
+
 function pilotAcademy.onToggleAutoHire(checked)
   trace("Toggled auto hire: " .. tostring(checked))
   pilotAcademy.editData.autoHire = checked
@@ -851,6 +909,65 @@ function pilotAcademy.buttonCancelAcademyChanges()
   if menu ~= nil then
     menu.refreshInfoFrame()
   end
+end
+
+function pilotAcademy.buttonSaveAcademy()
+  trace("Saving academy changes")
+  local menu = pilotAcademy.menuMap
+  if menu == nil then
+    trace("Menu is nil; cannot save academy changes")
+    return
+  end
+
+  local academyData = pilotAcademy.commonData or {}
+  local editData = pilotAcademy.editData or {}
+
+  if editData.locationId ~= nil then
+    academyData.locationId = editData.locationId
+  end
+  if editData.targetRankLevel ~= nil then
+    if editData.targetRankLevel ~= academyData.targetRankLevel then
+      trace("Setting target rank level to " .. tostring(editData.targetRankLevel))
+      SignalObject(pilotAcademy.playerId, "AcademyTargetRankLevelChanged")
+    end
+    academyData.targetRankLevel = editData.targetRankLevel
+  end
+  if academyData.targetRankLevel == nil then
+    academyData.targetRankLevel = 2
+  end
+
+  if editData.autoHire ~= nil then
+    academyData.autoHire = editData.autoHire
+  end
+  if academyData.autoHire == nil then
+    academyData.autoHire = false
+  end
+
+  if editData.factions ~= nil then
+    academyData.factions = editData.factions
+  end
+  if academyData.factions == nil then
+    academyData.factions = {}
+  end
+
+  if editData.assign ~= nil then
+    academyData.assign = editData.assign
+  end
+  if academyData.assign == nil then
+    academyData.assign = "manual"
+  end
+
+  if editData.assignPriority ~= nil then
+    academyData.assignPriority = editData.assignPriority
+  end
+  if academyData.assignPriority == nil then
+    academyData.assignPriority = "priority_small_to_large"
+  end
+
+  pilotAcademy.editData = {}
+
+  pilotAcademy.saveCommonData()
+  menu.refreshInfoFrame()
 end
 
 function pilotAcademy.combineFactionsSelections(editData, savedData)
@@ -969,6 +1086,46 @@ function pilotAcademy.getPilotsList()
   return pilots
 end
 
+
+
+function pilotAcademy.loadCommonData()
+  pilotAcademy.commonData = {}
+  if pilotAcademy.playerId == nil or pilotAcademy.playerId == 0 then
+    debug("loadCommonData: unable to resolve player id")
+    return
+  end
+  local variableId = string.format("$%s", pilotAcademy.variableId)
+  local savedData = GetNPCBlackboard(pilotAcademy.playerId, variableId)
+  if savedData == nil or type(savedData) ~= "table" then
+    debug("loadCommonData: no saved common data found, initializing empty common data")
+    return
+  end
+  pilotAcademy.commonData = savedData or {}
+  debug("loadCommonData: loaded common data from saved data")
+  if pilotAcademy.commonData.locationObject ~= nil then
+    pilotAcademy.commonData.locationId = ConvertStringTo64Bit(tostring(pilotAcademy.commonData.locationObject))
+  end
+
+  debug("loadCommonData: locationId is " .. tostring(pilotAcademy.commonData.locationId))
+end
+
+
+function pilotAcademy.saveCommonData()
+  if pilotAcademy.playerId == nil or pilotAcademy.playerId == 0 then
+    debug("saveCommonData: unable to resolve player id")
+    return
+  end
+  local variableId = string.format("$%s", pilotAcademy.variableId)
+  if pilotAcademy.commonData == nil or type(pilotAcademy.commonData) ~= "table" or next(pilotAcademy.commonData) == nil then
+    debug("saveCommonData: no common data to save, going to clear saved data")
+    SetNPCBlackboard(pilotAcademy.playerId, variableId, {})
+    return
+  end
+  SetNPCBlackboard(pilotAcademy.playerId, variableId, pilotAcademy.commonData)
+  debug("saveCommonData: saved common data to saved data")
+  -- Save common data to persistent storage
+end
+
 function pilotAcademy.setInfoContentColumnWidths(tableHandle, menu, config, maxShortNameWidth, maxRelationNameWidth)
   if tableHandle == nil or menu == nil then
     debug("tableWingmans or menu is nil; cannot set column widths")
@@ -1033,7 +1190,6 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   local wingData = existingWing and wings[wingId] or {}
   local editData = pilotAcademy.editData or {}
   local primaryGoal = editData.primaryGoal or wingData.primaryGoal or "rank"
-  local targetRankLevel = editData.targetRankLevel or wingData.targetRankLevel or 2
   local selectedFactions = pilotAcademy.combineFactionsSelections(editData, wingData)
 
   local wingLeaderId = editData.wingLeaderId or wingData.wingLeaderId or nil
@@ -1062,24 +1218,6 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
     return pilotAcademy.onSelectPrimaryGoal(id)
   end
   tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-  local row = tableTop:addRow("target_rank_level", { fixed = true })
-  row[2]:setColSpan(5):createText(texts.targetRankLevel, { halign = "left", titleColor = Color["row_title"] })
-  row[7]:setColSpan(5):createSliderCell({
-    height = config.mapRowHeight,
-    bgColor = Color["slider_background_transparent"],
-    min = 2,
-    minSelect = 2,
-    max = 5,
-    maxSelect = 5,
-    start = targetRankLevel,
-    step = 1,
-    -- mouseOverText = ffi.string(C.GetDisplayedModifierKey("shift")) .. " - " .. ReadText(1026, 3279),
-  })
-  row[7].handlers.onSliderCellChanged = function(_, val) return pilotAcademy.onSelectTargetRankLevel(val) end
-  row[7].handlers.onSliderCellConfirm = function() return menu.refreshInfoFrame() end
-  row[7].handlers.onSliderCellActivated = function() menu.noupdate = true end
-  row[7].handlers.onSliderCellDeactivated = function() menu.noupdate = false end
-  tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   tables[#tables + 1] = { table = tableTop, height = tableTop:getFullHeight() }
 
   local tableFactions = frame:addTable(12, { tabOrder = 2, reserveScrollBar = false })
@@ -1103,7 +1241,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
       row[6]:setColSpan(4):createText(faction.name, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
       row[10]:createText(faction.relationName, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
       row[11]:createText(string.format("(%+2d)", faction.uiRelation), { halign = "right", color = Color[faction.colorId] or Color["text_normal"] })
-      if i == 10 then
+      if i == 15 then
         tableFactionMaxHeight = tableFactions:getFullHeight()
       end
     end
@@ -1116,11 +1254,11 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
 
   local wingKey = tostring(pilotAcademy.selectedTab)
   if #factions  > 0 then
-    if pilotAcademy.topRows.tableFactions[wingKey] ~= nil then
-      tableFactions:setTopRow(pilotAcademy.topRows.tableFactions[wingKey])
+    if pilotAcademy.topRows.tableWingsFactions[wingKey] ~= nil then
+      tableFactions:setTopRow(pilotAcademy.topRows.tableWingsFactions[wingKey])
     end
   end
-  pilotAcademy.topRows.tableFactions[wingKey] = nil
+  pilotAcademy.topRows.tableWingsFactions[wingKey] = nil
 
   local tableWingLeader = frame:addTable(12, { tabOrder = 2, reserveScrollBar = false })
   tableWingLeader.name = "table_wing_wing_leader"
@@ -1216,11 +1354,11 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   tables[#tables + 1] = { table = tableWingmans, height = tableWingmans.properties.maxVisibleHeight }
 
   if #wingmans > 0 then
-    if pilotAcademy.topRows.tableWingmans[wingKey] ~= nil then
-      tableFactions:setTopRow(pilotAcademy.topRows.tableWingmans[wingKey])
+    if pilotAcademy.topRows.tableWingsWingmans[wingKey] ~= nil then
+      tableFactions:setTopRow(pilotAcademy.topRows.tableWingsWingmans[wingKey])
     end
   end
-  pilotAcademy.topRows.tableWingmans[wingKey] = nil
+  pilotAcademy.topRows.tableWingsWingmans[wingKey] = nil
 
   local tableBottom = frame:addTable(7, { tabOrder = 2, reserveScrollBar = false })
   tableBottom.name = "table_wing_bottom"
@@ -1254,56 +1392,6 @@ function pilotAcademy.onSelectPrimaryGoal(id)
     return
   end
   pilotAcademy.editData.primaryGoal = id
-  local menu = pilotAcademy.menuMap
-  if menu == nil then
-    trace("Menu is nil; cannot refresh info frame")
-    return
-  end
-  pilotAcademy.storeTopRows()
-  menu.refreshInfoFrame()
-end
-
-function pilotAcademy.onSelectTargetRankLevel(level)
-  trace("onSelectTargetRankLevel called with level: " .. tostring(level))
-  if level == nil then
-    trace("level is nil; cannot process")
-    return
-  end
-  pilotAcademy.editData.targetRankLevel = level
-end
-
-function pilotAcademy.onSelectFaction(factionId, isSelected, savedData)
-  trace("onSelectFaction called with factionId: " .. tostring(factionId) .. ", isSelected: " .. tostring(isSelected))
-  if factionId == nil then
-    trace("factionId is nil; cannot process")
-    return
-  end
-  if pilotAcademy.editData.factions == nil or type(pilotAcademy.editData.factions) ~= "table" then
-    pilotAcademy.editData.factions = savedData.factions ~= nil and type(savedData.factions) == "table" and savedData.factions or {}
-  end
-  local factions = pilotAcademy.editData.factions
-  if isSelected then
-    -- Add faction if not already present
-    local found = false
-    for i = 1, #factions do
-      if factions[i] == factionId then
-        found = true
-        break
-      end
-    end
-    if not found then
-      factions[#factions + 1] = factionId
-    end
-  else
-    -- Remove faction if present
-    for i = 1, #factions do
-      if factions[i] == factionId then
-        table.remove(factions, i)
-        break
-      end
-    end
-  end
-
   local menu = pilotAcademy.menuMap
   if menu == nil then
     trace("Menu is nil; cannot refresh info frame")
@@ -1690,8 +1778,8 @@ function pilotAcademy.buttonDismissWing()
     trace("No wing selected or invalid index; cannot dismiss wing")
     return
   end
-  pilotAcademy.topRows.tableFactions[wingId] = nil
-  pilotAcademy.topRows.tableWingmans[wingId] = nil
+  pilotAcademy.topRows.tableWingsFactions[wingId] = nil
+  pilotAcademy.topRows.tableWingsWingmans[wingId] = nil
   if wings[wingId] and wings[wingId].wingLeaderId ~= nil then
     SignalObject(wings[wingId].wingLeaderId, "AcademyOrderDismissWing")
   end
@@ -1765,12 +1853,6 @@ function pilotAcademy.buttonSaveWing()
   if wingData.primaryGoal == nil then
     wingData.primaryGoal = "rank"
   end
-  if editData.targetRankLevel ~= nil then
-    wingData.targetRankLevel = editData.targetRankLevel
-  end
-  if wingData.targetRankLevel == nil then
-    wingData.targetRankLevel = 2
-  end
   if editData.factions ~= nil then
     wingData.factions = editData.factions
   end
@@ -1787,13 +1869,13 @@ function pilotAcademy.buttonSaveWing()
     end
     wings[wingId] = wingData
     pilotAcademy.storeTopRows()
-    local currentTopRowFactions = pilotAcademy.topRows.tableFactions[tostring(pilotAcademy.selectedTab)]
-    local currentTopRowWingmans = pilotAcademy.topRows.tableWingmans[tostring(pilotAcademy.selectedTab)]
-    pilotAcademy.topRows.tableFactions[tostring(pilotAcademy.selectedTab)] = nil
-    pilotAcademy.topRows.tableWingmans[tostring(pilotAcademy.selectedTab)] = nil
+    local currentTopRowFactions = pilotAcademy.topRows.tableWingsFactions[tostring(pilotAcademy.selectedTab)]
+    local currentTopRowWingmans = pilotAcademy.topRows.tableWingsWingmans[tostring(pilotAcademy.selectedTab)]
+    pilotAcademy.topRows.tableWingsFactions[tostring(pilotAcademy.selectedTab)] = nil
+    pilotAcademy.topRows.tableWingsWingmans[tostring(pilotAcademy.selectedTab)] = nil
     pilotAcademy.selectedTab = wingId
-    pilotAcademy.topRows.tableFactions[tostring(pilotAcademy.selectedTab)] = currentTopRowFactions
-    pilotAcademy.topRows.tableWingmans[tostring(pilotAcademy.selectedTab)] = currentTopRowWingmans
+    pilotAcademy.topRows.tableWingsFactions[tostring(pilotAcademy.selectedTab)] = currentTopRowFactions
+    pilotAcademy.topRows.tableWingsWingmans[tostring(pilotAcademy.selectedTab)] = currentTopRowWingmans
   end
   pilotAcademy.saveWings()
   pilotAcademy.setOrderForWingLeader(wingData.wingLeaderId, pilotAcademy.selectedTab, existingWing)
