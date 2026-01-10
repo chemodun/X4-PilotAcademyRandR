@@ -50,10 +50,14 @@
       </actions>
       <actions name="PilotAcademyInitShipVariables">
         <set_value name="$idCode" exact="this.assignedcontrolled.idcode" />
+        <debug_text
+          text="'Pilot Academy [%s]: pilotAcademyRAndRShipsInfo: %s' . [this.assignedcontrolled.debugname, @player.entity.$pilotAcademyRAndRShipsInfo]"
+          chance="$debugchance" />
         <do_if value="not player.entity.$pilotAcademyRAndRShipsInfo? or @player.entity.$pilotAcademyRAndRShipsInfo == null">
           <set_value name="player.entity.$pilotAcademyRAndRShipsInfo" exact="table[]" />
         </do_if>
         <set_value name="$shipsInfo" exact="player.entity.$pilotAcademyRAndRShipsInfo" />
+        <debug_text text="'Pilot Academy [%s]: loaded shipsInfo: %s' . [this.assignedcontrolled.debugname, @$shipsInfo]" chance="$debugchance" />
         <do_if value="not $shipsInfo.{'$%s'.[$idCode]}? or @$shipsInfo.{'$%s'.[$idCode]} == null">
           <set_value name="$shipsInfo.{'$%s'.[$idCode]}" exact="table[]" />
         </do_if>
@@ -302,6 +306,7 @@
         [this.assignedcontrolled.debugname, @$wingId, @$wingData]"
       chance="$debugchance" />
     <include_interrupt_actions ref="PilotAcademyProcessWingData" />
+    <include_interrupt_actions ref="PilotAcademyInitShipVariables" />
     <set_value name="$enoughFactionsToCheck" exact="30" />
     <set_value name="$blacklistGroup" exact="blacklistgroup.civilian" />
     <set_value name="$tradeOfferTypes" exact="['buy', 'sell']" />
