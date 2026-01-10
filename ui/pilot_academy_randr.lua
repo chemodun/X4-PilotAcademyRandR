@@ -105,6 +105,7 @@ local pilotAcademy = {
   wingIds = { "a", "b", "c", "d", "e", "f", "g", "h", "i" },
   variableId = "pilotAcademyRAndRData",
   wingsVariableId = "pilotAcademyRAndRWings",
+  shipsInfoVariableId = "pilotAcademyRAndRShipsInfo",
   editData = {},
   orderId = "PilotAcademyWing",
   assignOptions = {
