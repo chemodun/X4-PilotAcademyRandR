@@ -39,48 +39,48 @@ ffi.cdef [[
 local traceEnabled = true
 
 local texts = {
-  pilotAcademyFull = ReadText(1972092412, 1), -- "Pilot Academy: Ranks and Relations"
-  pilotAcademy = ReadText(1972092412, 11), -- "Pilot Academy R&R"
-  wingFleetName = ReadText(1972092412, 111), -- "Wing %s of Pilot Academy R&R"
-  academySettings = ReadText(1972092412, 10001), -- "Academy Settings"
-  cadetsAndPilots = ReadText(1972092412, 10011), -- "Cadets and Pilots"
-  cadetsAndPilotsTitle = ReadText(1972092412, 10019), -- "Pilot Academy: Cadets and Pilots"
-  wing = ReadText(1972092412, 10021), -- "Wing %s"
-  addNewWing = ReadText(1972092412, 10029), -- "Add new Wing"
-  location = ReadText(1972092412, 10101), -- "Location:"
-  noAvailableLocations = ReadText(1972092412, 10109), -- "No available locations"
-  targetRankLevel = ReadText(1972092412, 10111), --"Target Rank:",
-  autoHire = ReadText(1972092412, 10121), -- "Auto hire:"
-  assign = ReadText(1972092412, 10131), -- "Assign:"
-  military_miners_traders = ReadText(1972092412, 10132), -- "Military - Miners - Traders"
-  military_traders_miners = ReadText(1972092412, 10133), -- "Military - Traders - Miners"
-  miners_traders_military = ReadText(1972092412, 10134), -- "Miners - Traders - Military"
-  miners_military_traders = ReadText(1972092412, 10135), -- "Miners - Military - Traders"
-  traders_military_miners = ReadText(1972092412, 10136), -- "Traders - Military - Miners"
-  traders_miners_military = ReadText(1972092412, 10137), -- "Traders - Miners - Military"
-  manual = ReadText(1972092412, 10139), -- "Manual"
-  priority = ReadText(1972092412, 10141), -- "Priority:"
-  priority_small_to_large = ReadText(1972092412, 10142), -- "Small to Large"
-  priority_large_to_small = ReadText(1972092412, 10143), -- "Large to Small"
-  cadets = ReadText(1972092412, 10201), -- "Cadets:"
-  noCadetsAssigned = ReadText(1972092412, 10209), -- "No cadets assigned"
-  pilots = ReadText(1972092412, 10211), -- "Pilots:"
-  noPilotsAvailable = ReadText(1972092412, 10219), -- "No pilots available"
-  primaryGoal = ReadText(1972092412, 10301), -- "Primary Goal:"
-  increaseRank = ReadText(1972092412, 10302), -- "Increase Rank"
-  gainReputation = ReadText(1972092412, 10303), -- "Gain Reputation"
-  noAvailablePrimaryGoals = ReadText(1972092412, 10309), -- "No available primary goals"
-  factions = ReadText(1972092412, 10311), -- "Factions:"
-  wingLeader = ReadText(1972092412, 10321), -- "Wing Leader:"
-  noAvailableWingLeaders = ReadText(1972092412, 10329), -- "No available wing leaders"
-  addWingman = ReadText(1972092412, 10331), -- "Add Wingman"
+  pilotAcademyFull = ReadText(1972092412, 1),                 -- "Pilot Academy: Ranks and Relations"
+  pilotAcademy = ReadText(1972092412, 11),                    -- "Pilot Academy R&R"
+  wingFleetName = ReadText(1972092412, 111),                  -- "Wing %s of Pilot Academy R&R"
+  academySettings = ReadText(1972092412, 10001),              -- "Academy Settings"
+  cadetsAndPilots = ReadText(1972092412, 10011),              -- "Cadets and Pilots"
+  cadetsAndPilotsTitle = ReadText(1972092412, 10019),         -- "Pilot Academy: Cadets and Pilots"
+  wing = ReadText(1972092412, 10021),                         -- "Wing %s"
+  addNewWing = ReadText(1972092412, 10029),                   -- "Add new Wing"
+  location = ReadText(1972092412, 10101),                     -- "Location:"
+  noAvailableLocations = ReadText(1972092412, 10109),         -- "No available locations"
+  targetRankLevel = ReadText(1972092412, 10111),              --"Target Rank:",
+  autoHire = ReadText(1972092412, 10121),                     -- "Auto hire:"
+  assign = ReadText(1972092412, 10131),                       -- "Assign:"
+  military_miners_traders = ReadText(1972092412, 10132),      -- "Military - Miners - Traders"
+  military_traders_miners = ReadText(1972092412, 10133),      -- "Military - Traders - Miners"
+  miners_traders_military = ReadText(1972092412, 10134),      -- "Miners - Traders - Military"
+  miners_military_traders = ReadText(1972092412, 10135),      -- "Miners - Military - Traders"
+  traders_military_miners = ReadText(1972092412, 10136),      -- "Traders - Military - Miners"
+  traders_miners_military = ReadText(1972092412, 10137),      -- "Traders - Miners - Military"
+  manual = ReadText(1972092412, 10139),                       -- "Manual"
+  priority = ReadText(1972092412, 10141),                     -- "Priority:"
+  priority_small_to_large = ReadText(1972092412, 10142),      -- "Small to Large"
+  priority_large_to_small = ReadText(1972092412, 10143),      -- "Large to Small"
+  cadets = ReadText(1972092412, 10201),                       -- "Cadets:"
+  noCadetsAssigned = ReadText(1972092412, 10209),             -- "No cadets assigned"
+  pilots = ReadText(1972092412, 10211),                       -- "Pilots:"
+  noPilotsAvailable = ReadText(1972092412, 10219),            -- "No pilots available"
+  primaryGoal = ReadText(1972092412, 10301),                  -- "Primary Goal:"
+  increaseRank = ReadText(1972092412, 10302),                 -- "Increase Rank"
+  gainReputation = ReadText(1972092412, 10303),               -- "Gain Reputation"
+  noAvailablePrimaryGoals = ReadText(1972092412, 10309),      -- "No available primary goals"
+  factions = ReadText(1972092412, 10311),                     -- "Factions:"
+  wingLeader = ReadText(1972092412, 10321),                   -- "Wing Leader:"
+  noAvailableWingLeaders = ReadText(1972092412, 10329),       -- "No available wing leaders"
+  addWingman = ReadText(1972092412, 10331),                   -- "Add Wingman"
   noAvailableWingmanCandidates = ReadText(1972092412, 10339), -- "No available wingman candidates"
-  wingmans = ReadText(1972092412, 10341), -- "Wingmans:"
-  noAvailableWingmans = ReadText(1972092412, 10349), -- "No wingmans assigned"
-  dismissWing = ReadText(1972092412, 10901), -- "Dismiss"
-  cancel = ReadText(1972092412, 10902), -- "Cancel"
-  update = ReadText(1972092412, 10903), -- "Update"
-  create = ReadText(1972092412, 10904), -- "Create"
+  wingmans = ReadText(1972092412, 10341),                     -- "Wingmans:"
+  noAvailableWingmans = ReadText(1972092412, 10349),          -- "No wingmans assigned"
+  dismissWing = ReadText(1972092412, 10901),                  -- "Dismiss"
+  cancel = ReadText(1972092412, 10902),                       -- "Cancel"
+  update = ReadText(1972092412, 10903),                       -- "Update"
+  create = ReadText(1972092412, 10904),                       -- "Create"
   wingNames = { a = ReadText(1972092412, 100001), b = ReadText(1972092412, 100002), c = ReadText(1972092412, 100003), d = ReadText(1972092412, 100004), e = ReadText(1972092412, 100005), f = ReadText(1972092412, 100006), g = ReadText(1972092412, 100007), h = ReadText(1972092412, 100008), i = ReadText(1972092412, 100009) },
 }
 
@@ -147,7 +147,7 @@ end
 local function hasItemsExcept(table, excludedKey)
   for k, v in pairs(table) do
     if k ~= excludedKey then
-      return true   -- found at least one other entry
+      return true -- found at least one other entry
     end
   end
   return false
@@ -638,7 +638,8 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
   row[1]:setColSpan(4):createText(texts.pilotAcademyFull, Helper.headerRowCenteredProperties)
   tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local locationId = editData.locationId or academyData.locationId or nil
-  local locationSelectable = locationId == nil or editData.locationId ~= nil and editData.locationId ~= academyData.locationId or editData.toChangeLocation == true
+  local locationSelectable = locationId == nil or editData.locationId ~= nil and editData.locationId ~= academyData.locationId or
+  editData.toChangeLocation == true
 
   local factions, maxShortNameWidth, maxRelationNameWidth = pilotAcademy.getFactions(config, false)
   local locationOptions = pilotAcademy.fetchPotentialLocations(locationSelectable, academyData.locationId, factions)
@@ -662,7 +663,8 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
       return pilotAcademy.onSelectLocation(id)
     end
   else
-    row[2]:setColSpan(2):createButton({ active = true }):setText(locationOptions[1].text, { halign = "left" }):setText2(locationOptions[1].text2, { halign = "right" })
+    row[2]:setColSpan(2):createButton({ active = true }):setText(locationOptions[1].text, { halign = "left" }):setText2(locationOptions[1].text2,
+      { halign = "right" })
     row[2].handlers.onClick = function() return pilotAcademy.onToChangeLocation() end
   end
   tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
@@ -718,7 +720,7 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
       if faction ~= nil then
         local row = tableFactions:addRow(faction.id, { fixed = false })
         row[2]:createCheckBox(selectedFactions[faction.id] == true, { scaling = false })
-        row[2].handlers.onClick = function(_, checked) return pilotAcademy.onSelectFaction(faction.id,  checked, academyData) end
+        row[2].handlers.onClick = function(_, checked) return pilotAcademy.onSelectFaction(faction.id, checked, academyData) end
         row[3]:createIcon(faction.icon, { height = config.mapRowHeight, width = config.mapRowHeight, color = Color[faction.colorId] or Color["text_normal"] })
         row[4]:createText(string.format("[%s]", faction.shortName), { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
         row[5]:createText("-", { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
@@ -806,7 +808,8 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
   row[4]:createButton({ active = next(editData) ~= nil }):setText(texts.cancel, { halign = "center" })
   row[4].handlers.onClick = function() return pilotAcademy.buttonCancelAcademyChanges() end
 
-  row[6]:createButton({ active = hasItemsExcept(editData, "toChangeLocation") and locationId ~= nil }):setText(academyData.locationId ~= nil and texts.update or texts.create,
+  row[6]:createButton({ active = hasItemsExcept(editData, "toChangeLocation") and locationId ~= nil }):setText(
+    academyData.locationId ~= nil and texts.update or texts.create,
     { halign = "center" })
   row[6].handlers.onClick = function() return pilotAcademy.buttonSaveAcademy() end
 
@@ -814,7 +817,6 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
   tables[#tables + 1] = { table = tableBottom, height = tableBottom:getFullHeight() }
   return tables
 end
-
 
 function pilotAcademy.fetchPotentialLocations(selectable, currentLocationId, factions)
   local locations = {}
@@ -847,7 +849,8 @@ function pilotAcademy.fetchPotentialLocations(selectable, currentLocationId, fac
             local stationId = ConvertStringTo64Bit(tostring(allOwnedStations[i]))
             local isUnderConstruction = IsComponentConstruction(stationId)
             if not isUnderConstruction then
-              local name, isShipyard, isWharf, isEquipmentDock, isTradeStation = GetComponentData(stationId, "name", "isshipyard", "iswharf", "isequipmentdock", "istradestation")
+              local name, isShipyard, isWharf, isEquipmentDock, isTradeStation = GetComponentData(stationId, "name", "isshipyard", "iswharf", "isequipmentdock",
+                "istradestation")
               if name ~= nil and (isShipyard == true or isWharf == true or isEquipmentDock == true or isTradeStation == true) then
                 stations[#stations + 1] = pilotAcademy.getStationInfo(stationId)
               end
@@ -905,7 +908,6 @@ function pilotAcademy.onSelectLocation(locationId)
   if menu ~= nil then
     menu.refreshInfoFrame()
   end
-
 end
 
 function pilotAcademy.onToChangeLocation()
@@ -916,7 +918,6 @@ function pilotAcademy.onToChangeLocation()
     menu.refreshInfoFrame()
   end
 end
-
 
 function pilotAcademy.onSelectTargetRankLevel(level)
   trace("onSelectTargetRankLevel called with level: " .. tostring(level))
@@ -1213,8 +1214,6 @@ function pilotAcademy.getPilotsList()
   return pilots
 end
 
-
-
 function pilotAcademy.loadCommonData()
   pilotAcademy.commonData = {}
   if pilotAcademy.playerId == nil or pilotAcademy.playerId == 0 then
@@ -1241,7 +1240,6 @@ function pilotAcademy.loadCommonData()
 
   debug("loadCommonData: locationId is " .. tostring(pilotAcademy.commonData.locationId))
 end
-
 
 function pilotAcademy.saveCommonData()
   if pilotAcademy.playerId == nil or pilotAcademy.playerId == 0 then
@@ -1334,8 +1332,8 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local row = tableTop:addRow("wing_primary_goal", { fixed = true })
   local primaryGoalOptions = {
-    { id = "rank",     icon = "", text = texts.increaseRank,     text2 = "", displayremoveoption = false },
-    { id = "relation", icon = "", text = texts.gainReputation,   text2 = "", displayremoveoption = false },
+    { id = "rank",     icon = "", text = texts.increaseRank,   text2 = "", displayremoveoption = false },
+    { id = "relation", icon = "", text = texts.gainReputation, text2 = "", displayremoveoption = false },
   }
   row[2]:setColSpan(5):createText(texts.primaryGoal, { halign = "left", titleColor = Color["row_title"] })
   row[7]:setColSpan(5):createDropDown(
@@ -1386,7 +1384,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   tables[#tables + 1] = { table = tableFactions, height = tableFactions.properties.maxVisibleHeight }
 
   local wingKey = tostring(pilotAcademy.selectedTab)
-  if #factions  > 0 then
+  if #factions > 0 then
     if pilotAcademy.topRows.tableWingsFactions[wingKey] ~= nil then
       tableFactions:setTopRow(pilotAcademy.topRows.tableWingsFactions[wingKey])
     end
@@ -1411,7 +1409,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
     icon:setText(leaderInfo.text, { x = config.mapRowHeight, halign = "left", color = Color["text_normal"] })
     icon:setText2(leaderInfo.text2, { halign = "right", color = Color["text_skills"] })
   else
-    row = tableWingLeader:addRow("wing_leader", { fixed = true})
+    row = tableWingLeader:addRow("wing_leader", { fixed = true })
     row[1]:createText("", { halign = "left" })
     row[2]:setColSpan(10):createDropDown(
       wingLeaderOptions,
@@ -1544,7 +1542,8 @@ function pilotAcademy.fetchPotentialWingmans(existingWing, existingWingLeader)
   allShipsCount = C.GetAllFactionShips(allShips, allShipsCount, "player")
   for i = 0, allShipsCount - 1 do
     local shipId = ConvertStringTo64Bit(tostring(allShips[i]))
-    local shipMacro, isDeployable, shipName, pilot, classId, idcode, icon = GetComponentData(shipId, "macro", "isdeployable", "name", "assignedaipilot", "classid", "idcode", "icon")
+    local shipMacro, isDeployable, shipName, pilot, classId, idcode, icon = GetComponentData(shipId, "macro", "isdeployable", "name", "assignedaipilot",
+      "classid", "idcode", "icon")
     local isLasertower, shipWare = GetMacroData(shipMacro, "islasertower", "ware")
     local isUnit = C.IsUnit(shipId)
     if shipWare and (not isUnit) and (not isLasertower) and (not isDeployable) and Helper.isComponentClass(classId, "ship_s") and pilot and IsValidComponent(pilot) then
@@ -1683,7 +1682,8 @@ function pilotAcademy.onTableRightMouseClick(uiTable, row, posX, posY)
     if posX == nil or posY == nil then
       posX, posY = GetLocalMousePosition()
     end
-    menu.contextMenuData = { width = Helper.scaleX(interactMenuConfig.width), xoffset = posX + Helper.viewWidth / 2, yoffset = Helper.viewHeight / 2 - posY, instance = menu.instance, tableName = tableName, rowData = rowData }
+    menu.contextMenuData = { width = Helper.scaleX(interactMenuConfig.width), xoffset = posX + Helper.viewWidth / 2, yoffset = Helper.viewHeight / 2 - posY, instance =
+    menu.instance, tableName = tableName, rowData = rowData }
     menu.createContextFrame()
   end
 end
@@ -1737,7 +1737,9 @@ function pilotAcademy.createWingmanContextMenu(contextFrame, contextMenuData)
   local menuWidth = menu.width or Helper.scaleX(config.width)
   local text = ffi.string(C.GetComponentName(wingmanId))
   local color = holomapColor.playercolor
-  local ftable = contextFrame:addTable(5, { tabOrder = 2, x = x, width = menuWidth, backgroundID = "solid", backgroundColor = Color["frame_background_semitransparent"], highlightMode = "offnormalscroll" })
+  local ftable = contextFrame:addTable(5,
+    { tabOrder = 2, x = x, width = menuWidth, backgroundID = "solid", backgroundColor = Color["frame_background_semitransparent"], highlightMode =
+    "offnormalscroll" })
   ftable:setDefaultCellProperties("text", { minRowHeight = config.rowHeight, fontsize = config.entryFontSize, x = config.entryX })
   ftable:setDefaultCellProperties("button", { height = config.rowHeight })
   ftable:setDefaultCellProperties("checkbox", { height = config.rowHeight, width = config.rowHeight })
@@ -1759,14 +1761,17 @@ function pilotAcademy.createWingmanContextMenu(contextFrame, contextMenuData)
   local height = 0
   -- title
   local row = ftable:addRow(false, {})
-  text = TruncateText(text, Helper.standardFontBold, Helper.scaleFont(Helper.standardFontBold, Helper.headerRow1FontSize), menuWidth - Helper.scaleX(Helper.standardButtonWidth) - 2 * config.entryX)
+  text = TruncateText(text, Helper.standardFontBold, Helper.scaleFont(Helper.standardFontBold, Helper.headerRow1FontSize),
+    menuWidth - Helper.scaleX(Helper.standardButtonWidth) - 2 * config.entryX)
   row[1]:setColSpan(5):createText(text, Helper.headerRowCenteredProperties)
   row[1].properties.color = color
   height = height + row:getHeight() + Helper.borderSize
 
   row = ftable:addRow(false, {})
-  row[1]:createText(string.format(ReadText(1001, 7803), commanderShortName), { font = Helper.standardFontBold, mouseOverText = commanderName, titleColor = Color["row_title"] })
-  row[4]:createText("[" .. GetComponentData(wingmanId, "assignmentname") .. "]", { font = Helper.standardFontBold, halign = "right", height = Helper.subHeaderHeight, titleColor = Color["row_title"] })
+  row[1]:createText(string.format(ReadText(1001, 7803), commanderShortName),
+    { font = Helper.standardFontBold, mouseOverText = commanderName, titleColor = Color["row_title"] })
+  row[4]:createText("[" .. GetComponentData(wingmanId, "assignmentname") .. "]",
+    { font = Helper.standardFontBold, halign = "right", height = Helper.subHeaderHeight, titleColor = Color["row_title"] })
   height = height + row:getHeight() + Helper.borderSize
   row = ftable:addRow(true, {})
   local button = row[1]:setColSpan(5):createButton({
@@ -1831,16 +1836,17 @@ function pilotAcademy.fetchWingmans(wingLeaderId)
       end
     end
     if mimicGroupId ~= nil and groupId == mimicGroupId then
-      local shipName, pilot = GetComponentData(wingmanId, "name", "assignedaipilot")
+      local shipName, pilot, shipIcon = GetComponentData(wingmanId, "name", "assignedaipilot", "icon")
       local pilotName, pilotSkill = GetComponentData(pilot, "name", "combinedskill")
       local shipIdCode = ffi.string(C.GetObjectIDCode(wingmanId))
-      wingmans[#wingmans + 1] = pilotAcademy.formatShipInfoOption(
-        wingmanId,
-        shipName,
-        shipIdCode,
-        pilotName,
-        pilotSkill
-      )
+      wingmans[#wingmans + 1] = pilotAcademy.formatShipInfoOption({
+        shipId = wingmanId,
+        shipName = shipName,
+        shipIdCode = shipIdCode,
+        pilotName = pilotName,
+        pilotSkill = pilotSkill,
+        shipIcon = shipIcon,
+      })
     end
   end
   return mimicGroupId, wingmans
@@ -1866,7 +1872,6 @@ function pilotAcademy.onSelectWingLeader(id)
   pilotAcademy.storeTopRows()
   menu.refreshInfoFrame()
 end
-
 
 function pilotAcademy.onSelectWingman(id, wingLeaderId, mimicGroupId)
   trace("onSelectWingman called with id: " .. tostring(id))
