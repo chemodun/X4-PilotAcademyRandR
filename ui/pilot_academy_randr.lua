@@ -1640,9 +1640,9 @@ function pilotAcademy.onSelectElement(uiTable, modified, row, isDoubleClick, inp
     if isDoubleClick or (input ~= "mouse") then
       C.SetFocusMapComponent(menu.holomap, ConvertStringTo64Bit(tostring(rowData.id)), true)
     else
+      menu.selectedcomponents = {}
       menu.addSelectedComponent(rowData.id, true, true)
       menu.setSelectedMapComponents()
-      menu.selectedcomponents = {}
     end
   end
 end
