@@ -51,12 +51,17 @@
       <actions name="PilotAcademyInitShipVariables">
         <set_value name="$idCode" exact="this.assignedcontrolled.idcode" />
         <debug_text
-          text="'Pilot Academy [%s]: pilotAcademyRAndRShipsInfo: %s' . [this.assignedcontrolled.debugname, @player.entity.$pilotAcademyRAndRShipsInfo]"
+          text="'Pilot Academy [%s]: pilotAcademyRAndRWingsInfo: %s' . [this.assignedcontrolled.debugname, @player.entity.$pilotAcademyRAndRWingsInfo]"
           chance="$debugchance" />
-        <do_if value="not player.entity.$pilotAcademyRAndRShipsInfo? or @player.entity.$pilotAcademyRAndRShipsInfo == null">
-          <set_value name="player.entity.$pilotAcademyRAndRShipsInfo" exact="table[]" />
+        <do_if value="not player.entity.$pilotAcademyRAndRWingsInfo? or @player.entity.$pilotAcademyRAndRWingsInfo == null">
+          <set_value name="player.entity.$pilotAcademyRAndRWingsInfo" exact="table[]" />
         </do_if>
-        <set_value name="$shipsInfo" exact="player.entity.$pilotAcademyRAndRShipsInfo" />
+        <set_value name="$wingsInfo" exact="player.entity.$pilotAcademyRAndRWingsInfo" />
+        <debug_text text="'Pilot Academy [%s]: loaded wingsInfo: %s' . [this.assignedcontrolled.debugname, @$wingsInfo]" chance="$debugchance" />
+        <do_if value="not $wingsInfo.{'$%s'.[$wingId]}? or @$wingsInfo.{'$%s'.[$wingId]} == null">
+          <set_value name="$wingsInfo.{'$%s'.[$wingId]}" exact="table[]" />
+        </do_if>
+        <set_value name="$shipsInfo" exact="$wingsInfo.{'$%s'.[$wingId]}" />
         <debug_text text="'Pilot Academy [%s]: loaded shipsInfo: %s' . [this.assignedcontrolled.debugname, @$shipsInfo]" chance="$debugchance" />
         <do_if value="not $shipsInfo.{'$%s'.[$idCode]}? or @$shipsInfo.{'$%s'.[$idCode]} == null">
           <set_value name="$shipsInfo.{'$%s'.[$idCode]}" exact="table[]" />
@@ -67,15 +72,16 @@
         <remove_value name="$idCode" />
       </actions>
       <actions name="PilotAcademyRemoveShipVariables">
-        <set_value name="$idCode" exact="event.object.idcode" />
-        <do_if value="$shipsInfo.{'$%s'.[$idCode]}? and @$shipsInfo.{'$%s'.[$idCode]} != null">
+        <set_value name="$ship" exact="if @event.object == null then this.assignedcontrolled else @event.object" />
+        <set_value name="$idCode" exact="$ship.idcode" />
+        <do_if value="$shipsInfo? and @$shipsInfo!= null and $shipsInfo.{'$%s'.[$idCode]}? and @$shipsInfo.{'$%s'.[$idCode]} != null">
           <remove_value name="$shipsInfo.{'$%s'.[$idCode]}" />
+          <debug_text
+            text="'Pilot Academy [%s]: removed shipInfo for idcode: %s.' . [$ship, $idCode]"
+            chance="$debugchance" />
         </do_if>
-        <signal_objects object="player.entity" param="'AcademyPilotShipDeregisterRequest'" param2="event.object" />
-        <debug_text
-          text="'Pilot Academy [%s]: removed shipInfo for idcode: %s. Global: %s' . [event.object.debugname, $idCode]"
-          chance="$debugchance" />
         <remove_value name="$idCode" />
+        <remove_value name="$ship" />
       </actions>
       <actions name="PilotAcademyResetCurrentTradeInfo">
         <include_interrupt_actions ref="PilotAcademyInitShipVariables" />
@@ -249,6 +255,7 @@
       </conditions>
       <actions>
         <include_interrupt_actions ref="PilotAcademyRemoveShipVariables" />
+        <signal_objects object="player.entity" param="'AcademyPilotShipDeregisterRequest'" param2="event.object" />
       </actions>
     </handler>
     <handler>
@@ -994,9 +1001,9 @@
           chance="$debugchance" />
         <signal_objects object="$subordinate" param="'AcademyOrderDismissWing'" />
       </do_for_each>
-      <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
       <include_interrupt_actions ref="PilotAcademyRemoveShipVariables" />
       <remove_object_commander object="this.assignedcontrolled" />
+      <signal_objects object="player.entity" param="'AcademyPilotShipDeregisterRequest'" param2="this.assignedcontrolled" />
       <create_order object="this.assignedcontrolled" id="'Wait'" default="true" />
     </actions>
   </attention>

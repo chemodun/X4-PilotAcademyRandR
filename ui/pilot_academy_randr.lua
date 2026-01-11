@@ -105,7 +105,7 @@ local pilotAcademy = {
   wingIds = { "a", "b", "c", "d", "e", "f", "g", "h", "i" },
   variableId = "pilotAcademyRAndRData",
   wingsVariableId = "pilotAcademyRAndRWings",
-  shipsInfoVariableId = "pilotAcademyRAndRShipsInfo",
+  wingsInfoVariableId = "pilotAcademyRAndRWingsInfo",
   editData = {},
   orderId = "PilotAcademyWing",
   assignOptions = {
@@ -1949,6 +1949,12 @@ function pilotAcademy.buttonDismissWing()
     end
   end
   pilotAcademy.saveWings()
+  local variableId = string.format("$%s", pilotAcademy.wingsInfoVariableId)
+  local wingsInfo = GetNPCBlackboard(pilotAcademy.playerId, variableId)
+  if wingsInfo ~= nil then
+    wingsInfo[wingId] = nil
+    SetNPCBlackboard(pilotAcademy.playerId, variableId, wingsInfo)
+  end
   local menu = pilotAcademy.menuMap
   if menu == nil then
     trace("Menu is nil; cannot refresh info frame")
