@@ -67,6 +67,9 @@
           <set_value name="$shipsInfo.{'$%s'.[$idCode]}" exact="table[]" />
         </do_if>
         <set_value name="$shipInfo" exact="@$shipsInfo.{'$%s'.[$idCode]}" />
+        <do_if value="not $shipInfo.$dataIsUpdated? or @$shipInfo.$dataIsUpdated == null">
+          <set_value name="$shipInfo.$dataIsUpdated" exact="false" />
+        </do_if>
         <debug_text
           text="'Pilot Academy [%s]: initialized shipInfo: %s, for idcode: %s.' . [this.assignedcontrolled.debugname, @$shipInfo, $idCode]" />
         <remove_value name="$idCode" />
@@ -275,7 +278,7 @@
           <abort_called_scripts resume="prepareTrade" />
         </do_if>
         <do_else>
-          <set_value name="$dataIsUpdated" exact="true" />
+          <set_value name="$shipInfo.$dataIsUpdated" exact="true" />
         </do_else>
       </actions>
     </handler>
@@ -324,7 +327,6 @@
     <set_value name="$selectedBuyOffer" exact="null" />
     <set_value name="$selectedSellOffer" exact="null" />
     <set_value name="$targetCombinedSkill" exact="@$targetRankLevel * 20" />
-    <set_value name="$dataIsUpdated" exact="false" />
     <set_value name="$tradeIsUnderPreparation" exact="false" />
     <set_value name="$isMovingToTradeTarget" exact="false" />
   </init>
@@ -371,7 +373,7 @@
         chance="$debugchance" />
       <do_if value="@$selectedFaction == null or @$selectedBuyOffer == null or @$selectedSellOffer == null">
 
-        <set_value name="$dataIsUpdated" exact="false" />
+        <set_value name="$shipInfo.$dataIsUpdated" exact="false" />
 
         <do_if value="this.assignedcontrolled.commander != null">
           <debug_text
@@ -887,9 +889,9 @@
             chance="$debugchance" />
           <apply_experience entity="this" experience="'ship_trade_good'" factor="1" />
           <apply_experience object="this.assignedcontrolled" role="entityrole.service" experience="'ship_trade_good'" factor="1" />
-          <do_if value="$dataIsUpdated">
+          <do_if value="$shipInfo.$dataIsUpdated">
             <debug_text text="'Pilot Academy [%s]: data is updated, going to re-init trade cycle' . [this.assignedcontrolled.debugname]" chance="$debugchance" />
-            <set_value name="$dataIsUpdated" exact="false" />
+            <set_value name="$shipInfo.$dataIsUpdated" exact="false" />
             <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
             <resume label="prepareTrade" />
           </do_if>
