@@ -34,6 +34,20 @@ ffi.cdef [[
 	bool EnablePlannedDefaultOrder(UniverseID controllableid, bool checkonly);
 
   void SetFleetName(UniverseID controllableid, const char* fleetname);
+
+
+	int32_t GetEntityCombinedSkill(UniverseID entityid, const char* role, const char* postid);
+
+	bool IsPerson(NPCSeed person, UniverseID controllableid);
+	bool IsPersonTransferScheduled(UniverseID controllableid, NPCSeed person);
+  int32_t GetPersonCombinedSkill(UniverseID controllableid, NPCSeed person, const char* role, const char* postid);
+	const char* GetPersonName(NPCSeed person, UniverseID controllableid);
+	const char* GetPersonRole(NPCSeed person, UniverseID controllableid);
+	const char* GetPersonRoleName(NPCSeed person, UniverseID controllableid);
+	UniverseID GetInstantiatedPerson(NPCSeed person, UniverseID controllableid);
+	bool HasPersonArrived(UniverseID controllableid, NPCSeed person);
+
+
 ]]
 
 local traceEnabled = true
@@ -81,6 +95,7 @@ local texts = {
   cancel = ReadText(1972092412, 10902),                       -- "Cancel"
   update = ReadText(1972092412, 10903),                       -- "Update"
   create = ReadText(1972092412, 10904),                       -- "Create"
+  appointAsCadet = ReadText(1972092412, 20001),                         -- "Appoint as a cadet"
   wingNames = { a = ReadText(1972092412, 100001), b = ReadText(1972092412, 100002), c = ReadText(1972092412, 100003), d = ReadText(1972092412, 100004), e = ReadText(1972092412, 100005), f = ReadText(1972092412, 100006), g = ReadText(1972092412, 100007), h = ReadText(1972092412, 100008), i = ReadText(1972092412, 100009) },
 }
 
@@ -153,163 +168,6 @@ local function hasItemsExcept(table, excludedKey)
   return false
 end
 
-local function preAddRowToMapMenuContext(contextMenuData, contextMenuMode, menu)
-  if contextMenuData.person then
-    trace("person: " ..
-      ffi.string(C.GetPersonName(contextMenuData.person, contextMenuData.component)) ..
-      ", combinedskill: " .. C.GetPersonCombinedSkill(contextMenuData.component, contextMenuData.person, nil, nil))
-  end
-  local result = nil
-  return result
-end
-
-local function addRowToMapMenuContext(contextFrame, contextMenuData, contextMenuMode, menu)
-  local result = nil
-  trace("testAddRow called")
-
-  if contextMenuMode ~= "info_context" then
-    trace(string.format("contextMenuMode is '%s', not 'info_context', returning", tostring(contextMenuMode)))
-    return result
-  end
-
-  if contextFrame == nil or type(contextFrame) ~= "table" then
-    trace("contextFrame is nil or not a table, returning")
-    return result
-  end
-
-  if contextMenuData == nil or type(contextMenuData) ~= "table" then
-    trace("contextMenuData is not a table, returning")
-    return result
-  end
-
-  if type(contextFrame.content) ~= "table" or #contextFrame.content == 0 then
-    trace("contextFrame.content is not not a table or empty table, returning")
-    return result
-  end
-
-  local menuTable = nil
-
-  for i = 1, #contextFrame.content do
-    local item = contextFrame.content[i]
-    if type(item) == "table" and item.index == 1 then
-      menuTable = item
-      break
-    end
-  end
-
-  if menuTable == nil then
-    trace("menuTable not found in contextFrame.content, returning")
-    return result
-  end
-
-
-  local entity = contextMenuData.entity
-  local person = contextMenuData.person
-  local controllable = contextMenuData.component
-  local personrole = ""
-
-  local player = C.GetPlayerID()
-
-  if person then
-    --print("person: " .. ffi.string(C.GetPersonName(person, controllable)) .. ", combinedskill: " .. C.GetPersonCombinedSkill(controllable, person, nil, nil))
-    -- get real NPC if instantiated
-    local instance = C.GetInstantiatedPerson(person, controllable)
-    entity = (instance ~= 0 and instance or nil)
-    personrole = ffi.string(C.GetPersonRole(person, controllable))
-  end
-
-  if person or (entity and (entity ~= player)) then
-    if GetComponentData(controllable, "isplayerowned") then
-      if (person and ((personrole == "service") or (personrole == "marine") or (personrole == "trainee_group") or (personrole == "unassigned"))) or (entity and GetComponentData(entity, "isplayerowned") and GetComponentData(entity, "caninitiatecomm")) then
-        trace("Adding Pilot Academy R&R row to context menu")
-        local mt = getmetatable(menuTable)
-        local row = mt.__index.addRow(menuTable, "info_move_to_academy", { fixed = true })
-        row[1]:createButton({ bgColor = Color["button_background_hidden"], height = Helper.standardTextHeight }):setText("Send to Pilot Academy R&R")
-        result = { contextFrame = contextFrame }
-      end
-    end
-  end
-  return result
-end
-
-
-local function preAddRowToPlayerInfoMenuContext(contextMenuData, contextMenuMode, menu)
-  local result = nil
-  return result
-end
-
-local function addRowToPlayerInfoMenuContext(contextFrame, contextMenuData, contextMenuMode, menu)
-  local result = nil
-  trace("testAddRow called")
-
-  if contextMenuMode ~= "personnel" then
-    trace(string.format("contextMenuMode is '%s', not 'info_context', returning", tostring(contextMenuMode)))
-    return result
-  end
-
-  if contextFrame == nil or type(contextFrame) ~= "table" then
-    trace("contextFrame is nil or not a table, returning")
-    return result
-  end
-
-  if contextMenuData == nil or type(contextMenuData) ~= "table" then
-    trace("contextMenuData is not a table, returning")
-    -- return result
-  end
-
-  if type(contextFrame.content) ~= "table" or #contextFrame.content == 0 then
-    trace("contextFrame.content is not not a table or empty table, returning")
-    return result
-  end
-
-  local menuTable = nil
-
-  for i = 1, #contextFrame.content do
-    local item = contextFrame.content[i]
-    if type(item) == "table" and item.index == 1 then
-      menuTable = item
-      break
-    end
-  end
-
-  if menuTable == nil then
-    trace("menuTable not found in contextFrame.content, returning")
-    return result
-  end
-
-
-  local controllable = C.ConvertStringTo64Bit(tostring(menu.personnelData.curEntry.container))
-  local entity, person
-  if menu.personnelData.curEntry.type == "person" then
-    person = C.ConvertStringTo64Bit(tostring(menu.personnelData.curEntry.id))
-  else
-    entity = menu.personnelData.curEntry.id
-  end
-
-  local transferscheduled = false
-  local hasarrived = true
-  local personrole = ""
-  if person then
-    -- get real NPC if instantiated
-    local instance = C.GetInstantiatedPerson(person, controllable)
-    entity = (instance ~= 0 and instance or nil)
-    transferscheduled = C.IsPersonTransferScheduled(controllable, person)
-    hasarrived = C.HasPersonArrived(controllable, person)
-    personrole = ffi.string(C.GetPersonRole(person, controllable))
-  end
-
-  local player = C.GetPlayerID()
-
-  if (not transferscheduled) and hasarrived then
-    trace("Adding Pilot Academy R&R row to context menu")
-    local mt = getmetatable(menuTable)
-    local row = mt.__index.addRow(menuTable, "info_move_to_academy", { fixed = true })
-    row[1]:createButton({ bgColor = Color["button_background_hidden"], height = Helper.standardTextHeight }):setText("Send to Pilot Academy R&R")
-    result = { contextFrame = contextFrame }
-  end
-  return result
-end
-
 function pilotAcademy.Init(menuMap, menuPlayerInfo)
   trace("pilotAcademy.Init called")
   pilotAcademy.sideBarIsCreated = false
@@ -327,6 +185,20 @@ function pilotAcademy.Init(menuMap, menuPlayerInfo)
     menuMap.registerCallback("createContextFrame_on_end", pilotAcademy.createInfoFrameContext)
     pilotAcademy.resetData()
     AddUITriggeredEvent("PilotAcademyRAndR", "Reloaded")
+    menuMap.registerCallback("createContextFrame_on_end", function(contextFrame, contextMenuData, contextMenuMode)
+      return pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenuData, contextMenuMode, menuMap)
+    end)
+    menuMap.registerCallback("refreshContextFrame_on_end", function(contextFrame, contextMenuData, contextMenuMode)
+      return pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenuData, contextMenuMode, menuMap)
+    end)
+  end
+  if menuPlayerInfo ~= nil and type(menuPlayerInfo.registerCallback) == "function" then
+    menuPlayerInfo.registerCallback("createContextFrame_on_end", function(contextFrame, contextMenuData, contextMenuMode)
+      return pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenuData, contextMenuMode, menuPlayerInfo)
+    end)
+    menuPlayerInfo.registerCallback("refreshContextFrame_on_end", function(contextFrame, contextMenuData, contextMenuMode)
+      return pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenuData, contextMenuMode, menuPlayerInfo)
+    end)
   end
 end
 
@@ -2100,6 +1972,165 @@ function pilotAcademy.saveWings()
   -- Save wings data to persistent storage
 end
 
+function pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenuData, contextMenuMode, menu)
+  local result = nil
+  trace("pilotAcademy.addAssignAsCadetRowToContextMenu called with mode: " .. tostring(contextMenuMode))
+
+  pilotAcademy.loadCommonData()
+
+  if pilotAcademy.commonData == nil then
+    trace("pilotAcademy.commonData is nil, returning")
+    return result
+  end
+
+  if pilotAcademy.commonData.locationId == nil then
+    trace("pilotAcademy.commonData.locationId is nil, returning")
+    return result
+  end
+
+  -- Validate context mode
+  local isMapContext = contextMenuMode == "info_context"
+  local isPersonnelContext = contextMenuMode == "personnel"
+
+  if not isMapContext and not isPersonnelContext then
+    trace(string.format("contextMenuMode is '%s', not supported, returning", tostring(contextMenuMode)))
+    return result
+  end
+
+  if contextFrame == nil or type(contextFrame) ~= "table" then
+    trace("contextFrame is nil or not a table, returning")
+    return result
+  end
+
+  if isMapContext and (contextMenuData == nil or type(contextMenuData) ~= "table") then
+    trace("contextMenuData is not a table, returning")
+    return result
+  end
+
+  if type(contextFrame.content) ~= "table" or #contextFrame.content == 0 then
+    trace("contextFrame.content is not a table or empty, returning")
+    return result
+  end
+
+  -- Find the menu table
+  local menuTable = nil
+  for i = 1, #contextFrame.content do
+    local item = contextFrame.content[i]
+    if type(item) == "table" and item.index == 1 then
+      menuTable = item
+      break
+    end
+  end
+
+  if menuTable == nil then
+    trace("menuTable not found in contextFrame.content, returning")
+    return result
+  end
+
+  -- Extract entity, person, and controllable based on context mode
+  local entity, person, controllable, transferscheduled, hasarrived, personrole
+
+  if isMapContext then
+    -- Map context: data comes from contextMenuData
+    entity = contextMenuData.entity
+    person = contextMenuData.person
+    controllable = contextMenuData.component
+    transferscheduled = false  -- Not relevant for map context
+    hasarrived = true          -- Not relevant for map context
+    personrole = ""
+  else
+    -- Personnel context: data comes from menu.personnelData
+    controllable = C.ConvertStringTo64Bit(tostring(menu.personnelData.curEntry.container))
+    if menu.personnelData.curEntry.type == "person" then
+      person = C.ConvertStringTo64Bit(tostring(menu.personnelData.curEntry.id))
+    else
+      entity = menu.personnelData.curEntry.id
+    end
+    transferscheduled = false
+    hasarrived = true
+    personrole = ""
+  end
+
+  -- Get real NPC if instantiated
+  if person then
+    local instance = C.GetInstantiatedPerson(person, controllable)
+    entity = (instance ~= 0 and instance or nil)
+    transferscheduled = C.IsPersonTransferScheduled(controllable, person)
+    hasarrived = C.HasPersonArrived(controllable, person)
+    personrole = ffi.string(C.GetPersonRole(person, controllable))
+  end
+
+  -- Get skill level
+  local skill = -1
+  if person then
+    skill = C.GetPersonCombinedSkill(controllable, person, nil, "aipilot")
+  elseif entity then
+    skill = C.GetEntityCombinedSkill(entity, nil, "aipilot")
+  end
+
+  if skill < 0 then
+    trace("Person or entity has zero pilot skill, returning")
+    return result
+  end
+
+  local fullSkill, partSkill = math.modf(skill * 15 / 300)
+
+  if pilotAcademy.commonData == nil or pilotAcademy.commonData.targetRankLevel == nil or fullSkill >= pilotAcademy.commonData.targetRankLevel then
+    trace("Person or entity has pilot skill at or above cadet max rank, returning")
+    return result
+  end
+
+  -- Check additional conditions based on context mode
+  local canAdd = false
+
+  if isMapContext then
+    local player = C.GetPlayerID()
+    if person or (entity and (entity ~= player)) then
+      if GetComponentData(controllable, "isplayerowned") then
+        if (person and ((personrole == "service") or (personrole == "marine") or (personrole == "trainee_group") or (personrole == "unassigned"))) or
+           (entity and GetComponentData(entity, "isplayerowned") and GetComponentData(entity, "caninitiatecomm")) then
+          canAdd = true
+        end
+      end
+    end
+  else
+    -- Personnel context
+    if (not transferscheduled) and hasarrived then
+      canAdd = true
+    end
+  end
+
+  if canAdd then
+    trace("Adding Pilot Academy R&R row to context menu")
+    local mt = getmetatable(menuTable)
+    local row = mt.__index.addRow(menuTable, "info_move_to_academy", { fixed = true })
+    row[1]:createButton({ bgColor = Color["button_background_hidden"], height = Helper.standardTextHeight }):setText(texts.appointAsCadet) -- "Appoint as a cadet"
+    result = { contextFrame = contextFrame }
+  end
+
+  return result
+end
+
+
+
+
+
+local function preAddRowToMapMenuContext(contextMenuData, contextMenuMode, menu)
+  if contextMenuData.person then
+    trace("person: " ..
+      ffi.string(C.GetPersonName(contextMenuData.person, contextMenuData.component)) ..
+      ", combinedskill: " .. C.GetPersonCombinedSkill(contextMenuData.component, contextMenuData.person, nil, nil))
+  end
+  local result = nil
+  return result
+end
+
+local function preAddRowToPlayerInfoMenuContext(contextMenuData, contextMenuMode, menu)
+  local result = nil
+  return result
+end
+
+
 local function Init()
   pilotAcademy.playerId = ConvertStringTo64Bit(tostring(C.GetPlayerID()))
   debug("Initializing Pilot Academy UI extension with PlayerID: " .. tostring(pilotAcademy.playerId))
@@ -2112,12 +2143,6 @@ local function Init()
     end)
     menuMap.registerCallback("refreshContextFrame_on_start", function(contextMenuData, contextMenuMode)
       return preAddRowToMapMenuContext(contextMenuData, contextMenuMode, menuMap)
-    end)
-    menuMap.registerCallback("createContextFrame_on_end", function(contextFrame, contextMenuData, contextMenuMode)
-      return addRowToMapMenuContext(contextFrame, contextMenuData, contextMenuMode, menuMap)
-    end)
-    menuMap.registerCallback("refreshContextFrame_on_end", function(contextFrame, contextMenuData, contextMenuMode)
-      return addRowToMapMenuContext(contextFrame, contextMenuData, contextMenuMode, menuMap)
     end)
     debug("Registered callback for Context Frame creation and refresh in MapMenu")
     -- menuMap.registerCallback("createInfoFrame_on_menu_infoTableMode", fcm.createInfoFrame)
@@ -2133,12 +2158,6 @@ local function Init()
     end)
     menuPlayerInfo.registerCallback("refreshContextFrame_on_start", function(contextMenuData, contextMenuMode)
       return preAddRowToPlayerInfoMenuContext(contextMenuData, contextMenuMode, menuPlayerInfo)
-    end)
-    menuPlayerInfo.registerCallback("createContextFrame_on_end", function(contextFrame, contextMenuData, contextMenuMode)
-      return addRowToPlayerInfoMenuContext(contextFrame, contextMenuData, contextMenuMode, menuPlayerInfo)
-    end)
-    menuPlayerInfo.registerCallback("refreshContextFrame_on_end", function(contextFrame, contextMenuData, contextMenuMode)
-      return addRowToPlayerInfoMenuContext(contextFrame, contextMenuData, contextMenuMode, menuPlayerInfo)
     end)
     debug("Registered callback for Context Frame creation and refresh in PlayerInfoMenu")
   else
