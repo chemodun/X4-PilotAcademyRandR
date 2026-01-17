@@ -2122,9 +2122,9 @@ function pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenu
     return result
   end
 
-  local fullSkill, partSkill = math.modf(skill * 15 / 300)
+  local fullSkill = skill * 15.0 / 300
 
-  if pilotAcademy.commonData == nil or pilotAcademy.commonData.targetRankLevel == nil or fullSkill >= pilotAcademy.commonData.targetRankLevel then
+  if pilotAcademy.commonData == nil or pilotAcademy.commonData.targetRankLevel == nil or fullSkill - pilotAcademy.commonData.targetRankLevel > 0 then
     trace("Person or entity has pilot skill at or above cadet max rank, returning")
     return result
   end
