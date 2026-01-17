@@ -22,6 +22,15 @@ ffi.cdef [[
 		bool istemporder;
 	} Order;
 
+	typedef struct {
+		const char* id;
+		const char* name;
+		const char* desc;
+		uint32_t amount;
+		uint32_t numtiers;
+		bool canhire;
+	} PeopleInfo;
+
   UniverseID GetPlayerID(void);
   RelationRangeInfo GetUIRelationName(const char* fromfactionid, const char* tofactionid);
 
@@ -47,7 +56,9 @@ ffi.cdef [[
 	UniverseID GetInstantiatedPerson(NPCSeed person, UniverseID controllableid);
 	bool HasPersonArrived(UniverseID controllableid, NPCSeed person);
 
-
+	uint32_t GetPeopleCapacity(UniverseID controllableid, const char* macroname, bool includepilot);
+  uint32_t GetNumAllRoles(void);
+	uint32_t GetPeople2(PeopleInfo* result, uint32_t resultlen, UniverseID controllableid, bool includearriving);
 ]]
 
 local traceEnabled = true
@@ -1008,7 +1019,7 @@ function pilotAcademy.displayPersonnelInfo(frame, menu, config)
   row[2]:setColSpan(2):createText(texts.cadets, Helper.headerRowCenteredProperties)
 
   local tableCadetsMaxHeight = 0
-  local cadets = pilotAcademy.getCadetsList()
+  local cadets, pilots = pilotAcademy.retrieveAcademyPersonnel()
   for i = 1, #cadets do
     local cadet = cadets[i]
     if cadet ~= nil then
@@ -1045,7 +1056,6 @@ function pilotAcademy.displayPersonnelInfo(frame, menu, config)
   local row = tablePilots:addRow(nil, { fixed = true })
   row[2]:setColSpan(2):createText(texts.pilots, Helper.headerRowCenteredProperties)
   local tablePilotsMaxHeight = 0
-  local pilots = pilotAcademy.getPilotsList()
   for i = 1, #pilots do
     local pilot = pilots[i]
     if pilot ~= nil then
@@ -1076,15 +1086,49 @@ function pilotAcademy.displayPersonnelInfo(frame, menu, config)
   return tables
 end
 
-function pilotAcademy.getCadetsList()
+function pilotAcademy.retrieveAcademyPersonnel()
   local cadets = {}
-  return cadets
+  local pilots = {}
+  if pilotAcademy.commonData == nil then
+    trace("commonData is nil; cannot get cadets list")
+    return cadets, pilots
+  end
+  if pilotAcademy.commonData.locationId == nil then
+    trace("locationId is nil; cannot get cadets list")
+    return cadets, pilots
+  end
+
+  local locationId = pilotAcademy.commonData.locationId
+  local capacity = C.GetPeopleCapacity(locationId, "", false)
+  trace("Cadet capacity at location " .. tostring(locationId) .. " is " .. tostring(capacity))
+  if capacity == nil or capacity <= 0 then
+    trace("No capacity; returning empty cadets list")
+    return cadets, pilots
+  end
+
+  local numRoles = C.GetNumAllRoles()
+  local rolesTable = ffi.new("PeopleInfo[?]", numRoles)
+  numRoles = C.GetPeople2(rolesTable, numRoles, locationId, true)
+  for i = 0, numRoles - 1 do
+    local role = rolesTable[i]
+    local roleId = ffi.string(role.id)
+    trace("Processing role ID: " .. tostring(roleId) .. " with amount: " .. tostring(role.amount))
+    if roleId == "trainee_group" and role.amount > 0 then
+      local amount = role.amount
+      local personsTable = GetRoleTierNPCs(locationId, roleId, 0)
+      for j = 1, #personsTable do
+        local person = personsTable[j]
+        if person ~= nil then
+          local personId = C.ConvertStringTo64Bit(tostring(person.seed))
+          local skill = C.GetPersonCombinedSkill(locationId, personId, nil, "aipilot")
+          trace("Found cadet: " .. tostring(person.name) .. " with skill: " .. tostring(skill))
+        end
+      end
+    end
+  end
+  return cadets, pilots
 end
 
-function pilotAcademy.getPilotsList()
-  local pilots = {}
-  return pilots
-end
 
 function pilotAcademy.loadCommonData()
   pilotAcademy.commonData = {}
