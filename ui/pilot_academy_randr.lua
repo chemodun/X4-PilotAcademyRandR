@@ -986,6 +986,10 @@ function pilotAcademy.combineFactionsSelections(editData, savedData)
   return selectedFactions
 end
 
+function pilotAcademy.skillBase(skill)
+  return skill * 15.0 / 300
+end
+
 function pilotAcademy.displayPersonnelInfo(frame, menu, config)
   if frame == nil then
     trace("Frame is nil; cannot display wing info")
@@ -1125,9 +1129,9 @@ function pilotAcademy.retrieveAcademyPersonnel()
           local personId = C.ConvertStringTo64Bit(tostring(person.seed))
           local skill = C.GetPersonCombinedSkill(locationId, personId, nil, "aipilot")
           trace("Found cadet: " .. tostring(person.name) .. " with skill: " .. tostring(skill))
-          local fullSkill = skill * 15.0 / 300
+          local skillBase = pilotAcademy.skillBase(skill)
           local skillInStars = string.format("%s", Helper.displaySkill(skill * 15 / 100))
-          if fullSkill - pilotAcademy.commonData.targetRankLevel >= 0 then
+          if skillBase - pilotAcademy.commonData.targetRankLevel >= 0 then
             pilots[#pilots + 1] = {
               id = personId,
               name = person.name,
@@ -2144,9 +2148,9 @@ function pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenu
     return result
   end
 
-  local fullSkill = skill * 15.0 / 300
+  local skillBase = pilotAcademy.skillBase(skill)
 
-  if pilotAcademy.commonData == nil or pilotAcademy.commonData.targetRankLevel == nil or fullSkill - pilotAcademy.commonData.targetRankLevel > 0 then
+  if pilotAcademy.commonData == nil or pilotAcademy.commonData.targetRankLevel == nil or skillBase - pilotAcademy.commonData.targetRankLevel > 0 then
     trace("Person or entity has pilot skill at or above cadet max rank, returning")
     return result
   end
