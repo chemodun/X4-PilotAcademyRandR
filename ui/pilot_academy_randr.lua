@@ -1024,8 +1024,9 @@ function pilotAcademy.displayPersonnelInfo(frame, menu, config)
     local cadet = cadets[i]
     if cadet ~= nil then
       local row = tableCadets:addRow(cadet.id, { fixed = false })
-      row[2]:createIcon(cadet.icon, { height = config.mapRowHeight, width = config.mapRowHeight, color = Color["text_normal"] })
-      row[3]:setColSpan(2):createText(cadet.name, { halign = "left", color = Color["text_normal"] })
+      local icon = row[2]:setColSpan(2):createIcon(cadet.icon, { height = config.mapRowHeight, width = config.mapRowHeight, color = Color["text_normal"] })
+      icon:setText(cadet.name, { x = config.mapRowHeight, halign = "left", color = Color["text_normal"] })
+      icon:setText2(cadet.skillInStars, { halign = "right", color = Color["text_skills"] })
       if i == 15 then
         tableCadetsMaxHeight = tableCadets:getFullHeight()
       end
@@ -1060,8 +1061,10 @@ function pilotAcademy.displayPersonnelInfo(frame, menu, config)
     local pilot = pilots[i]
     if pilot ~= nil then
       local row = tablePilots:addRow(pilot.id, { fixed = false })
-      row[2]:createIcon(pilot.icon, { height = config.mapRowHeight, width = config.mapRowHeight, color = Color["text_normal"] })
-      row[3]:setColSpan(2):createText(pilot.name, { halign = "left", color = Color["text_normal"] })
+      local icon = row[2]:setColSpan(2):createIcon(pilot.icon, { height = config.mapRowHeight, width = config.mapRowHeight, color = Color["text_normal"] })
+      icon:setText(pilot.name, { x = config.mapRowHeight, halign = "left", color = Color["text_normal"] })
+      icon:setText2(pilot.skillInStars, { halign = "right", color = Color["text_skills"] })
+
       if i == 15 then
         tablePilotsMaxHeight = tablePilots:getFullHeight()
       end
@@ -1122,6 +1125,25 @@ function pilotAcademy.retrieveAcademyPersonnel()
           local personId = C.ConvertStringTo64Bit(tostring(person.seed))
           local skill = C.GetPersonCombinedSkill(locationId, personId, nil, "aipilot")
           trace("Found cadet: " .. tostring(person.name) .. " with skill: " .. tostring(skill))
+          local fullSkill = skill * 15.0 / 300
+          local skillInStars = string.format("%s", Helper.displaySkill(skill * 15 / 100))
+          if fullSkill - pilotAcademy.commonData.targetRankLevel >= 0 then
+            pilots[#pilots + 1] = {
+              id = personId,
+              name = person.name,
+              icon = "pa_icon_pilot",
+              skill = skill,
+              skillInStars = skillInStars
+            }
+          else
+            cadets[#cadets + 1] = {
+              id = personId,
+              name = person.name,
+              icon = "pa_icon_cadet",
+              skill = skill,
+              skillInStars = skillInStars
+            }
+          end
         end
       end
     end
