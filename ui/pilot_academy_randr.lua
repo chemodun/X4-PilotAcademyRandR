@@ -1976,6 +1976,11 @@ function pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenu
   local result = nil
   trace("pilotAcademy.addAssignAsCadetRowToContextMenu called with mode: " .. tostring(contextMenuMode))
 
+  if menu == nil then
+    trace("menu is nil, returning")
+    return result
+  end
+
   pilotAcademy.loadCommonData()
 
   if pilotAcademy.commonData == nil then
@@ -2028,15 +2033,15 @@ function pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenu
   end
 
   -- Extract entity, person, and controllable based on context mode
-  local entity, person, controllable, transferscheduled, hasarrived, personrole
+  local entity, person, controllable, transferScheduled, hasArrived, personrole
 
   if isMapContext then
     -- Map context: data comes from contextMenuData
     entity = contextMenuData.entity
     person = contextMenuData.person
     controllable = contextMenuData.component
-    transferscheduled = false  -- Not relevant for map context
-    hasarrived = true          -- Not relevant for map context
+    transferScheduled = false  -- Not relevant for map context
+    hasArrived = true          -- Not relevant for map context
     personrole = ""
   else
     -- Personnel context: data comes from menu.personnelData
@@ -2046,8 +2051,8 @@ function pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenu
     else
       entity = menu.personnelData.curEntry.id
     end
-    transferscheduled = false
-    hasarrived = true
+    transferScheduled = false
+    hasArrived = true
     personrole = ""
   end
 
@@ -2055,8 +2060,8 @@ function pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenu
   if person then
     local instance = C.GetInstantiatedPerson(person, controllable)
     entity = (instance ~= 0 and instance or nil)
-    transferscheduled = C.IsPersonTransferScheduled(controllable, person)
-    hasarrived = C.HasPersonArrived(controllable, person)
+    transferScheduled = C.IsPersonTransferScheduled(controllable, person)
+    hasArrived = C.HasPersonArrived(controllable, person)
     personrole = ffi.string(C.GetPersonRole(person, controllable))
   end
 
@@ -2095,23 +2100,37 @@ function pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenu
     end
   else
     -- Personnel context
-    if (not transferscheduled) and hasarrived then
+    if (not transferScheduled) and hasArrived then
       canAdd = true
     end
   end
 
   if canAdd then
-    trace("Adding Pilot Academy R&R row to context menu")
+    local actor = person and { entity = nil, personcontrollable = controllable, personseed = person } or
+        entity and { entity = entity, personcontrollable = nil, personseed = nil } or nil
+    if actor == nil then
+      trace("Actor is nil, cannot add row, returning")
+      return result
+    end
+    trace("Adding Pilot Academy R&R row to context menu with actor: " .. tostring(actor))
     local mt = getmetatable(menuTable)
     local row = mt.__index.addRow(menuTable, "info_move_to_academy", { fixed = true })
     row[1]:createButton({ bgColor = Color["button_background_hidden"], height = Helper.standardTextHeight }):setText(texts.appointAsCadet) -- "Appoint as a cadet"
+    row[1].handlers.onClick = function()
+      pilotAcademy.assignAsCadet(actor, controllable)
+      menu.closeContextMenu()
+    end
     result = { contextFrame = contextFrame }
   end
 
   return result
 end
 
-
+function pilotAcademy.assignAsCadet(actor, controllable)
+  trace("assignAsCadet called")
+  local result = ffi.string(C.AssignHiredActor(actor, pilotAcademy.commonData.locationId, nil, "trainee_group", false))
+  debug("assignAsCadet result: " .. tostring(result))
+end
 
 
 
