@@ -583,7 +583,7 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
   end
 
   row = tableTop:addRow("auto_hire", { fixed = true })
-  row[2]:createCheckBox(autoHire == true, { active = #factions > 0 }) -- To Do: add check on own stations with hiring possibility
+  row[2]:createCheckBox(autoHire == true, { active = #factions > 0 }) -- ToDo: add check on own stations with hiring possibility
   row[2].handlers.onClick = function(_, checked) return pilotAcademy.onToggleAutoHire(checked) end
   row[3]:createText(texts.autoHire, { halign = "left", titleColor = Color["row_title"] })
   tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
@@ -1039,22 +1039,32 @@ function pilotAcademy.displayPersonnelInfo(frame, menu, config)
 
   local tableCadets = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
   tableCadets.name = "table_personnel_cadets"
-  pilotAcademy.fillPersonnelTable(tableCadets, cadets, menu, config, tables)
+  pilotAcademy.fillPersonnelTable(tableCadets, cadets, texts.cadets, menu, config, tables)
 
   local tablePilots = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
   tablePilots.name = "table_personnel_pilots"
-  pilotAcademy.fillPersonnelTable(tablePilots, pilots, menu, config, tables)
+  pilotAcademy.fillPersonnelTable(tablePilots, pilots, texts.pilots, menu, config, tables)
+
+  local tableBottom = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
+  tableBottom.name = "table_personnel_bottom"
+  tableBottom:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
+  tableBottom:setDefaultCellProperties("button", { height = config.mapRowHeight })
+  tableBottom:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
+  pilotAcademy.setAcademyContentColumnWidths(tableBottom, menu, config)
+  tableBottom:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  tables[#tables + 1] = { table = tableBottom, height = tableBottom:getFullHeight() }
+
   return tables
 end
 
-function pilotAcademy.fillPersonnelTable(tablePersonnel, personnel, menu, config, tables)
+function pilotAcademy.fillPersonnelTable(tablePersonnel, personnel, title, menu, config, tables)
   tablePersonnel:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
   tablePersonnel:setDefaultCellProperties("button", { height = config.mapRowHeight })
   tablePersonnel:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
   pilotAcademy.setAcademyContentColumnWidths(tablePersonnel, menu, config)
   tablePersonnel:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local row = tablePersonnel:addRow(nil, { fixed = true })
-  row[2]:setColSpan(2):createText(texts.pilots, Helper.headerRowCenteredProperties)
+  row[2]:setColSpan(2):createText(title, Helper.headerRowCenteredProperties)
   local tablePersonnelMaxHeight = 0
   for i = 1, #personnel do
     local person = personnel[i]
@@ -1122,7 +1132,8 @@ function pilotAcademy.retrieveAcademyPersonnel(toOneTable)
         if person ~= nil then
           local personId = C.ConvertStringTo64Bit(tostring(person.seed))
           local skill = C.GetPersonCombinedSkill(locationId, personId, nil, "aipilot")
-          trace("Found cadet: " .. tostring(person.name) .. " with skill: " .. tostring(skill))
+          local fee = pilotAcademy.calculateHiringFee(skill) -- ToDo: to delete!
+          trace("Found person: " .. tostring(person.name) .. " with skill: " .. tostring(skill) .. " and hiring fee: " .. tostring(fee))
           local skillBase = pilotAcademy.skillBase(skill)
           local skillInStars = string.format("%s", Helper.displaySkill(skill * 15 / 100))
           local transferScheduled = C.IsPersonTransferScheduled(locationId, personId)
@@ -2279,7 +2290,24 @@ function pilotAcademy.appointAsCadet(actor, controllable)
   debug("assignAsCadet result: " .. tostring(result))
 end
 
+function pilotAcademy.calculateHiringFee(combinedskill)
+  -- Base fee
+  local hiringFee = combinedskill * 225
 
+  -- If combinedskill > 20, apply the special max() formula
+  if combinedskill > 20 then
+    local alt = (combinedskill * 15) * (15 ^ (combinedskill / 20))
+    hiringFee = math.max(hiringFee, alt)
+  end
+
+  -- Add a random amount between 300 and 700
+  hiringFee = hiringFee + math.random(300, 700)
+
+  -- Round down to nearest 10
+  hiringFee = math.floor(hiringFee / 10) * 10
+
+  return hiringFee
+end
 
 local function preAddRowToMapMenuContext(contextMenuData, contextMenuMode, menu)
   if contextMenuData.person then
