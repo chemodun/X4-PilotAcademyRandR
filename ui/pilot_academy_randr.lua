@@ -993,8 +993,7 @@ function pilotAcademy.transferPersonnel(oldLocationId, newLocationId)
     if person ~= nil and person.hasArrived == true and not person.transferScheduled then
       local actor = { entity = nil, personcontrollable = oldLocationId, personseed = person.id }
       if not GetComponentData(oldLocationId, "isplayerowned") then
-        local entity = C.CreateNPCFromPerson(person.id, oldLocationId)
-        pilotAcademy.setNPCOwnedByPlayer(entity)
+        local entity = pilotAcademy.getOrCreateEntity(person.id, oldLocationId)
         actor = { entity = entity, personcontrollable = nil, personseed = nil }
       end
       pilotAcademy.appointAsCadet(actor, newLocationId)
@@ -1007,6 +1006,16 @@ function pilotAcademy.setNPCOwnedByPlayer(entity)
   if not GetComponentData(entityId, "isplayerowned") then
     C.SetComponentOwner(entityId, "player")
   end
+end
+
+function pilotAcademy.getOrCreateEntity(person, controllable)
+  local entity = C.GetInstantiatedPerson(person, controllable)
+  trace("Retrieved entity for person: " .. tostring(entity))
+  if entity == 0 or entity == nil then
+    entity = C.CreateNPCFromPerson(person, controllable)
+    trace("Created entity for person: " .. tostring(entity))
+  end
+  return entity
 end
 
 function pilotAcademy.combineFactionsSelections(editData, savedData)
@@ -1124,6 +1133,7 @@ function pilotAcademy.retrieveAcademyPersonnel(toOneTable)
   end
 
   local locationId = pilotAcademy.commonData.locationId
+  local isPlayerOwned = GetComponentData(locationId, "isplayerowned")
   local capacity = C.GetPeopleCapacity(locationId, "", false)
   trace("Cadet capacity at location " .. tostring(locationId) .. " is " .. tostring(capacity))
   if capacity == nil or capacity <= 0 then
@@ -1152,6 +1162,13 @@ function pilotAcademy.retrieveAcademyPersonnel(toOneTable)
           local skillInStars = string.format("%s", Helper.displaySkill(skill * 15 / 100))
           local transferScheduled = C.IsPersonTransferScheduled(locationId, personId)
           local hasArrived = C.HasPersonArrived(locationId, personId)
+          if isPlayerOwned ~= true and hasArrived == true then
+            trace("Person has arrived at non-player-owned location; checking entity ownership")
+            local entity = pilotAcademy.getOrCreateEntity(personId, locationId)
+            if entity ~= nil then
+              pilotAcademy.setNPCOwnedByPlayer(entity)
+            end
+          end
           if transferScheduled ~= true then
             if toOneTable or skillBase - pilotAcademy.commonData.targetRankLevel < 0 then
               cadets[#cadets + 1] = {
@@ -2311,12 +2328,12 @@ function pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenu
       end
     elseif contextMenuData and contextMenuData.isAcademyPersonnel then
       if hasArrived then
-        if entity == nil then
-          entity = C.CreateNPCFromPerson(person, controllable)
-        end
-        pilotAcademy.setNPCOwnedByPlayer(entity)
-        person = nil
-        controllable = nil
+        -- if entity == nil then
+        --   entity = C.CreateNPCFromPerson(person, controllable)
+        -- end
+        -- pilotAcademy.setNPCOwnedByPlayer(entity)
+        -- person = nil
+        -- controllable = nil
         -- work somewhere else
         local row = mt.__index.addRow(menuTable, "info_person_worksomewhere", { fixed = true })
         row[1]:createButton({ bgColor = Color["button_background_hidden"], height = Helper.standardTextHeight }):setText(ReadText(1002, 3008))
