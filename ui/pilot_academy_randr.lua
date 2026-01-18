@@ -1014,83 +1014,52 @@ function pilotAcademy.displayPersonnelInfo(frame, menu, config)
 
   local tableCadets = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
   tableCadets.name = "table_personnel_cadets"
-  tableCadets:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
-  tableCadets:setDefaultCellProperties("button", { height = config.mapRowHeight })
-  tableCadets:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-  pilotAcademy.setAcademyContentColumnWidths(tableCadets, menu, config)
-  tableCadets:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-  local row = tableCadets:addRow(nil, { fixed = true })
-  row[2]:setColSpan(2):createText(texts.cadets, Helper.headerRowCenteredProperties)
-
-  local tableCadetsMaxHeight = 0
   local cadets, pilots = pilotAcademy.retrieveAcademyPersonnel()
-  for i = 1, #cadets do
-    local cadet = cadets[i]
-    if cadet ~= nil then
-      local row = tableCadets:addRow(cadet.id, { fixed = false })
-      local icon = row[2]:setColSpan(2):createIcon(cadet.icon, { height = config.mapRowHeight, width = config.mapRowHeight, color = Color["text_normal"] })
-      icon:setText(cadet.name, { x = config.mapRowHeight, halign = "left", color = Color["text_normal"] })
-      icon:setText2(cadet.skillInStars, { halign = "right", color = Color["text_skills"] })
-      if i == 15 then
-        tableCadetsMaxHeight = tableCadets:getFullHeight()
-      end
-    end
-  end
-  if #cadets == 0 then
-    local row = tableCadets:addRow(nil, { fixed = false })
-    row[2]:setColSpan(2):createText(texts.noCadetsAssigned, { halign = "center", color = Color["text_warning"] })
-  else
-    if pilotAcademy.topRows.tablePersonnelCadets ~= nil then
-      tableCadets:setTopRow(pilotAcademy.topRows.tablePersonnelCadets)
-    end
-  end
-  pilotAcademy.topRows.tablePersonnelCadets = nil
-  if tableCadetsMaxHeight == 0 then
-    tableCadetsMaxHeight = tableCadets:getFullHeight()
-  end
-  tableCadets.properties.maxVisibleHeight = math.min(tableCadets:getFullHeight(), tableCadetsMaxHeight)
-  tables[#tables + 1] = { table = tableCadets, height = tableCadets.properties.maxVisibleHeight }
+  pilotAcademy.fillPersonnelTable(tableCadets, cadets, menu, config, tables)
 
   local tablePilots = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
   tablePilots.name = "table_personnel_pilots"
-  tablePilots:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
-  tablePilots:setDefaultCellProperties("button", { height = config.mapRowHeight })
-  tablePilots:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-  pilotAcademy.setAcademyContentColumnWidths(tablePilots, menu, config)
-  tablePilots:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-  local row = tablePilots:addRow(nil, { fixed = true })
+  pilotAcademy.fillPersonnelTable(tablePilots, pilots, menu, config, tables)
+  return tables
+end
+
+function pilotAcademy.fillPersonnelTable(tablePersonnel, personnel, menu, config, tables)
+  tablePersonnel:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
+  tablePersonnel:setDefaultCellProperties("button", { height = config.mapRowHeight })
+  tablePersonnel:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
+  pilotAcademy.setAcademyContentColumnWidths(tablePersonnel, menu, config)
+  tablePersonnel:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  local row = tablePersonnel:addRow(nil, { fixed = true })
   row[2]:setColSpan(2):createText(texts.pilots, Helper.headerRowCenteredProperties)
-  local tablePilotsMaxHeight = 0
-  for i = 1, #pilots do
-    local pilot = pilots[i]
-    if pilot ~= nil then
-      local row = tablePilots:addRow(pilot.id, { fixed = false })
-      local icon = row[2]:setColSpan(2):createIcon(pilot.icon, { height = config.mapRowHeight, width = config.mapRowHeight, color = Color["text_normal"] })
-      icon:setText(pilot.name, { x = config.mapRowHeight, halign = "left", color = Color["text_normal"] })
-      icon:setText2(pilot.skillInStars, { halign = "right", color = Color["text_skills"] })
+  local tablePersonnelMaxHeight = 0
+  for i = 1, #personnel do
+    local person = personnel[i]
+    if person ~= nil then
+      local row = tablePersonnel:addRow({ tableName = tablePersonnel.name, rowData = person }, { fixed = false })
+      local icon = row[2]:setColSpan(2):createIcon(person.icon, { height = config.mapRowHeight, width = config.mapRowHeight, color = person.hasArrived and Color["text_normal"] or Color["text_inactive"] })
+      icon:setText(person.name, { x = config.mapRowHeight, halign = "left", color = person.hasArrived and Color["text_normal"] or Color["text_inactive"] })
+      icon:setText2(person.skillInStars, { halign = "right", color = person.hasArrived and Color["text_skills"] or Color["text_inactive"] })
 
       if i == 15 then
-        tablePilotsMaxHeight = tablePilots:getFullHeight()
+        tablePersonnelMaxHeight = tablePersonnel:getFullHeight()
       end
     end
   end
 
-  if #pilots == 0 then
-    local row = tablePilots:addRow(nil, { fixed = false })
+  if #personnel == 0 then
+    local row = tablePersonnel:addRow(nil, { fixed = false })
     row[2]:setColSpan(2):createText(texts.noPilotsAvailable, { halign = "center", color = Color["text_warning"] })
   else
     if pilotAcademy.topRows.tablePersonnelPilots ~= nil then
-      tablePilots:setTopRow(pilotAcademy.topRows.tablePersonnelPilots)
+      tablePersonnel:setTopRow(pilotAcademy.topRows.tablePersonnelPilots)
     end
   end
   pilotAcademy.topRows.tablePersonnelPilots = nil
-  if tablePilotsMaxHeight == 0 then
-    tablePilotsMaxHeight = tablePilots:getFullHeight()
+  if tablePersonnelMaxHeight == 0 then
+    tablePersonnelMaxHeight = tablePersonnel:getFullHeight()
   end
-  tablePilots.properties.maxVisibleHeight = math.min(tablePilots:getFullHeight(), tablePilotsMaxHeight)
-  tables[#tables + 1] = { table = tablePilots, height = tablePilots.properties.maxVisibleHeight }
-
-  return tables
+  tablePersonnel.properties.maxVisibleHeight = math.min(tablePersonnel:getFullHeight(), tablePersonnelMaxHeight)
+  tables[#tables + 1] = { table = tablePersonnel, height = tablePersonnel.properties.maxVisibleHeight }
 end
 
 function pilotAcademy.retrieveAcademyPersonnel()
@@ -1131,22 +1100,28 @@ function pilotAcademy.retrieveAcademyPersonnel()
           trace("Found cadet: " .. tostring(person.name) .. " with skill: " .. tostring(skill))
           local skillBase = pilotAcademy.skillBase(skill)
           local skillInStars = string.format("%s", Helper.displaySkill(skill * 15 / 100))
-          if skillBase - pilotAcademy.commonData.targetRankLevel >= 0 then
-            pilots[#pilots + 1] = {
-              id = personId,
-              name = person.name,
-              icon = "pa_icon_pilot",
-              skill = skill,
-              skillInStars = skillInStars
-            }
-          else
-            cadets[#cadets + 1] = {
-              id = personId,
-              name = person.name,
-              icon = "pa_icon_cadet",
-              skill = skill,
-              skillInStars = skillInStars
-            }
+          local transferScheduled = C.IsPersonTransferScheduled(locationId, personId)
+          local hasArrived = C.HasPersonArrived(locationId, personId)
+          if transferScheduled ~= true then
+            if skillBase - pilotAcademy.commonData.targetRankLevel >= 0 then
+              pilots[#pilots + 1] = {
+                id = personId,
+                name = person.name,
+                icon = "pa_icon_pilot",
+                skill = skill,
+                skillInStars = skillInStars,
+                hasArrived = hasArrived
+              }
+            else
+              cadets[#cadets + 1] = {
+                id = personId,
+                name = person.name,
+                icon = "pa_icon_cadet",
+                skill = skill,
+                skillInStars = skillInStars,
+                hasArrived = hasArrived
+              }
+            end
           end
         end
       end
@@ -1625,7 +1600,17 @@ function pilotAcademy.onTableRightMouseClick(uiTable, row, posX, posY)
       posX, posY = GetLocalMousePosition()
     end
     menu.contextMenuData = { width = Helper.scaleX(interactMenuConfig.width), xoffset = posX + Helper.viewWidth / 2, yoffset = Helper.viewHeight / 2 - posY, instance =
-    menu.instance, tableName = tableName, rowData = rowData }
+        menu.instance, tableName = tableName, rowData = rowData }
+    menu.createContextFrame()
+  elseif tableName == "table_personnel_cadets" or tableName == "table_personnel_pilots" then
+    config = pilotAcademy.menuMapConfig
+    menu.contextMenuMode = "info_context"
+    if posX == nil or posY == nil then
+      posX, posY = GetLocalMousePosition()
+    end
+    menu.contextMenuData = { width = Helper.scaleX(interactMenuConfig.width), xoffset = posX + Helper.viewWidth / 2, yoffset = Helper.viewHeight / 2 - posY, instance =
+        menu.instance,  person = rowData.id, component = pilotAcademy.commonData.locationId, tableName = tableName, rowData = rowData, isAcademyPersonnel = true }
+
     menu.createContextFrame()
   end
 end
@@ -2106,6 +2091,10 @@ function pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenu
   local entity, person, controllable, transferScheduled, hasArrived, personrole
 
   if isMapContext then
+    if contextMenuData.isAcademyPersonnel then
+      trace("Context menu is for academy personnel; skipping 'Assign as Cadet' option")
+      return result
+    end
     -- Map context: data comes from contextMenuData
     entity = contextMenuData.entity
     person = contextMenuData.person
@@ -2150,7 +2139,7 @@ function pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenu
 
   local skillBase = pilotAcademy.skillBase(skill)
 
-  if pilotAcademy.commonData == nil or pilotAcademy.commonData.targetRankLevel == nil or skillBase - pilotAcademy.commonData.targetRankLevel > 0 then
+  if pilotAcademy.commonData == nil or pilotAcademy.commonData.targetRankLevel == nil --[[ or skillBase - pilotAcademy.commonData.targetRankLevel > 0 ]] then
     trace("Person or entity has pilot skill at or above cadet max rank, returning")
     return result
   end
@@ -2164,7 +2153,7 @@ function pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenu
       if GetComponentData(controllable, "isplayerowned") then
         if (person and ((personrole == "service") or (personrole == "marine") or (personrole == "trainee_group") or (personrole == "unassigned"))) or
            (entity and GetComponentData(entity, "isplayerowned") and GetComponentData(entity, "caninitiatecomm")) then
-          canAdd = true
+          canAdd = transferScheduled == false and hasArrived
         end
       end
     end
@@ -2206,9 +2195,9 @@ end
 
 local function preAddRowToMapMenuContext(contextMenuData, contextMenuMode, menu)
   if contextMenuData.person then
-    trace("person: " ..
-      ffi.string(C.GetPersonName(contextMenuData.person, contextMenuData.component)) ..
-      ", combinedskill: " .. C.GetPersonCombinedSkill(contextMenuData.component, contextMenuData.person, nil, nil))
+    trace("mode: " .. tostring(contextMenuMode) .. ", component: " .. (contextMenuData.component or "nil") .. "person: " ..
+      (contextMenuData.component and ffi.string(C.GetPersonName(contextMenuData.person, contextMenuData.component)) or "unknown") ..
+      ", combinedskill: " .. (contextMenuData.component and C.GetPersonCombinedSkill(contextMenuData.component, contextMenuData.person, nil, nil) or "unknown"))
   end
   local result = nil
   return result
