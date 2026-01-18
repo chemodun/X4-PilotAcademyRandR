@@ -1,5 +1,4 @@
 local ffi = require("ffi")
-local p = require("ui.core.lua.jit.p")
 local C = ffi.C
 
 ffi.cdef [[
@@ -1097,7 +1096,7 @@ function pilotAcademy.fillPersonnelTable(tablePersonnel, personnel, title, menu,
 
   if #personnel == 0 then
     local row = tablePersonnel:addRow(nil, { fixed = false })
-    row[2]:setColSpan(2):createText(title == texts.pilots and texts.noPilotsAvailable or texts.noCadetsAvailable, { halign = "center", color = Color["text_warning"] })
+    row[2]:setColSpan(2):createText(title == texts.pilots and texts.noPilotsAvailable or texts.noCadetsAssigned, { halign = "center", color = Color["text_warning"] })
   else
     if pilotAcademy.topRows.tablePersonnelPilots ~= nil then
       tablePersonnel:setTopRow(pilotAcademy.topRows.tablePersonnelPilots)
