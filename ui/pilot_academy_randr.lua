@@ -200,18 +200,18 @@ function pilotAcademy.Init(menuMap, menuPlayerInfo)
     pilotAcademy.resetData()
     AddUITriggeredEvent("PilotAcademyRAndR", "Reloaded")
     menuMap.registerCallback("createContextFrame_on_end", function(contextFrame, contextMenuData, contextMenuMode)
-      return pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenuData, contextMenuMode, menuMap)
+      return pilotAcademy.addAppointAsCadetRowToContextMenu(contextFrame, contextMenuData, contextMenuMode, menuMap)
     end)
     menuMap.registerCallback("refreshContextFrame_on_end", function(contextFrame, contextMenuData, contextMenuMode)
-      return pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenuData, contextMenuMode, menuMap)
+      return pilotAcademy.addAppointAsCadetRowToContextMenu(contextFrame, contextMenuData, contextMenuMode, menuMap)
     end)
   end
   if menuPlayerInfo ~= nil and type(menuPlayerInfo.registerCallback) == "function" then
     menuPlayerInfo.registerCallback("createContextFrame_on_end", function(contextFrame, contextMenuData, contextMenuMode)
-      return pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenuData, contextMenuMode, menuPlayerInfo)
+      return pilotAcademy.addAppointAsCadetRowToContextMenu(contextFrame, contextMenuData, contextMenuMode, menuPlayerInfo)
     end)
     menuPlayerInfo.registerCallback("refreshContextFrame_on_end", function(contextFrame, contextMenuData, contextMenuMode)
-      return pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenuData, contextMenuMode, menuPlayerInfo)
+      return pilotAcademy.addAppointAsCadetRowToContextMenu(contextFrame, contextMenuData, contextMenuMode, menuPlayerInfo)
     end)
   end
 end
@@ -2162,9 +2162,9 @@ function pilotAcademy.saveWings()
   -- Save wings data to persistent storage
 end
 
-function pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenuData, contextMenuMode, menu)
+function pilotAcademy.addAppointAsCadetRowToContextMenu(contextFrame, contextMenuData, contextMenuMode, menu)
   local result = nil
-  trace("pilotAcademy.addAssignAsCadetRowToContextMenu called with mode: " .. tostring(contextMenuMode))
+  trace("pilotAcademy.addAppointAsCadetRowToContextMenu called with mode: " .. tostring(contextMenuMode))
 
   if menu == nil then
     trace("menu is nil, returning")
