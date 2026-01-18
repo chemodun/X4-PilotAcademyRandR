@@ -546,7 +546,8 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
       return pilotAcademy.onSelectLocation(id)
     end
   else
-    row[2]:setColSpan(2):createButton({ active = true }):setText(locationOptions[1].text, { halign = "left" }):setText2(locationOptions[1].text2,
+    local isAnyPersonNotArrived = pilotAcademy.isAnyPersonNotArrived()
+    row[2]:setColSpan(2):createButton({ active = not isAnyPersonNotArrived }):setText(locationOptions[1].text, { halign = "left" }):setText2(locationOptions[1].text2,
       { halign = "right" })
     row[2].handlers.onClick = function() return pilotAcademy.onToChangeLocation() end
   end
@@ -918,7 +919,9 @@ function pilotAcademy.buttonSaveAcademy()
   local editData = pilotAcademy.editData or {}
 
   if editData.locationId ~= nil then
-    academyData.locationId = editData.locationId
+    local newLocationId = ConvertStringTo64Bit(tostring(editData.locationId))
+    pilotAcademy.transferPersonnel(academyData.locationId, newLocationId)
+    academyData.locationId = newLocationId
   end
   if academyData.locationId ~= nil then
     academyData.locationObject = ConvertStringToLuaID(tostring(academyData.locationId))
@@ -972,6 +975,26 @@ function pilotAcademy.buttonSaveAcademy()
   menu.refreshInfoFrame()
 end
 
+function pilotAcademy.transferPersonnel(oldLocationId, newLocationId)
+  if oldLocationId == nil or newLocationId == nil then
+    trace("Old or new location ID is nil; cannot transfer personnel")
+    return
+  end
+  if oldLocationId == newLocationId then
+    trace("Old and new location IDs are the same; no transfer needed")
+    return
+  end
+  local personnel = pilotAcademy.retrieveAcademyPersonnel(true)
+  for i = 1, #personnel do
+    local person = personnel[i]
+    if person ~= nil and person.hasArrived == true and not person.transferScheduled then
+      local actor = { entity = nil, personcontrollable = oldLocationId, personseed = person.id }
+      pilotAcademy.appointAsCadet(actor, newLocationId)
+    end
+  end
+end
+
+
 function pilotAcademy.combineFactionsSelections(editData, savedData)
   local selectedFactions = {}
   if editData.factions ~= nil and type(editData.factions) == "table" then
@@ -1012,9 +1035,10 @@ function pilotAcademy.displayPersonnelInfo(frame, menu, config)
 
   tables[#tables + 1] = { table = tableTop, height = tableTop:getFullHeight() }
 
+  local cadets, pilots = pilotAcademy.retrieveAcademyPersonnel()
+
   local tableCadets = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
   tableCadets.name = "table_personnel_cadets"
-  local cadets, pilots = pilotAcademy.retrieveAcademyPersonnel()
   pilotAcademy.fillPersonnelTable(tableCadets, cadets, menu, config, tables)
 
   local tablePilots = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
@@ -1062,9 +1086,10 @@ function pilotAcademy.fillPersonnelTable(tablePersonnel, personnel, menu, config
   tables[#tables + 1] = { table = tablePersonnel, height = tablePersonnel.properties.maxVisibleHeight }
 end
 
-function pilotAcademy.retrieveAcademyPersonnel()
+function pilotAcademy.retrieveAcademyPersonnel(toOneTable)
   local cadets = {}
   local pilots = {}
+  toOneTable = toOneTable or false
   if pilotAcademy.commonData == nil then
     trace("commonData is nil; cannot get cadets list")
     return cadets, pilots
@@ -1103,22 +1128,24 @@ function pilotAcademy.retrieveAcademyPersonnel()
           local transferScheduled = C.IsPersonTransferScheduled(locationId, personId)
           local hasArrived = C.HasPersonArrived(locationId, personId)
           if transferScheduled ~= true then
-            if skillBase - pilotAcademy.commonData.targetRankLevel >= 0 then
-              pilots[#pilots + 1] = {
-                id = personId,
-                name = person.name,
-                icon = "pa_icon_pilot",
-                skill = skill,
-                skillInStars = skillInStars,
-                hasArrived = hasArrived
-              }
-            else
+            if toOneTable or skillBase - pilotAcademy.commonData.targetRankLevel < 0 then
               cadets[#cadets + 1] = {
                 id = personId,
                 name = person.name,
                 icon = "pa_icon_cadet",
                 skill = skill,
                 skillInStars = skillInStars,
+                transferScheduled = transferScheduled,
+                hasArrived = hasArrived
+              }
+            else
+              pilots[#pilots + 1] = {
+                id = personId,
+                name = person.name,
+                icon = "pa_icon_pilot",
+                skill = skill,
+                skillInStars = skillInStars,
+                transferScheduled = transferScheduled,
                 hasArrived = hasArrived
               }
             end
@@ -1130,6 +1157,48 @@ function pilotAcademy.retrieveAcademyPersonnel()
   return cadets, pilots
 end
 
+function pilotAcademy.isAnyPersonNotArrived()
+  if pilotAcademy.commonData == nil then
+    trace("commonData is nil; returning false")
+    return false
+  end
+  if pilotAcademy.commonData.locationId == nil then
+    trace("locationId is nil; returning false")
+    return false
+  end
+
+  local locationId = pilotAcademy.commonData.locationId
+  local capacity = C.GetPeopleCapacity(locationId, "", false)
+  trace("Cadet capacity at location " .. tostring(locationId) .. " is " .. tostring(capacity))
+  if capacity == nil or capacity <= 0 then
+    trace("No capacity; returning false")
+    return false
+  end
+
+  local numRoles = C.GetNumAllRoles()
+  local rolesTable = ffi.new("PeopleInfo[?]", numRoles)
+  numRoles = C.GetPeople2(rolesTable, numRoles, locationId, true)
+  for i = 0, numRoles - 1 do
+    local role = rolesTable[i]
+    local roleId = ffi.string(role.id)
+    trace("Processing role ID: " .. tostring(roleId) .. " with amount: " .. tostring(role.amount))
+    if roleId == "trainee_group" and role.amount > 0 then
+      local amount = role.amount
+      local personsTable = GetRoleTierNPCs(locationId, roleId, 0)
+      for j = 1, #personsTable do
+        local person = personsTable[j]
+        if person ~= nil then
+          local personId = C.ConvertStringTo64Bit(tostring(person.seed))
+          local hasArrived = C.HasPersonArrived(locationId, personId)
+          if hasArrived ~= true then
+            return true
+          end
+        end
+      end
+    end
+  end
+  return false
+end
 
 function pilotAcademy.loadCommonData()
   pilotAcademy.commonData = {}
@@ -2176,7 +2245,7 @@ function pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenu
     local row = mt.__index.addRow(menuTable, "info_move_to_academy", { fixed = true })
     row[1]:createButton({ bgColor = Color["button_background_hidden"], height = Helper.standardTextHeight }):setText(texts.appointAsCadet) -- "Appoint as a cadet"
     row[1].handlers.onClick = function()
-      pilotAcademy.assignAsCadet(actor, controllable)
+      pilotAcademy.appointAsCadet(actor)
       menu.closeContextMenu()
     end
     result = { contextFrame = contextFrame }
@@ -2185,9 +2254,9 @@ function pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenu
   return result
 end
 
-function pilotAcademy.assignAsCadet(actor, controllable)
+function pilotAcademy.appointAsCadet(actor, controllable)
   trace("assignAsCadet called")
-  local result = ffi.string(C.AssignHiredActor(actor, pilotAcademy.commonData.locationId, nil, "trainee_group", false))
+  local result = ffi.string(C.AssignHiredActor(actor, controllable or pilotAcademy.commonData.locationId, nil, "trainee_group", false))
   debug("assignAsCadet result: " .. tostring(result))
 end
 
