@@ -1,4 +1,5 @@
 local ffi = require("ffi")
+local p = require("ui.core.lua.jit.p")
 local C = ffi.C
 
 ffi.cdef [[
@@ -59,6 +60,8 @@ ffi.cdef [[
 	uint32_t GetPeopleCapacity(UniverseID controllableid, const char* macroname, bool includepilot);
   uint32_t GetNumAllRoles(void);
 	uint32_t GetPeople2(PeopleInfo* result, uint32_t resultlen, UniverseID controllableid, bool includearriving);
+
+  const char* AssignHiredActor(GenericActor actor, UniverseID targetcontrollableid, const char* postid, const char* roleid, bool checkonly);
 ]]
 
 local traceEnabled = true
@@ -125,6 +128,7 @@ local pilotAcademy = {
   sideBarIsCreated = false,
   selectedTab = nil,
   minRelationForAcademyStation = 5, -- Neutral
+  role = "trainee_group",
   commonData = {},
   wings = {},
   wingsCountMax = 9,
@@ -718,7 +722,7 @@ function pilotAcademy.fetchPotentialLocations(selectable, currentLocationId, fac
         end
       end
     end
-    if #stations == 0 and #factions > 0 then
+    if --[[ #stations == 0 and ]] #factions > 0 then
       for i = 1, #factions do
         local faction = factions[i]
         local relation = GetUIRelation(faction.id)
@@ -989,11 +993,22 @@ function pilotAcademy.transferPersonnel(oldLocationId, newLocationId)
     local person = personnel[i]
     if person ~= nil and person.hasArrived == true and not person.transferScheduled then
       local actor = { entity = nil, personcontrollable = oldLocationId, personseed = person.id }
+      if not GetComponentData(oldLocationId, "isplayerowned") then
+        local entity = C.CreateNPCFromPerson(person.id, oldLocationId)
+        pilotAcademy.setNPCOwnedByPlayer(entity)
+        actor = { entity = entity, personcontrollable = nil, personseed = nil }
+      end
       pilotAcademy.appointAsCadet(actor, newLocationId)
     end
   end
 end
 
+function pilotAcademy.setNPCOwnedByPlayer(entity)
+  local entityId = ConvertStringTo64Bit(tostring(entity))
+  if not GetComponentData(entityId, "isplayerowned") then
+    C.SetComponentOwner(entityId, "player")
+  end
+end
 
 function pilotAcademy.combineFactionsSelections(editData, savedData)
   local selectedFactions = {}
@@ -1082,7 +1097,7 @@ function pilotAcademy.fillPersonnelTable(tablePersonnel, personnel, title, menu,
 
   if #personnel == 0 then
     local row = tablePersonnel:addRow(nil, { fixed = false })
-    row[2]:setColSpan(2):createText(texts.noPilotsAvailable, { halign = "center", color = Color["text_warning"] })
+    row[2]:setColSpan(2):createText(title == texts.pilots and texts.noPilotsAvailable or texts.noCadetsAvailable, { halign = "center", color = Color["text_warning"] })
   else
     if pilotAcademy.topRows.tablePersonnelPilots ~= nil then
       tablePersonnel:setTopRow(pilotAcademy.topRows.tablePersonnelPilots)
@@ -1124,7 +1139,7 @@ function pilotAcademy.retrieveAcademyPersonnel(toOneTable)
     local role = rolesTable[i]
     local roleId = ffi.string(role.id)
     trace("Processing role ID: " .. tostring(roleId) .. " with amount: " .. tostring(role.amount))
-    if roleId == "trainee_group" and role.amount > 0 then
+    if roleId == pilotAcademy.role and role.amount > 0 then
       local amount = role.amount
       local personsTable = GetRoleTierNPCs(locationId, roleId, 0)
       for j = 1, #personsTable do
@@ -1212,7 +1227,7 @@ function pilotAcademy.isAnyPersonNotArrived()
     local role = rolesTable[i]
     local roleId = ffi.string(role.id)
     trace("Processing role ID: " .. tostring(roleId) .. " with amount: " .. tostring(role.amount))
-    if roleId == "trainee_group" and role.amount > 0 then
+    if roleId == pilotAcademy.role and role.amount > 0 then
       local amount = role.amount
       local personsTable = GetRoleTierNPCs(locationId, roleId, 0)
       for j = 1, #personsTable do
@@ -1702,6 +1717,11 @@ function pilotAcademy.onTableRightMouseClick(uiTable, row, posX, posY)
         menu.instance, tableName = tableName, rowData = rowData }
     menu.createContextFrame()
   elseif tableName == "table_personnel_cadets" or tableName == "table_personnel_pilots" then
+    local isPlayerOwned = GetComponentData(pilotAcademy.commonData.locationId, "isplayerowned")
+    if isPlayerOwned ~= true and rowData.hasArrived ~= true then
+      trace("Location is not player owned and person has not arrived; no context menu")
+      return
+    end
     config = pilotAcademy.menuMapConfig
     menu.contextMenuMode = "info_context"
     if posX == nil or posY == nil then
@@ -2189,11 +2209,9 @@ function pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenu
   -- Extract entity, person, and controllable based on context mode
   local entity, person, controllable, transferScheduled, hasArrived, personrole
 
+  local isPlayerOwned = true
   if isMapContext then
-    if contextMenuData.isAcademyPersonnel then
-      trace("Context menu is for academy personnel; skipping 'Assign as Cadet' option")
-      return result
-    end
+
     -- Map context: data comes from contextMenuData
     entity = contextMenuData.entity
     person = contextMenuData.person
@@ -2201,6 +2219,13 @@ function pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenu
     transferScheduled = false  -- Not relevant for map context
     hasArrived = true          -- Not relevant for map context
     personrole = ""
+    isPlayerOwned = GetComponentData(controllable, "isplayerowned")
+    if contextMenuData.isAcademyPersonnel then
+      if isPlayerOwned then
+        trace("Context menu is for academy personnel; skipping 'Assign as Cadet' option")
+        return result
+      end
+    end
   else
     -- Personnel context: data comes from menu.personnelData
     controllable = C.ConvertStringTo64Bit(tostring(menu.personnelData.curEntry.container))
@@ -2212,6 +2237,7 @@ function pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenu
     transferScheduled = false
     hasArrived = true
     personrole = ""
+    isPlayerOwned = true
   end
 
   -- Get real NPC if instantiated
@@ -2222,6 +2248,8 @@ function pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenu
     hasArrived = C.HasPersonArrived(controllable, person)
     personrole = ffi.string(C.GetPersonRole(person, controllable))
   end
+
+
 
   -- Get skill level
   local skill = -1
@@ -2249,11 +2277,14 @@ function pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenu
   if isMapContext then
     local player = C.GetPlayerID()
     if person or (entity and (entity ~= player)) then
-      if GetComponentData(controllable, "isplayerowned") then
+      if isPlayerOwned then
         if (person and ((personrole == "service") or (personrole == "marine") or (personrole == "trainee_group") or (personrole == "unassigned"))) or
            (entity and GetComponentData(entity, "isplayerowned") and GetComponentData(entity, "caninitiatecomm")) then
           canAdd = transferScheduled == false and hasArrived
         end
+      else
+        trace("Controllable is not player owned, adding standard menu items only")
+        canAdd = contextMenuData.isAcademyPersonnel or false
       end
     end
   else
@@ -2264,19 +2295,42 @@ function pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenu
   end
 
   if canAdd then
-    local actor = person and { entity = nil, personcontrollable = controllable, personseed = person } or
-        entity and { entity = entity, personcontrollable = nil, personseed = nil } or nil
+    local actor = entity and { entity = entity, personcontrollable = nil, personseed = nil } or
+        person and { entity = nil, personcontrollable = controllable, personseed = person } or nil
     if actor == nil then
       trace("Actor is nil, cannot add row, returning")
       return result
     end
     trace("Adding Pilot Academy R&R row to context menu with actor: " .. tostring(actor))
     local mt = getmetatable(menuTable)
-    local row = mt.__index.addRow(menuTable, "info_move_to_academy", { fixed = true })
-    row[1]:createButton({ bgColor = Color["button_background_hidden"], height = Helper.standardTextHeight }):setText(texts.appointAsCadet) -- "Appoint as a cadet"
-    row[1].handlers.onClick = function()
-      pilotAcademy.appointAsCadet(actor)
-      menu.closeContextMenu()
+    if isPlayerOwned then
+      local row = mt.__index.addRow(menuTable, "info_move_to_academy", { fixed = true })
+      row[1]:createButton({ bgColor = Color["button_background_hidden"], height = Helper.standardTextHeight }):setText(texts.appointAsCadet) -- "Appoint as a cadet"
+      row[1].handlers.onClick = function()
+        pilotAcademy.appointAsCadet(actor)
+        menu.closeContextMenu()
+      end
+    elseif contextMenuData and contextMenuData.isAcademyPersonnel then
+      if hasArrived then
+        if entity == nil then
+          entity = C.CreateNPCFromPerson(person, controllable)
+        end
+        pilotAcademy.setNPCOwnedByPlayer(entity)
+        person = nil
+        controllable = nil
+        -- work somewhere else
+        local row = mt.__index.addRow(menuTable, "info_person_worksomewhere", { fixed = true })
+        row[1]:createButton({ bgColor = Color["button_background_hidden"], height = Helper.standardTextHeight }):setText(ReadText(1002, 3008))
+        if entity then
+          row[1].handlers.onClick = function () Helper.closeMenuAndOpenNewMenu(menu, "MapMenu", { 0, 0, true, controllable, nil, "hire", { "signal", entity, 0 } }); menu.cleanup() end
+        else
+          row[1].handlers.onClick = function () Helper.closeMenuAndOpenNewMenu(menu, "MapMenu", { 0, 0, true, controllable, nil, "hire", { "signal", controllable, 0, person } }); menu.cleanup() end
+        end
+
+        local row = mt.__index.addRow(menuTable, "info_person_fire", { fixed = true })
+        row[1]:createButton({ bgColor = Color["button_background_hidden"], height = Helper.standardTextHeight }):setText(ReadText(1002, 15800))
+        row[1].handlers.onClick = function() return menu.infoSubmenuFireNPCConfirm(controllable, entity, person, menu.contextMenuData.instance) end
+      end
     end
     result = { contextFrame = contextFrame }
   end
@@ -2285,8 +2339,10 @@ function pilotAcademy.addAssignAsCadetRowToContextMenu(contextFrame, contextMenu
 end
 
 function pilotAcademy.appointAsCadet(actor, controllable)
-  trace("assignAsCadet called")
-  local result = ffi.string(C.AssignHiredActor(actor, controllable or pilotAcademy.commonData.locationId, nil, "trainee_group", false))
+  trace("assignAsCadet called: actor.entity=" .. tostring(actor.entity) .. ", actor.personcontrollable=" .. tostring(actor.personcontrollable) ..
+    ", actor.personseed=" .. tostring(actor.personseed) .. ", controllable=" .. tostring(controllable))
+  local target = controllable or pilotAcademy.commonData.locationId
+  local result = ffi.string(C.AssignHiredActor(actor, target, nil, pilotAcademy.role, false))
   debug("assignAsCadet result: " .. tostring(result))
 end
 
