@@ -1154,8 +1154,27 @@ function pilotAcademy.retrieveAcademyPersonnel(toOneTable)
       end
     end
   end
+  if not toOneTable then
+    table.sort(cadets, pilotAcademy.sortCadets)
+    table.sort(pilots, pilotAcademy.sortPilots)
+  end
   return cadets, pilots
 end
+
+function pilotAcademy.sortCadets(a, b)
+  if a.skill == b.skill then
+    return a.name < b.name
+  end
+  return a.skill < b.skill
+end
+
+function pilotAcademy.sortPilots(a, b)
+  if a.skill == b.skill then
+    return a.name < b.name
+  end
+  return a.skill > b.skill
+end
+
 
 function pilotAcademy.isAnyPersonNotArrived()
   if pilotAcademy.commonData == nil then
