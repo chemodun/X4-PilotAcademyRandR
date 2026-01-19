@@ -50,6 +50,115 @@
           </actions>
         </cue>
 
+        <cue name="Process_Pilot_Swapping" instantiate="true" version="1">
+          <conditions>
+            <event_object_signalled object="player.entity" param="'AcademyPilotSwapRequest'" />
+            <check_value value="@event.param2 != null" />
+            <check_value value="typeof @event.param2 == datatype.table" />
+          </conditions>
+          <actions>
+            <debug_text
+              text="'Pilot Academy: Process_Pilot_Swapping: Received swap request for %s pilots.' .
+                [@event.param2]"
+              chance="100" filter="scripts" />
+            <set_value name="$replacementPilotTemplate" exact="@event.param2.$newPilotTemplate" />
+            <set_value name="$oldPilot" exact="@event.param2.$oldPilot" />
+            <set_value name="$oldPilotTemplate" exact="$oldPilot.npctemplate" />
+            <set_value name="$ship" exact="@event.param2.$ship" />
+            <set_value name="$academyObject" exact="@event.param2.$academyObject" />
+            <assign_hired_actor actor="[$ship, $replacementPilotTemplate]" target="$ship"
+              post="controlpost.aipilot" success="$pilotsSwappingResult" failed="$pilotsSwappingMessage" check="true" />
+            <debug_text
+              text="'Pilot Academy: Process_Pilot_Swapping: Swap Pilots Check: Result: %s. Message: %s'.[$pilotsSwappingResult, $pilotsSwappingMessage ]"
+            />
+            <do_if value="$pilotsSwappingResult">
+              <debug_text
+                text="'Pilot Academy: Process_Pilot_Swapping: pilot %s is being replaced on %s by new pilot %s.' .
+                  [$oldPilot.debugname, $ship.debugname, $replacementPilotTemplate]"
+                chance="100" />
+              <assign_hired_actor actor="[$ship, $replacementPilotTemplate]" target="$ship"
+                post="controlpost.aipilot" success="$pilotsSwappingResult" failed="$pilotsSwappingMessage" />
+            </do_if>
+            <do_if value="$pilotsSwappingResult">
+              <debug_text
+                text="'Pilot Academy: Process_Pilot_Swapping: pilot %s successfully assigned to %s, replacing %s.' .
+                  [$replacementPilotTemplate, $ship.debugname, $oldPilot.debugname]"
+                chance="100" />
+              <signal_objects object="player.entity" param="'AcademyOldPilotReturnRequest'"
+                param2="table[
+                    $oldPilotTemplate = $oldPilotTemplate,
+                    $ship = $ship,
+                    $academyObject = $academyObject
+                  ]"
+                delay="200ms" />
+            </do_if>
+            <do_else>
+              <debug_text
+                text="'Pilot Academy: Process_Pilot_Swapping: failed to replace pilot %s on %s with new pilot %s. Message: %s. Going to repeat.' .
+                  [$oldPilot.debugname, $ship.debugname, $replacementPilotTemplate, $pilotsSwappingMessage]"
+                chance="100" />
+              <signal_objects object="player.entity" param="'AcademyPilotSwapRequest'"
+                param2="table[
+                    $oldPilot = $oldPilot,
+                    $newPilotTemplate = $replacementPilotTemplate,
+                    $ship = $ship,
+                    $academyObject = $academyObject
+                  ]"
+                delay="200ms" />
+            </do_else>
+            <remove_value name="$replacementPilotTemplate" />
+            <remove_value name="$oldPilot" />
+            <remove_value name="$oldPilotTemplate" />
+            <remove_value name="$ship" />
+            <remove_value name="$academyObject" />
+            <remove_value name="$pilotsSwappingMessage" />
+            <remove_value name="$pilotsSwappingResult" />
+          </actions>
+        </cue>
+
+        <cue name="Process_Old_Pilot_Return" instantiate="true" version="1">
+          <conditions>
+            <event_object_signalled object="player.entity" param="'AcademyOldPilotReturnRequest'" />
+            <check_value value="@event.param2 != null" />
+            <check_value value="typeof @event.param2 == datatype.table" />
+          </conditions>
+          <actions>
+            <debug_text
+              text="'Pilot Academy: Process_Old_Pilot_Return: Received old pilot return request: %s.' .
+                [@event.param2]"
+              chance="100" filter="scripts" />
+            <set_value name="$oldPilotTemplate" exact="@event.param2.$oldPilotTemplate" />
+            <set_value name="$ship" exact="@event.param2.$ship" />
+            <set_value name="$academyObject" exact="@event.param2.$academyObject" />
+            <set_npc_template_role template="$oldPilotTemplate" object="$ship" role="entityrole.trainee_group" />
+            <debug_text
+              text="'Pilot Academy: Process_Old_Pilot_Return: going to move old one %s to Academy: %s.' .
+                  [$oldPilot.debugname, $academyObject.debugname]"
+              chance="100" />
+            <transfer_people result="$personTransferred" object="$academyObject" otherobject="$ship"
+              receiveworkforce="false">
+              <existing_people people="[$oldPilotTemplate]" />
+            </transfer_people>
+            <do_if value="$personTransferred.count == 1">
+              <debug_text
+                text="'Pilot Academy: Process_Old_Pilot_Return: old pilot %s successfully transferred to %s.' .
+                      [$oldPilot.debugname, $academyObject.debugname]"
+                chance="$debugchance" />
+            </do_if>
+            <do_else>
+              <debug_text
+                text="'Pilot Academy: Process_Old_Pilot_Return: failed to transfer old pilot %s to %s.' .
+                      [$oldPilot.debugname, $academyObject.debugname]"
+                chance="$debugchance" />
+            </do_else>
+            <remove_value name="$oldPilotTemplate" />
+            <remove_value name="$ship" />
+            <remove_value name="$academyObject" />
+            <remove_value name="$personTransferred" />
+          </actions>
+        </cue>
+
+
       </cues>
     </cue>
   </cues>

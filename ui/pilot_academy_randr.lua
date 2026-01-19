@@ -214,6 +214,7 @@ function pilotAcademy.Init(menuMap, menuPlayerInfo)
       return pilotAcademy.addAppointAsCadetRowToContextMenu(contextFrame, contextMenuData, contextMenuMode, menuPlayerInfo)
     end)
   end
+  RegisterEvent("PilotAcademyRAndR.RankLevelReached", pilotAcademy.OnRankLevelReached)
 end
 
 function pilotAcademy.resetData()
@@ -987,7 +988,7 @@ function pilotAcademy.transferPersonnel(oldLocationId, newLocationId)
     trace("Old and new location IDs are the same; no transfer needed")
     return
   end
-  local personnel = pilotAcademy.retrieveAcademyPersonnel(true)
+  local personnel = pilotAcademy.fetchAcademyPersonnel(true)
   for i = 1, #personnel do
     local person = personnel[i]
     if person ~= nil and person.hasArrived == true and not person.transferScheduled then
@@ -1058,7 +1059,7 @@ function pilotAcademy.displayPersonnelInfo(frame, menu, config)
 
   tables[#tables + 1] = { table = tableTop, height = tableTop:getFullHeight() }
 
-  local cadets, pilots = pilotAcademy.retrieveAcademyPersonnel()
+  local cadets, pilots = pilotAcademy.fetchAcademyPersonnel()
 
   local tableCadets = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
   tableCadets.name = "table_personnel_cadets"
@@ -1119,7 +1120,7 @@ function pilotAcademy.fillPersonnelTable(tablePersonnel, personnel, title, menu,
   tables[#tables + 1] = { table = tablePersonnel, height = tablePersonnel.properties.maxVisibleHeight }
 end
 
-function pilotAcademy.retrieveAcademyPersonnel(toOneTable)
+function pilotAcademy.fetchAcademyPersonnel(toOneTable, onlyArrived)
   local cadets = {}
   local pilots = {}
   toOneTable = toOneTable or false
@@ -1162,14 +1163,15 @@ function pilotAcademy.retrieveAcademyPersonnel(toOneTable)
           local skillInStars = string.format("%s", Helper.displaySkill(skill * 15 / 100))
           local transferScheduled = C.IsPersonTransferScheduled(locationId, personId)
           local hasArrived = C.HasPersonArrived(locationId, personId)
+          local entity = nil
           if isPlayerOwned ~= true and hasArrived == true then
             trace("Person has arrived at non-player-owned location; checking entity ownership")
-            local entity = pilotAcademy.getOrCreateEntity(personId, locationId)
+            entity = pilotAcademy.getOrCreateEntity(personId, locationId)
             if entity ~= nil then
               pilotAcademy.setNPCOwnedByPlayer(entity)
             end
           end
-          if transferScheduled ~= true then
+          if transferScheduled ~= true and (not onlyArrived or hasArrived) then
             if toOneTable or skillBase - pilotAcademy.commonData.targetRankLevel < 0 then
               cadets[#cadets + 1] = {
                 id = personId,
@@ -1178,7 +1180,8 @@ function pilotAcademy.retrieveAcademyPersonnel(toOneTable)
                 skill = skill,
                 skillInStars = skillInStars,
                 transferScheduled = transferScheduled,
-                hasArrived = hasArrived
+                hasArrived = hasArrived,
+                entity = entity
               }
             else
               pilots[#pilots + 1] = {
@@ -1188,7 +1191,8 @@ function pilotAcademy.retrieveAcademyPersonnel(toOneTable)
                 skill = skill,
                 skillInStars = skillInStars,
                 transferScheduled = transferScheduled,
-                hasArrived = hasArrived
+                hasArrived = hasArrived,
+                entity = entity
               }
             end
           end
@@ -2109,6 +2113,7 @@ function pilotAcademy.setOrderForWingLeader(wingLeaderId, wingId, existingWing)
     trace("wingLeaderId does not match wing data; cannot set orders")
     return
   end
+  C.RemoveAllOrders(wingLeaderId)
   C.CreateOrder(wingLeaderId, pilotAcademy.orderId, true)
   local buf = ffi.new("Order")
   if C.GetPlannedDefaultOrder(buf, wingLeaderId) then
@@ -2379,6 +2384,50 @@ function pilotAcademy.calculateHiringFee(combinedskill)
   hiringFee = math.floor(hiringFee / 10) * 10
 
   return hiringFee
+end
+
+function pilotAcademy.OnRankLevelReached(_, param)
+  trace("OnRankLevelReached called with param: " .. tostring(param))
+  local controllable = ConvertStringTo64Bit(tostring(param))
+  if controllable == nil or controllable == 0 then
+    trace("controllable is nil or invalid, returning")
+    return
+  end
+  local locationId = pilotAcademy.commonData and pilotAcademy.commonData.locationId or nil
+  if locationId == nil then
+    trace("locationId is nil, returning")
+    return
+  end
+  local name, idcode, pilot = GetComponentData(controllable, "name", "idcode", "assignedaipilot")
+  if pilot == nil or pilot == 0 then
+    trace("pilot is nil or invalid, returning")
+    return
+  end
+  local pilotName, pilotSkill = GetComponentData(pilot, "name", "combinedskill")
+  if pilotSkill == nil or pilotSkill < 0 then
+    trace("pilotSkill is nil or invalid, returning")
+    return
+  end
+  local skillBase = pilotAcademy.skillBase(pilotSkill)
+  if skillBase - pilotAcademy.commonData.targetRankLevel <= 0 then
+    trace("Pilot has not reached target rank level. Signalling and returning.")
+    SignalObject(pilotAcademy.playerId, "AcademyTargetRankLevelChanged")
+    return
+  end
+  trace(string.format("Pilot '%s' has reached rank level %d (skill: %d) at controllable '%s (%s)'",
+    pilotName, skillBase, pilotSkill, name, idcode))
+  local cadets = pilotAcademy.fetchAcademyPersonnel(false, true)
+  if cadets == nil or #cadets == 0 then
+    trace("No cadets found, returning")
+    return
+  end
+  local cadet = cadets[1]
+  if cadet == nil then
+    trace("Cadet is nil, returning")
+    return
+  end
+  trace("Promoting cadet with name: " .. tostring(cadet.name) .. " (entity: " .. tostring(cadet.entity) .. ") and skill: " .. tostring(cadet.skill))
+  SignalObject(controllable, "AcademyOrderPrepareForPilotReplacement", ConvertStringToLuaID(tostring(cadet.entity)))
 end
 
 local function preAddRowToMapMenuContext(contextMenuData, contextMenuMode, menu)

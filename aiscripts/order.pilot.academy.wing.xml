@@ -128,6 +128,7 @@
               $selectedBuyOffer = @$selectedBuyOffer,
               $selectedSellOffer = @$selectedSellOffer
             ]" />
+          <raise_lua_event name="'PilotAcademyRAndR.RankLevelReached'" param="this.assignedcontrolled" />
           <include_interrupt_actions ref="PilotAcademyInitShipVariables" />
           <set_value name="$shipInfo.$LastRankUpReportTime" exact="player.age" />
         </do_if>
@@ -307,6 +308,19 @@
       <actions>
         <debug_text text="'Pilot Academy [%s]: received target rank level change notification' . [this.assignedcontrolled.debugname]" chance="$debugchance" />
         <include_interrupt_actions ref="GetTargetRankLevel" />
+      </actions>
+    </handler>
+    <handler>
+      <conditions>
+        <event_object_signalled object="this.assignedcontrolled" param="'AcademyOrderPrepareForPilotReplacement'" />
+        <check_value value="@event.param2 != null" />
+      </conditions>
+      <actions>
+        <debug_text
+          text="'Pilot Academy [%s]: preparing for pilot replacement by %s (type: %s, npm: %s) from %s.' . [this.assignedcontrolled.debugname, @event.param2.debugname, typeof @event.param2, typeof @event.param2 == datatype.npc, @event.param2.roleobject.debugname]"
+          chance="$debugchance" />
+        <set_value name="$replacementPilot" exact="@event.param2" />
+        <abort_called_scripts resume="pilotReplacement" />
       </actions>
     </handler>
   </interrupts>
@@ -896,6 +910,11 @@
             <resume label="prepareTrade" />
           </do_if>
         </do_if>
+        <include_interrupt_actions ref="PilotAcademyPrintStats" />
+        <include_interrupt_actions ref="PilotAcademyReportRankUp" />
+        <do_if value="$shipInfo.$LastRankUpReportTime? and player.age - $shipInfo.$LastRankUpReportTime lt 100ms">
+          <wait exact="600ms" />
+        </do_if>
         <set_value name="$tradeTarget" exact="$seller" />
         <set_value name="$targetType" exact="'seller'" />
         <set_value name="$tradeOperation" exact="'buy'" />
@@ -904,8 +923,6 @@
           seller="$selectedSellOffer.owner" result="$tradeAmount" />
       </do_else>
 
-      <include_interrupt_actions ref="PilotAcademyPrintStats" />
-      <include_interrupt_actions ref="PilotAcademyReportRankUp" />
 
       <do_if value="$tradeAmount le 0">
         <debug_text
@@ -994,6 +1011,55 @@
       </wait>
       <resume label="prepareTrade" />
 
+      <label name="pilotReplacement" />
+      <debug_text
+        text="'Pilot Academy [%s]: pilot replacement requested at %s by %s' . [this.assignedcontrolled.debugname, player.age, @$replacementPilot.debugname]"
+        chance="$debugchance" />
+      <set_command command="command.wait" />
+      <set_command_action commandaction="commandaction.standingby" />
+      <do_if value="@$replacementPilot != null">
+        <set_value name="$replacementPilotTemplate" exact="$replacementPilot.npctemplate" />
+        <set_value name="$academyObject" exact="$replacementPilot.roleobject" />
+        <debug_text
+          text="'Pilot Academy [%s]: going to move the replacement pilot %s with template %s' .
+            [this.assignedcontrolled.debugname, $replacementPilot.debugname, $replacementPilotTemplate]"
+          chance="$debugchance" />
+        <transfer_people result="$personTransferred" object="this.assignedcontrolled" otherobject="$academyObject"
+          receiveworkforce="false">
+          <existing_people people="[$replacementPilotTemplate]" />
+        </transfer_people>
+        <debug_text
+          text="'Pilot Academy [%s]: Person transferred: Count: %s, Data: %s.'.
+                            [ this.assignedcontrolled.debugname, $personTransferred.count, $personTransferred ]"
+        />
+        <do_if value="$personTransferred.count == 1">
+          <debug_text
+            text="'Pilot Academy [%s]: new pilot %s successfully transferred to %s. Going to swap with %s' .
+            [this.assignedcontrolled.debugname, $replacementPilotTemplate, this.assignedcontrolled.debugname, this.debugname]"
+            chance="$debugchance" />
+          <signal_objects object="player.entity" param="'AcademyPilotSwapRequest'"
+            param2="table[
+              $oldPilot = this,
+              $newPilotTemplate = $replacementPilotTemplate,
+              $ship = this.assignedcontrolled,
+              $academyObject = $academyObject
+            ]"
+            delay="200ms" />
+          <remove_value name="$replacementPilotTemplate" />
+          <remove_value name="$replacementPilot" />
+          <resume label="pilotReplacementWait" />
+        </do_if>
+        <remove_value name="$replacementPilotTemplate" />
+      </do_if>
+      <remove_value name="$replacementPilot" />
+      <resume label="prepareTrade" />
+
+
+      <label name="pilotReplacementWait" />
+
+      <wait min="3s" max="5s" />
+      <resume label="pilotReplacementWait" />
+
       <label name="finish" />
       <debug_text
         text="'Pilot Academy [%s]: finished order.pilot.academy.wing at %s. Subordinates count: %s' . [this.assignedcontrolled.debugname, player.age, @this.assignedcontrolled.subordinates.count]"
@@ -1010,6 +1076,6 @@
     </actions>
   </attention>
   <on_abort>
-    <debug_text text="'Pilot Academy [%s]: aborted order.pilot.academy.wing at %s' . [this.assignedcontrolled.debugname, player.age]" chance="$debugchance" />
+    <debug_text text="'Pilot Academy [%s]: aborted order.pilot.academy.wing at %s' . [@this.assignedcontrolled.debugname, player.age]" chance="$debugchance" />
   </on_abort>
 </aiscript>
