@@ -57,6 +57,13 @@
       <t id="100007">Golf</t>
       <t id="100008">Hotel</t>
       <t id="100009">India</t>
+      <t id="1000001">Pilot %s is reached the target skill level %s.</t>
+      <t id="1000002">Cadet %s assigned as pilot on %s.</t>
+      <t id="1000003">Pilot %s is moved back to Academy. You can now assign him to any new task.</t>
+      <t id="2000001">No free cadets available for pilots swapping!</t>
+      <t id="2000002">No free crew capacity on %s to do pilots swapping!</t>
+      <t id="2000003">Can not make pilots swapping on %s! Please do it manually!</t>
+      <t id="2000004">Can't return back pilot %s to the Academy! Please do it manually!</t>
     </page>
   </add>
 </diff>
