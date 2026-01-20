@@ -128,7 +128,21 @@
               $selectedBuyOffer = @$selectedBuyOffer,
               $selectedSellOffer = @$selectedSellOffer
             ]" />
-          <raise_lua_event name="'PilotAcademyRAndR.RankLevelReached'" param="this.assignedcontrolled" />
+
+          <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,1000001}.[this.name, $targetRankLevel]]" timeout="15s" />
+          <do_if value="this.assignedcontrolled.people.free ge 1">
+            <raise_lua_event name="'PilotAcademyRAndR.RankLevelReached'" param="this.assignedcontrolled" />
+            <set_value name="$rankUpReported" exact="true" />
+          </do_if>
+          <do_else>
+            <debug_text
+              text="'Pilot Academy [%s]: Ship has no free crew capacity to perform rank up replacement!' .
+                [this.assignedcontrolled.debugname]"
+              chance="$debugchance" />
+            <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,2000002}.[this.assignedcontrolled.name]]" priority="2" sound="notification_warning"
+              timeout="15s" />
+            <set_value name="$rankUpReported" exact="false" />
+          </do_else>
           <include_interrupt_actions ref="PilotAcademyInitShipVariables" />
           <set_value name="$shipInfo.$LastRankUpReportTime" exact="player.age" />
         </do_if>
@@ -344,6 +358,7 @@
     <set_value name="$tradeIsUnderPreparation" exact="false" />
     <set_value name="$isMovingToTradeTarget" exact="false" />
     <set_value name="$currentShip" exact="this.assignedcontrolled" />
+    <set_value name="$rankUpReported" exact="false" />
   </init>
   <attention min="unknown">
     <actions>
@@ -913,7 +928,7 @@
         </do_if>
         <include_interrupt_actions ref="PilotAcademyPrintStats" />
         <include_interrupt_actions ref="PilotAcademyReportRankUp" />
-        <do_if value="$shipInfo.$LastRankUpReportTime? and player.age - $shipInfo.$LastRankUpReportTime lt 100ms">
+        <do_if value="@$rankUpReported == true">
           <wait exact="600ms" />
         </do_if>
         <set_value name="$tradeTarget" exact="$seller" />
@@ -1043,7 +1058,8 @@
               $oldPilot = this,
               $newPilotTemplate = $replacementPilotTemplate,
               $ship = this.assignedcontrolled,
-              $academyObject = $academyObject
+              $academyObject = $academyObject,
+              $iteration =  0
             ]"
             delay="200ms" />
           <remove_value name="$replacementPilotTemplate" />
