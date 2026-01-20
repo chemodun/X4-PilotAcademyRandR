@@ -331,7 +331,7 @@
       </conditions>
       <actions>
         <debug_text
-          text="'Pilot Academy [%s]: preparing for pilot replacement by %s (type: %s, npm: %s) from %s.' . [this.assignedcontrolled.debugname, @event.param2.debugname, typeof @event.param2, typeof @event.param2 == datatype.npc, @event.param2.roleobject.debugname]"
+          text="'Pilot Academy [%s]: preparing for pilot replacement by %s from %s.' . [this.assignedcontrolled.debugname, @event.param2.debugname, @event.param2.roleobject.debugname]"
           chance="$debugchance" />
         <set_value name="$replacementPilot" exact="@event.param2" />
         <abort_called_scripts resume="pilotReplacement" />
