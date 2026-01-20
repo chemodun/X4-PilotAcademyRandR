@@ -343,6 +343,7 @@
     <set_value name="$targetCombinedSkill" exact="@$targetRankLevel * 20" />
     <set_value name="$tradeIsUnderPreparation" exact="false" />
     <set_value name="$isMovingToTradeTarget" exact="false" />
+    <set_value name="$currentShip" exact="this.assignedcontrolled" />
   </init>
   <attention min="unknown">
     <actions>
@@ -1076,6 +1077,6 @@
     </actions>
   </attention>
   <on_abort>
-    <debug_text text="'Pilot Academy [%s]: aborted order.pilot.academy.wing at %s' . [@this.assignedcontrolled.debugname, player.age]" chance="$debugchance" />
+    <debug_text text="'Pilot Academy [%s]: aborted order.pilot.academy.wing at %s' . [@$currentShip.debugname, player.age]" chance="$debugchance" />
   </on_abort>
 </aiscript>

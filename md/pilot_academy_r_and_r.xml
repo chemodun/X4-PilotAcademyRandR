@@ -1,17 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mdscript name="Pilot_Academy_Ranks_And_Relations" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <cues>
-    <cue name="Main" version="1">
+    <cue name="Main" version="2">
       <actions>
         <debug_text text="'Pilot Academy: Main'" chance="100" filter="scripts" />
+        <set_value name="$debugchance" exact="100" />
       </actions>
+      <patch sinceversion="2">
+        <set_value name="$debugchance" exact="100" />
+      </patch>
       <cues>
         <cue name="On_Reload" instantiate="true">
           <conditions>
             <event_ui_triggered screen="'PilotAcademyRAndR'" control="'Reloaded'" />
           </conditions>
           <actions>
-            <debug_text text="'Pilot Academy: On_Reload'" chance="100" filter="scripts" />
+            <debug_text text="'Pilot Academy: On_Reload'" chance="$debugchance" filter="scripts" />
             <signal_cue_instantly cue="Reloaded" />
           </actions>
         </cue>
@@ -21,13 +25,14 @@
             <event_cue_signalled />
           </conditions>
           <actions>
-            <debug_text text="'Pilot Academy: Reloaded. Variable: %s'. [player.entity.$pilotAcademyRAndRWings]" chance="100" filter="scripts" />
+            <debug_text text="'Pilot Academy: Reloaded. Data: %s. Wings: %s'. [@player.entity.$pilotAcademyRAndRData, @player.entity.$pilotAcademyRAndRWings]"
+              chance="$debugchance" filter="scripts" />
           </actions>
         </cue>
 
         <cue name="Refresh_Pilot_Academy_Pilots" instantiate="true" checkinterval="300s">
           <actions>
-            <debug_text text="'Pilot Academy: Refresh_Pilot_Academy_Pilots.'" chance="100" filter="scripts" />
+            <debug_text text="'Pilot Academy: Refresh_Pilot_Academy_Pilots.'" chance="$debugchance" filter="scripts" />
           </actions>
         </cue>
 
@@ -46,7 +51,7 @@
             <debug_text
               text="'Pilot Academy: Report_Rank_Up: Pilot %s on %s is reached target rank %s at %s'.
                 [@event.param2.pilot.debugname, @event.param2.debugname, @event.param3.$targetRankLevel, @event.param3.$timeStamp]"
-              chance="100" filter="scripts" />
+              chance="$debugchance" filter="scripts" />
           </actions>
         </cue>
 
@@ -60,7 +65,7 @@
             <debug_text
               text="'Pilot Academy: Process_Pilot_Swapping: Received swap request for %s pilots.' .
                 [@event.param2]"
-              chance="100" filter="scripts" />
+              chance="$debugchance" filter="scripts" />
             <set_value name="$replacementPilotTemplate" exact="@event.param2.$newPilotTemplate" />
             <set_value name="$oldPilot" exact="@event.param2.$oldPilot" />
             <set_value name="$oldPilotTemplate" exact="$oldPilot.npctemplate" />
@@ -75,7 +80,7 @@
               <debug_text
                 text="'Pilot Academy: Process_Pilot_Swapping: pilot %s is being replaced on %s by new pilot %s.' .
                   [$oldPilot.debugname, $ship.debugname, $replacementPilotTemplate]"
-                chance="100" />
+                chance="$debugchance" />
               <assign_hired_actor actor="[$ship, $replacementPilotTemplate]" target="$ship"
                 post="controlpost.aipilot" success="$pilotsSwappingResult" failed="$pilotsSwappingMessage" />
             </do_if>
@@ -83,20 +88,20 @@
               <debug_text
                 text="'Pilot Academy: Process_Pilot_Swapping: pilot %s successfully assigned to %s, replacing %s.' .
                   [$replacementPilotTemplate, $ship.debugname, $oldPilot.debugname]"
-                chance="100" />
+                chance="$debugchance" />
               <signal_objects object="player.entity" param="'AcademyOldPilotReturnRequest'"
                 param2="table[
                     $oldPilotTemplate = $oldPilotTemplate,
                     $ship = $ship,
                     $academyObject = $academyObject
                   ]"
-                delay="200ms" />
+                delay="500ms" />
             </do_if>
             <do_else>
               <debug_text
                 text="'Pilot Academy: Process_Pilot_Swapping: failed to replace pilot %s on %s with new pilot %s. Message: %s. Going to repeat.' .
                   [$oldPilot.debugname, $ship.debugname, $replacementPilotTemplate, $pilotsSwappingMessage]"
-                chance="100" />
+                chance="$debugchance" />
               <signal_objects object="player.entity" param="'AcademyPilotSwapRequest'"
                 param2="table[
                     $oldPilot = $oldPilot,
@@ -126,15 +131,15 @@
             <debug_text
               text="'Pilot Academy: Process_Old_Pilot_Return: Received old pilot return request: %s.' .
                 [@event.param2]"
-              chance="100" filter="scripts" />
+              chance="$debugchance" filter="scripts" />
             <set_value name="$oldPilotTemplate" exact="@event.param2.$oldPilotTemplate" />
             <set_value name="$ship" exact="@event.param2.$ship" />
             <set_value name="$academyObject" exact="@event.param2.$academyObject" />
             <set_npc_template_role template="$oldPilotTemplate" object="$ship" role="entityrole.trainee_group" />
             <debug_text
               text="'Pilot Academy: Process_Old_Pilot_Return: going to move old one %s to Academy: %s.' .
-                  [$oldPilot.debugname, $academyObject.debugname]"
-              chance="100" />
+                  [$oldPilotTemplate, $academyObject.debugname]"
+              chance="$debugchance" />
             <transfer_people result="$personTransferred" object="$academyObject" otherobject="$ship"
               receiveworkforce="false">
               <existing_people people="[$oldPilotTemplate]" />
@@ -142,14 +147,21 @@
             <do_if value="$personTransferred.count == 1">
               <debug_text
                 text="'Pilot Academy: Process_Old_Pilot_Return: old pilot %s successfully transferred to %s.' .
-                      [$oldPilot.debugname, $academyObject.debugname]"
+                      [$oldPilotTemplate, $academyObject.debugname]"
                 chance="$debugchance" />
             </do_if>
             <do_else>
               <debug_text
-                text="'Pilot Academy: Process_Old_Pilot_Return: failed to transfer old pilot %s to %s.' .
-                      [$oldPilot.debugname, $academyObject.debugname]"
+                text="'Pilot Academy: Process_Old_Pilot_Return: failed to transfer old pilot %s to %s. Going to repeat.' .
+                      [$oldPilotTemplate, $academyObject.debugname]"
                 chance="$debugchance" />
+              <signal_objects object="player.entity" param="'AcademyOldPilotReturnRequest'"
+                param2="table[
+                    $oldPilotTemplate = $oldPilotTemplate,
+                    $ship = $ship,
+                    $academyObject = $academyObject
+                  ]"
+                delay="500ms" />
             </do_else>
             <remove_value name="$oldPilotTemplate" />
             <remove_value name="$ship" />
