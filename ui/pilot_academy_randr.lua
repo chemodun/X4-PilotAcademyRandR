@@ -2419,6 +2419,7 @@ function pilotAcademy.OnRankLevelReached(_, param)
   local cadets = pilotAcademy.fetchAcademyPersonnel(false, true)
   if cadets == nil or #cadets == 0 then
     trace("No cadets found, returning")
+    SignalObject(pilotAcademy.playerId, "AcademyNoCadetsAvailable")
     return
   end
   local cadet = cadets[1]
