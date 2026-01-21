@@ -215,6 +215,7 @@ function pilotAcademy.Init(menuMap, menuPlayerInfo)
     end)
   end
   RegisterEvent("PilotAcademyRAndR.RankLevelReached", pilotAcademy.OnRankLevelReached)
+  pilotAcademy.loadCommonData()
 end
 
 function pilotAcademy.resetData()
@@ -2409,16 +2410,15 @@ function pilotAcademy.OnRankLevelReached(_, param)
     return
   end
   local skillBase = pilotAcademy.skillBase(pilotSkill)
-  if skillBase - pilotAcademy.commonData.targetRankLevel <= 0 then
-    trace("Pilot has not reached target rank level. Signalling and returning.")
-    SignalObject(pilotAcademy.playerId, "AcademyTargetRankLevelChanged")
+  if skillBase - pilotAcademy.commonData.targetRankLevel < 0 then
+    trace("Pilot has not reached target rank level, returning")
     return
   end
   trace(string.format("Pilot '%s' has reached rank level %d (skill: %d) at controllable '%s (%s)'",
     pilotName, skillBase, pilotSkill, name, idcode))
   local cadets = pilotAcademy.fetchAcademyPersonnel(false, true)
   if cadets == nil or #cadets == 0 then
-    trace("No cadets found, returning")
+    trace("No cadets found, signalling and returning")
     SignalObject(pilotAcademy.playerId, "AcademyNoCadetsAvailable")
     return
   end
