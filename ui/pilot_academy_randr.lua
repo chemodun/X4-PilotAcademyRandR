@@ -2418,9 +2418,15 @@ function pilotAcademy.OnRankLevelReached(_, param)
     pilotName, skillBase, pilotSkill, name, idcode))
   local cadets = pilotAcademy.fetchAcademyPersonnel(false, true)
   if cadets == nil or #cadets == 0 then
-    trace("No cadets found, signalling and returning")
-    SignalObject(pilotAcademy.playerId, "AcademyNoCadetsAvailable")
-    return
+    if pilotAcademy.commonData.autoHire then
+      trace("No cadets found, auto-hire is enabled, attempting to hire new cadet")
+      SignalObject(pilotAcademy.playerId, "AcademyCadetAutoHire", ConvertStringToLuaID(tostring(controllable)), pilotAcademy.commonData.factions)
+      return
+    else
+      trace("No cadets found, signalling and returning")
+      SignalObject(pilotAcademy.playerId, "AcademyNoCadetsAvailable")
+      return
+    end
   end
   local cadet = cadets[1]
   if cadet == nil then
