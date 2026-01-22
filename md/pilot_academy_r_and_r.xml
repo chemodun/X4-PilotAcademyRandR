@@ -200,21 +200,6 @@
           </actions>
         </cue>
 
-        <cue name="Process_ActorAssigned" instantiate="true" version="1">
-          <conditions>
-            <event_player_assigned_hired_actor />
-          </conditions>
-          <actions>
-            <debug_text
-              text="'Pilot Academy: Process_ActorAssigned: object: %s (%s), param: %s (%s), param2: %s (%s), param3: %s (%s).'.
-                [@event.object, @event.object.debugname,
-                @event.param, @event.param.debugname,
-                @event.param2, @event.param2.debugname,
-                @event.param3, @event.param3.debugname]"
-              chance="$debugchance" filter="scripts" />
-          </actions>
-        </cue>
-
         <cue name="Process_Pilot_Auto_Hire" instantiate="true" version="1">
           <conditions>
             <event_object_signalled object="player.entity" param="'AcademyCadetAutoHire'" />
