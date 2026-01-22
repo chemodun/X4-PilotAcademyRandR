@@ -86,6 +86,16 @@
         <remove_value name="$idCode" />
         <remove_value name="$ship" />
       </actions>
+      <actions name="PilotAcademyStoreCurrentShipInfo">
+        <set_value name="$shipInfo.$tradeInfo"
+          exact="table[
+            $timeStamp = player.age,
+            $tradeOperation = $tradeOperation,
+            $selectedFaction = $selectedFaction,
+            $selectedBuyOffer = $selectedBuyOffer,
+            $selectedSellOffer = $selectedSellOffer,
+          ]" />
+      </actions>
       <actions name="PilotAcademyResetCurrentTradeInfo">
         <include_interrupt_actions ref="PilotAcademyInitShipVariables" />
         <remove_value name="$shipInfo.$tradeInfo" />
@@ -120,14 +130,6 @@
             text="'Pilot Academy [%s]: Pilot %s reached target rank level %s with combined skill %s, reporting to Academy to request replacement.' .
               [this.assignedcontrolled.debugname, this.debugname, $targetRankLevel, this.combinedskill]"
             chance="$debugchance" />
-          <signal_objects object="player.entity" param="'AcademyPilotRankUpReached'" param2="this.assignedcontrolled"
-            param3="table[
-              $timeStamp = player.age,
-              $targetRankLevel = $targetRankLevel,
-              $selectedFaction = @$selectedFaction,
-              $selectedBuyOffer = @$selectedBuyOffer,
-              $selectedSellOffer = @$selectedSellOffer
-            ]" />
 
           <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,1000001}.[this.name, $targetRankLevel]]" timeout="15s" />
           <do_if value="this.assignedcontrolled.people.free ge 1">
@@ -144,6 +146,7 @@
             <set_value name="$rankUpReported" exact="false" />
           </do_else>
           <include_interrupt_actions ref="PilotAcademyInitShipVariables" />
+          <include_interrupt_actions ref="PilotAcademyStoreCurrentShipInfo" />
           <set_value name="$shipInfo.$LastRankUpReportTime" exact="player.age" />
         </do_if>
       </actions>
@@ -976,14 +979,7 @@
       <debug_text text="'Pilot Academy [%s]: reached %s %s' . [this.assignedcontrolled.debugname, $targetType, $tradeTarget.debugname]" chance="$debugchance" />
 
       <include_interrupt_actions ref="PilotAcademyInitShipVariables" />
-      <set_value name="$shipInfo.$tradeInfo"
-        exact="table[
-          $timeStamp = player.age,
-          $tradeOperation = $tradeOperation,
-          $selectedFaction = $selectedFaction,
-          $selectedBuyOffer = $selectedBuyOffer,
-          $selectedSellOffer = $selectedSellOffer,
-        ]" />
+      <include_interrupt_actions ref="PilotAcademyStoreCurrentShipInfo" />
 
       <debug_text
         text="'Pilot Academy [%s]: store info to $shipInfo.$tradeInfo: %s'.[this.assignedcontrolled.debugname, @$shipInfo.$tradeInfo]"
