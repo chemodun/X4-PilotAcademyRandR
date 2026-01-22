@@ -36,25 +36,6 @@
           </actions>
         </cue>
 
-        <cue name="Process_Report_Rank_Up" instantiate="true" version="1">
-          <conditions>
-            <event_object_signalled object="player.entity" param="'AcademyPilotRankUpReached'" />
-            <check_value value="@event.param2 != null" />
-            <check_value value="@event.param3 != null" />
-            <check_value value="@event.param3.$timeStamp != null" />
-            <check_value value="@event.param3.$targetRankLevel != null" />
-            <check_value value="@event.param3.$selectedFaction != null" />
-            <check_value value="@event.param3.$selectedBuyOffer != null" />
-            <check_value value="@event.param3.$selectedSellOffer != null" />
-          </conditions>
-          <actions>
-            <debug_text
-              text="'Pilot Academy: Report_Rank_Up: Pilot %s on %s is reached target rank %s at %s'.
-                [@event.param2.pilot.debugname, @event.param2.debugname, @event.param3.$targetRankLevel, @event.param3.$timeStamp]"
-              chance="$debugchance" filter="scripts" />
-          </actions>
-        </cue>
-
         <cue name="Process_Pilot_Swapping" instantiate="true" version="1">
           <conditions>
             <event_object_signalled object="player.entity" param="'AcademyPilotSwapRequest'" />
@@ -231,6 +212,88 @@
                 @event.param2, @event.param2.debugname,
                 @event.param3, @event.param3.debugname]"
               chance="$debugchance" filter="scripts" />
+          </actions>
+        </cue>
+
+        <cue name="Process_Pilot_Auto_Hire" instantiate="true" version="1">
+          <conditions>
+            <event_object_signalled object="player.entity" param="'AcademyCadetAutoHire'" />
+          </conditions>
+          <actions>
+            <debug_text
+              text="'Pilot Academy: Process_Pilot_Auto_Hire: Received auto-hire request. At: %s (%s). Factions: %s.' .
+                [@event.param2.debugname, @event.param2, @event.param3]"
+              chance="$debugchance" filter="scripts" />
+            <set_value name="$ship" exact="@event.param2" />
+            <set_value name="$factionNames" exact="@event.param3" />
+            <debug_text
+              text="'Pilot Academy: Process_Pilot_Auto_Hire: Ship is %s. Faction names filter: %s.' .
+                [$ship.debugname, $factionNames]"
+              chance="$debugchance" />
+            <get_factions_by_relation faction="faction.player" relation="neutral" result="$factionsListAll" />
+            <get_factions_by_relation faction="faction.player" relation="friend" result="$friendFactions" />
+            <append_list_elements name="$factionsListAll" other="$friendFactions" />
+            <get_factions_by_tag result="$hiddenFactions" tag="tag.hidden" />
+            <remove_from_list name="$factionsListAll" list="$hiddenFactions" />
+            <remove_from_list name="$factionsListAll" exact="faction.player" />
+            <debug_text
+              text="'Pilot Academy: Process_Pilot_Auto_Hire: Factions available after relation and hidden filtering: %s, count: %s.' .
+                [@$factionsListAll, @$factionsListAll.count]"
+              chance="$debugchance" />
+            <create_list name="$factionsListFiltered" />
+            <do_if value="@$factionNames != null and $factionNames.count gt 0">
+              <do_for_each name="$faction" in="$factionsListAll">
+                <do_if value="$factionNames.indexof.{$faction.id} gt 0">
+                  <append_to_list name="$factionsListFiltered" exact="$faction" />
+                </do_if>
+              </do_for_each>
+            </do_if>
+            <do_else>
+              <append_list_elements name="$factionsListFiltered" other="$factionsListAll" />
+            </do_else>
+            <shuffle_list list="$factionsListFiltered" />
+            <debug_text
+              text="'Pilot Academy: Process_Pilot_Auto_Hire: Factions available after name filtering: %s, count: %s, first: %s.' .
+                [@$factionsListFiltered, @$factionsListFiltered.count, @$factionsListFiltered.{1}]"
+              chance="$debugchance" />
+            <set_value name="$selectedFaction" exact="$factionsListFiltered.{1}" />
+            <debug_text
+              text="'Pilot Academy: Process_Pilot_Auto_Hire: Selected faction %s for new cadet on %s.' .
+                [$selectedFaction.id, $ship.debugname]"
+              chance="$debugchance" />
+            <get_character_definition macro="$cadetMacro" faction="$selectedFaction" tags="tag.pilot" />
+            <debug_text
+              text="'Pilot Academy: Process_Pilot_Auto_Hire: Cadet macro is %s.' .
+                [@$cadetMacro]"
+              chance="$debugchance" />
+            <create_npc_template object="$ship" role="entityrole.trainee_group" name="$cadetTemplate" macro="$cadetMacro" />
+            <set_skill object="$ship" template="$cadetTemplate" type="skilltype.boarding" min="0" max="2" />
+            <set_skill object="$ship" template="$cadetTemplate" type="skilltype.engineering" min="1" max="4" />
+            <set_skill object="$ship" template="$cadetTemplate" type="skilltype.management" min="1" max="2" />
+            <set_skill object="$ship" template="$cadetTemplate" type="skilltype.piloting" min="2" max="4" />
+            <set_skill object="$ship" template="$cadetTemplate" type="skilltype.morale" min="2" max="4" />
+            <set_value name="$combinedskill" exact="$ship.availablepeople.{$cadetTemplate}.potentialskill.{controlpost.aipilot}" />
+            <run_actions ref="md.NPC_Instantiation.HiringFeeFromCombinedSkill" result="$cadetHiringFee">
+              <param name="combinedskill" value="$combinedskill" />
+            </run_actions>
+            <debug_text
+              text="'Pilot Academy: Process_Pilot_Auto_Hire: Created new cadet %s (%s) on %s with hiring fee %s.' .
+                [@$ship.availablepeople.{$cadetTemplate}.name, @$cadetTemplate, $ship.debugname, @$cadetHiringFee]"
+              chance="$debugchance" />
+            <set_value name="$commonData" exact="@player.entity.$pilotAcademyRAndRData" />
+            <set_value name="$academyObject" exact="$commonData.$locationObject" />
+            <debug_text
+              text="'Pilot Academy: Process_Pilot_Auto_Hire: Academy object is %s.' .
+                [$academyObject.debugname]"
+              chance="$debugchance" />
+            <signal_objects object="player.entity" param="'AcademyPilotSwapRequest'"
+              param2="table[
+                $ship = $ship,
+                $replacementPilotTemplate = $cadetTemplate,
+                $academyObject = $academyObject,
+                $iteration = 0
+              ]"
+              delay="200ms" />
           </actions>
         </cue>
 
