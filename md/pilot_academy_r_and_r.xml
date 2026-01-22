@@ -265,6 +265,10 @@
               text="'Pilot Academy: Process_Pilot_Auto_Hire: Created new cadet %s (%s) on %s with hiring fee %s.' .
                 [@$ship.availablepeople.{$cadetTemplate}.name, @$cadetTemplate, $ship.debugname, @$cadetHiringFee]"
               chance="$debugchance" />
+            <reward_player money="-$cadetHiringFee" />
+            <show_notification
+              text="'%s\n%s'.[{1972092412,1}, {1972092412,1000004}.[@$ship.availablepeople.{$cadetTemplate}.name, @$cadetHiringFee.formatted.default]]"
+              timeout="15s" />
             <set_value name="$commonData" exact="@player.entity.$pilotAcademyRAndRData" />
             <set_value name="$academyObject" exact="$commonData.$locationObject" />
             <debug_text
