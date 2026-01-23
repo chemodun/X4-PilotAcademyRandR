@@ -2457,7 +2457,7 @@ function pilotAcademy.OnPilotReturned(_, param)
   end
 
   if pilotAcademy.commonData.assign then
-    trace("Auto-assigning returned pilot to academy location")
+    trace("Auto-assigning returned pilot " .. tostring(ffi.string(C.GetPersonName(pilotTemplateId, pilotAcademy.commonData.locationId))) .. " to academy location")
   else
     trace("Auto-assign is disabled, not assigning returned pilot")
   end
