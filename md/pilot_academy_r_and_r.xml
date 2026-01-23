@@ -141,7 +141,7 @@
             <set_value name="$academyFreeCapacity" exact="$academyObject.people.free" />
             <set_npc_template_role template="$oldPilotTemplate" object="$ship" role="entityrole.trainee_group" />
             <debug_text
-              text="'Pilot Academy: Process_Old_Pilot_Return: Iteration %s. Going to move old one %s (%s) to Academy: %s. Capacity: %s.' .
+              text="'Pilot Academy: Process_Old_Pilot_Return: Iteration %s. Going to move old one %s (%s) to Academy: %s. Free capacity: %s.' .
                   [$iteration, $oldPilotName, $oldPilotTemplate, $academyObject.debugname, $academyFreeCapacity]"
               chance="$debugchance" />
             <do_if value="$academyFreeCapacity gt 0">
@@ -155,7 +155,7 @@
                       [$oldPilotName, $oldPilotTemplate, $academyObject.debugname]"
                   chance="$debugchance" />
                 <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,1000003}.[$oldPilotName]]" timeout="15s" />
-                <raise_lua_event name="'PilotAcademyRAndR.PilotReturned'" param="$oldPilotTemplate" />
+                <raise_lua_event name="'PilotAcademyRAndR.PilotReturned'" param="'%s'.[$personTransferred.{1}]" />
               </do_if>
               <do_else>
                 <do_if value="$iteration le 5">
@@ -198,6 +198,92 @@
             <remove_value name="$personTransferred" />
           </actions>
         </cue>
+
+        <cue name="Process_Move_New_Pilot" instantiate="true" version="1">
+          <conditions>
+            <event_object_signalled object="player.entity" param="'AcademyMoveNewPilotRequest'" />
+            <check_value value="@event.param2 != null" />
+            <check_value value="typeof @event.param2 == datatype.table" />
+          </conditions>
+          <actions>
+            <debug_text
+              text="'Pilot Academy: Process_Move_New_Pilot: Received new pilot move request: %s.' .
+                [@event.param2]"
+              chance="$debugchance" filter="scripts" />
+            <set_value name="$ship" exact="@event.param2.$ship" />
+            <set_value name="$shipName" exact="{1016,6}.[$ship.knownname, $ship.idcode]" />
+            <set_value name="$newPilotTemplate" exact="@event.param2.$newPilotTemplate" />
+            <set_value name="$academyObject" exact="@event.param2.$academyObject" />
+            <set_value name="$newPilotName" exact="$academyObject.availablepeople.{$newPilotTemplate}.name" />
+            <set_value name="$iteration" exact="@event.param2.$iteration" />
+            <set_value name="$shipFreeCapacity" exact="$ship.people.free" />
+            <debug_text
+              text="'Pilot Academy: Process_Move_New_Pilot: Iteration %s. Going to move new pilot %s (%s) to %s. Free capacity: %s.' .
+                  [$iteration, $newPilotName, $newPilotTemplate, $shipName, $shipFreeCapacity]"
+              chance="$debugchance" />
+            <do_if value="$shipFreeCapacity gt 0">
+              <transfer_people result="$personTransferred" object="$ship" otherobject="$academyObject"
+                receiveworkforce="false">
+                <existing_people people="[$newPilotTemplate]" />
+              </transfer_people>
+              <do_if value="$personTransferred.count == 1">
+                <debug_text
+                  text="'Pilot Academy: Process_Move_New_Pilot: new pilot %s (%s) successfully transferred to %s. Initiating pilot swap.' .
+                      [$newPilotName, $newPilotTemplate, $shipName]"
+                  chance="$debugchance" />
+                <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,1000003}.[$newPilotName]]" timeout="15s" />
+                <signal_objects object="player.entity" param="'AcademyPilotSwapRequest'"
+                  param2="table[
+                    $ship = $ship,
+                    $replacementPilotTemplate = $personTransferred.{1},
+                    $academyObject = $academyObject,
+                    $iteration = 0
+                  ]"
+                  delay="200ms" />
+              </do_if>
+              <do_else>
+                <do_if value="$iteration le 5">
+                  <debug_text
+                    text="'Pilot Academy: Process_Move_New_Pilot: failed to transfer new pilot %s (%s) to %s. Going to repeat.' .
+                      [$newPilotName, $newPilotTemplate, $shipName]"
+                    chance="$debugchance" />
+                  <signal_objects object="player.entity" param="'AcademyMoveNewPilotRequest'"
+                    param2="table[
+                    $newPilotTemplate = $newPilotTemplate,
+                    $ship = $ship,
+                    $academyObject = $academyObject,
+                    $iteration = $iteration + 1
+                  ]"
+                    delay="500ms" />
+                </do_if>
+                <do_else>
+                  <debug_text
+                    text="'Pilot Academy: Process_Move_New_Pilot: exceeded max attempts to transfer new pilot %s (%s) to %s. Please do it manually!' .
+                          [$newPilotName, $newPilotTemplate, $ship.debugname]"
+                    chance="$debugchance" />
+                  <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,2000006}.[$shipName, $newPilotName]]" priority="2" sound="notification_warning"
+                    timeout="15s" />
+                </do_else>
+              </do_else>
+            </do_if>
+            <do_else>
+              <debug_text
+                text="'Pilot Academy: Process_Move_New_Pilot: no free capacity on ship %s to move new pilot %s (%s).' .
+                  [$ship.debugname, $newPilotName, $newPilotTemplate]"
+                chance="$debugchance" />
+              <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,2000002}.[$shipName]]" priority="2" sound="notification_warning"
+                timeout="15s" />
+            </do_else>
+            <remove_value name="$iteration" />
+            <remove_value name="$newPilotName" />
+            <remove_value name="$newPilotTemplate" />
+            <remove_value name="$ship" />
+            <remove_value name="$shipName" />
+            <remove_value name="$academyObject" />
+            <remove_value name="$personTransferred" />
+          </actions>
+        </cue>
+
 
         <cue name="Process_No_Cadets_Available" instantiate="true" version="1">
           <conditions>
