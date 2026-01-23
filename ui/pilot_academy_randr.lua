@@ -215,6 +215,7 @@ function pilotAcademy.Init(menuMap, menuPlayerInfo)
     end)
   end
   RegisterEvent("PilotAcademyRAndR.RankLevelReached", pilotAcademy.OnRankLevelReached)
+  RegisterEvent("PilotAcademyRAndR.PilotReturned", pilotAcademy.OnPilotReturned)
   pilotAcademy.loadCommonData()
 end
 
@@ -2436,6 +2437,32 @@ function pilotAcademy.OnRankLevelReached(_, param)
   trace("Promoting cadet with name: " .. tostring(cadet.name) .. " (entity: " .. tostring(cadet.entity) .. ") and skill: " .. tostring(cadet.skill))
   SignalObject(controllable, "AcademyOrderPrepareForPilotReplacement", ConvertStringToLuaID(tostring(cadet.entity)))
 end
+
+function pilotAcademy.OnPilotReturned(_, param)
+  trace("OnPilotReturned called with param: " .. tostring(param))
+  local pilotTemplateId = ConvertStringTo64Bit(tostring(param))
+  if pilotTemplateId == nil or pilotTemplateId == 0 then
+    trace("pilotTemplateId is nil or invalid, returning")
+    return
+  end
+
+  pilotAcademy.loadCommonData()
+  if pilotAcademy.commonData == nil then
+    trace("pilotAcademy.commonData is nil, returning")
+    return
+  end
+  if pilotAcademy.commonData.locationId == nil then
+    trace("pilotAcademy.commonData.locationId is nil, returning")
+    return
+  end
+
+  if pilotAcademy.commonData.assign then
+    trace("Auto-assigning returned pilot to academy location")
+  else
+    trace("Auto-assign is disabled, not assigning returned pilot")
+  end
+end
+
 
 local function preAddRowToMapMenuContext(contextMenuData, contextMenuMode, menu)
   if contextMenuData.person then

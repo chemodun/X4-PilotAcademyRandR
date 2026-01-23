@@ -155,6 +155,7 @@
                       [$oldPilotName, $oldPilotTemplate, $academyObject.debugname]"
                   chance="$debugchance" />
                 <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,1000003}.[$oldPilotName]]" timeout="15s" />
+                <raise_lua_event name="'PilotAcademyRAndR.PilotReturned'" param="$oldPilotTemplate" />
               </do_if>
               <do_else>
                 <do_if value="$iteration le 5">
