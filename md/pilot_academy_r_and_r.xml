@@ -30,9 +30,10 @@
           </actions>
         </cue>
 
-        <cue name="Refresh_Pilot_Academy_Pilots" instantiate="true" checkinterval="300s">
+        <cue name="Refresh_Pilot_Academy_Pilots" instantiate="true" checkinterval="180s">
           <actions>
             <debug_text text="'Pilot Academy: Refresh_Pilot_Academy_Pilots.'" chance="$debugchance" filter="scripts" />
+            <raise_lua_event name="'PilotAcademyRAndR.RefreshPilots'" />
           </actions>
         </cue>
 

@@ -150,6 +150,10 @@ local pilotAcademy = {
     "priority_small_to_large",
     "priority_large_to_small",
   },
+  classOrderSmallToLarge = { ship_xl = 4, ship_l = 3, ship_m = 2, ship_s = 1 },
+  classOrderLargeToSmall = { ship_xl = 1, ship_l = 2, ship_m = 3, ship_s = 4 },
+  lastAutoAssignTime = 0,
+  autoAssignCoolDown = 120, -- seconds
 }
 
 local config = {}
@@ -214,8 +218,9 @@ function pilotAcademy.Init(menuMap, menuPlayerInfo)
       return pilotAcademy.addAppointAsCadetRowToContextMenu(contextFrame, contextMenuData, contextMenuMode, menuPlayerInfo)
     end)
   end
-  RegisterEvent("PilotAcademyRAndR.RankLevelReached", pilotAcademy.OnRankLevelReached)
-  RegisterEvent("PilotAcademyRAndR.PilotReturned", pilotAcademy.OnPilotReturned)
+  RegisterEvent("PilotAcademyRAndR.RankLevelReached", pilotAcademy.onRankLevelReached)
+  RegisterEvent("PilotAcademyRAndR.PilotReturned", pilotAcademy.onPilotReturned)
+  RegisterEvent("PilotAcademyRAndR.RefreshPilots", pilotAcademy.onRefreshPilots)
   pilotAcademy.loadCommonData()
 end
 
@@ -2388,7 +2393,7 @@ function pilotAcademy.calculateHiringFee(combinedskill)
   return hiringFee
 end
 
-function pilotAcademy.OnRankLevelReached(_, param)
+function pilotAcademy.onRankLevelReached(_, param)
   trace("OnRankLevelReached called with param: " .. tostring(param))
   local controllable = ConvertStringTo64Bit(tostring(param))
   if controllable == nil or controllable == 0 then
@@ -2438,7 +2443,7 @@ function pilotAcademy.OnRankLevelReached(_, param)
   SignalObject(controllable, "AcademyOrderPrepareForPilotReplacement", ConvertStringToLuaID(tostring(cadet.entity)))
 end
 
-function pilotAcademy.OnPilotReturned(_, param)
+function pilotAcademy.onPilotReturned(_, param)
   trace("OnPilotReturned called with param: " .. tostring(param))
   local pilotTemplateId = ConvertStringTo64Bit(tostring(param))
   if pilotTemplateId == nil or pilotTemplateId == 0 then
@@ -2456,13 +2461,178 @@ function pilotAcademy.OnPilotReturned(_, param)
     return
   end
 
-  if pilotAcademy.commonData.assign then
+  if pilotAcademy.commonData.assign ~= "manual" then
     trace("Auto-assigning returned pilot " .. tostring(ffi.string(C.GetPersonName(pilotTemplateId, pilotAcademy.commonData.locationId))) .. " to academy location")
+    pilotAcademy.autoAssignPilots()
   else
     trace("Auto-assign is disabled, not assigning returned pilot")
   end
 end
 
+function pilotAcademy.onRefreshPilots()
+  trace("onRefreshPilots called")
+  pilotAcademy.autoAssignPilots()
+end
+
+function pilotAcademy.autoAssignPilots()
+  trace("autoAssignPilots called")
+  pilotAcademy.loadCommonData()
+  if pilotAcademy.commonData == nil then
+    trace("pilotAcademy.commonData is nil, returning")
+    return
+  end
+  if pilotAcademy.commonData.locationId == nil then
+    trace("pilotAcademy.commonData.locationId is nil, returning")
+    return
+  end
+  if pilotAcademy.commonData.assign == "manual" then
+    trace("Auto-assign is disabled, returning")
+    return
+  end
+  local currentTime = getElapsedTime()
+  if pilotAcademy.lastAutoAssignTime ~= nil and currentTime - pilotAcademy.lastAutoAssignTime < pilotAcademy.autoAssignCoolDown then
+    trace("Auto-assign cool down not yet elapsed, returning")
+    return
+  end
+  pilotAcademy.lastAutoAssignTime = currentTime
+  local cadets, pilots = pilotAcademy.fetchAcademyPersonnel(false, true)
+  if pilots == nil or #pilots == 0 then
+    trace("No available pilots found, returning")
+    return
+  end
+  local candidateShips = pilotAcademy.fetchCandidatesForReplacement()
+  if candidateShips == nil or #candidateShips == 0 then
+    trace("No candidate ships found for replacement, returning")
+    return
+  end
+  trace(string.format("Auto-assigning pilots: found %d pilots and %d candidate ships", #pilots, #candidateShips))
+end
+
+function pilotAcademy.fetchCandidatesForReplacement()
+  trace("fetchCandidatesForReplacement called")
+  local targetRankLevel = pilotAcademy.commonData and pilotAcademy.commonData.targetRankLevel or 2
+  local candidateShips = {}
+  local allShipsCount = C.GetNumAllFactionShips("player")
+  local allShips = ffi.new("UniverseID[?]", allShipsCount)
+  allShipsCount = C.GetAllFactionShips(allShips, allShipsCount, "player")
+  for i = 0, allShipsCount - 1 do
+    local shipId = ConvertStringTo64Bit(tostring(allShips[i]))
+    local shipMacro, isDeployable, shipName, pilot, classId, idcode, purpose = GetComponentData(shipId, "macro", "isdeployable", "name", "assignedaipilot",
+      "classid", "idcode", "primarypurpose")
+    local isLasertower, shipWare = GetMacroData(shipMacro, "islasertower", "ware")
+    local isUnit = C.IsUnit(shipId)
+    if shipWare and (not isUnit) and (not isLasertower) and (not isDeployable) and not Helper.isComponentClass(classId, "ship_xs") and pilot and IsValidComponent(pilot) then
+      local pilotName, pilotSkill, pilotMacro = GetComponentData(pilot, "name", "combinedskill", "macro")
+      local pilotRace = GetMacroData(pilotMacro)
+      local skillBase = pilotAcademy.skillBase(pilotSkill)
+      if skillBase < targetRankLevel and pilotRace ~= "drone" then
+        local class = Helper.isComponentClass(classId, "ship_s") and "ship_s" or Helper.isComponentClass(classId, "ship_m") and "ship_m" or Helper.isComponentClass(classId, "ship_l") and "ship_l" or  Helper.isComponentClass(classId, "ship_xl") and "ship_xl" or "unknown"
+        trace(string.format("Evaluating ship '%s' (idcode: %s, class: %s, purpose: %s) with pilot '%s' (skill: %d, base rank: %d)",
+          shipName, idcode, class, purpose, pilotName, pilotSkill, skillBase))
+        if class ~= "unknown" then
+          if purpose == "mine" or purpose == "salvage" then
+            purpose = "mine"
+          elseif purpose == "fight" or purpose == "auxiliary" then
+            purpose = "military"
+          else
+            purpose = "trade"
+          end
+          candidateShips[#candidateShips + 1] = {
+            shipId = shipId,
+            shipName = shipName,
+            shipIdCode = idcode,
+            class = class,
+            purpose = purpose,
+            pilotName = pilotName,
+            pilotSkill = pilotSkill,
+          }
+        end
+      end
+    end
+  end
+  pilotAcademy.sortCandidatesForReplacement(candidateShips, pilotAcademy.commonData.assign, pilotAcademy.commonData.assignPriority)
+  return candidateShips
+end
+
+
+function pilotAcademy.sortCandidatesForReplacement(candidates, assign, assignPriority)
+  table.sort(candidates, function(a, b)
+    if a.purpose ~= b.purpose then
+      if assign == "military_miners_traders" then
+        if a.purpose == "military" then
+          return true
+        elseif b.purpose == "military" then
+          return false
+        elseif a.purpose == "mine" then
+          return true
+        elseif b.purpose == "mine" then
+          return false
+        end
+      elseif assign == "military_traders_miners" then
+        if a.purpose == "military" then
+          return true
+        elseif b.purpose == "military" then
+          return false
+        elseif a.purpose == "trade" then
+          return true
+        elseif b.purpose == "trade" then
+          return false
+        end
+      elseif assign == "miners_military_traders" then
+        if a.purpose == "mine" then
+          return true
+        elseif b.purpose == "mine" then
+          return false
+        elseif a.purpose == "military" then
+          return true
+        elseif b.purpose == "military" then
+          return false
+        end
+      elseif assign == "traders_military_miners" then
+        if a.purpose == "trade" then
+          return true
+        elseif b.purpose == "trade" then
+          return false
+        elseif a.purpose == "military" then
+          return true
+        elseif b.purpose == "military" then
+          return false
+        end
+      elseif assign == "miners_traders_military" then
+        if a.purpose == "mine" then
+          return true
+        elseif b.purpose == "mine" then
+          return false
+        elseif a.purpose == "trade" then
+          return true
+        elseif b.purpose == "trade" then
+          return false
+        end
+      elseif assign == "traders_miners_military" then
+        if a.purpose == "trade" then
+          return true
+        elseif b.purpose == "trade" then
+          return false
+        elseif a.purpose == "mine" then
+          return true
+        elseif b.purpose == "mine" then
+          return false
+        end
+      end
+    end
+    if a.class ~= b.class then
+      if assignPriority == "priority_small_to_large" then
+        return pilotAcademy.classOrderSmallToLarge[a.class] < pilotAcademy.classOrderSmallToLarge[b.class]
+      else
+        return pilotAcademy.classOrderLargeToSmall[a.class] < pilotAcademy.classOrderLargeToSmall[b.class]
+      end
+    end
+    if a.pilotSkill ~= b.pilotSkill then
+      return a.pilotSkill < b.pilotSkill
+    end
+    return a.shipName < b.shipName
+  end)
+end
 
 local function preAddRowToMapMenuContext(contextMenuData, contextMenuMode, menu)
   if contextMenuData.person then
