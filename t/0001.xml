@@ -65,6 +65,7 @@
       <t id="2000002">No free crew capacity on %s to do pilots swapping!</t>
       <t id="2000003">Can not make pilots swapping on %s! Please do it manually!</t>
       <t id="2000004">Can't return back pilot %s to the Academy! Please do it manually!</t>
+      <t id="2000005">No free capacity at Academy to return back pilot %s! Please resolve it!</t>
     </page>
   </add>
 </diff>

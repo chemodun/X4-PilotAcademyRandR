@@ -138,45 +138,56 @@
             <set_value name="$oldPilotName" exact="$ship.availablepeople.{$oldPilotTemplate}.name" />
             <set_value name="$academyObject" exact="@event.param2.$academyObject" />
             <set_value name="$iteration" exact="@event.param2.$iteration" />
+            <set_value name="$academyFreeCapacity" exact="$academyObject.people.free" />
             <set_npc_template_role template="$oldPilotTemplate" object="$ship" role="entityrole.trainee_group" />
             <debug_text
-              text="'Pilot Academy: Process_Old_Pilot_Return: Iteration %s. Going to move old one %s (%s) to Academy: %s.' .
-                  [$iteration, $oldPilotName, $oldPilotTemplate, $academyObject.debugname]"
+              text="'Pilot Academy: Process_Old_Pilot_Return: Iteration %s. Going to move old one %s (%s) to Academy: %s. Capacity: %s.' .
+                  [$iteration, $oldPilotName, $oldPilotTemplate, $academyObject.debugname, $academyFreeCapacity]"
               chance="$debugchance" />
-            <transfer_people result="$personTransferred" object="$academyObject" otherobject="$ship"
-              receiveworkforce="false">
-              <existing_people people="[$oldPilotTemplate]" />
-            </transfer_people>
-            <do_if value="$personTransferred.count == 1">
-              <debug_text
-                text="'Pilot Academy: Process_Old_Pilot_Return: old pilot %s (%s) successfully transferred to %s.' .
-                      [$oldPilotName, $oldPilotTemplate, $academyObject.debugname]"
-                chance="$debugchance" />
-              <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,1000003}.[$oldPilotName]]" timeout="15s" />
-            </do_if>
-            <do_else>
-              <do_if value="$iteration le 5">
+            <do_if value="$academyFreeCapacity gt 0">
+              <transfer_people result="$personTransferred" object="$academyObject" otherobject="$ship"
+                receiveworkforce="false">
+                <existing_people people="[$oldPilotTemplate]" />
+              </transfer_people>
+              <do_if value="$personTransferred.count == 1">
                 <debug_text
-                  text="'Pilot Academy: Process_Old_Pilot_Return: failed to transfer old pilot %s (%s) to %s. Going to repeat.' .
+                  text="'Pilot Academy: Process_Old_Pilot_Return: old pilot %s (%s) successfully transferred to %s.' .
                       [$oldPilotName, $oldPilotTemplate, $academyObject.debugname]"
                   chance="$debugchance" />
-                <signal_objects object="player.entity" param="'AcademyOldPilotReturnRequest'"
-                  param2="table[
+                <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,1000003}.[$oldPilotName]]" timeout="15s" />
+              </do_if>
+              <do_else>
+                <do_if value="$iteration le 5">
+                  <debug_text
+                    text="'Pilot Academy: Process_Old_Pilot_Return: failed to transfer old pilot %s (%s) to %s. Going to repeat.' .
+                      [$oldPilotName, $oldPilotTemplate, $academyObject.debugname]"
+                    chance="$debugchance" />
+                  <signal_objects object="player.entity" param="'AcademyOldPilotReturnRequest'"
+                    param2="table[
                     $oldPilotTemplate = $oldPilotTemplate,
                     $ship = $ship,
                     $academyObject = $academyObject,
                     $iteration = $iteration + 1
                   ]"
-                  delay="500ms" />
-              </do_if>
-              <do_else>
-                <debug_text
-                  text="'Pilot Academy: Process_Old_Pilot_Return: exceeded max attempts to return old pilot %s (%s) to %s. Please do it manually!' .
+                    delay="500ms" />
+                </do_if>
+                <do_else>
+                  <debug_text
+                    text="'Pilot Academy: Process_Old_Pilot_Return: exceeded max attempts to return old pilot %s (%s) to %s. Please do it manually!' .
                           [$oldPilotName, $oldPilotTemplate, $academyObject.debugname]"
-                  chance="$debugchance" />
-                <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,2000004}.[$oldPilotName]]" priority="2" sound="notification_warning"
-                  timeout="15s" />
+                    chance="$debugchance" />
+                  <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,2000004}.[$oldPilotName]]" priority="2" sound="notification_warning"
+                    timeout="15s" />
+                </do_else>
               </do_else>
+            </do_if>
+            <do_else>
+              <debug_text
+                text="'Pilot Academy: Process_Old_Pilot_Return: no free capacity in Academy %s to return old pilot %s (%s).' .
+                  [$academyObject.debugname, $oldPilotName, $oldPilotTemplate]"
+                chance="$debugchance" />
+              <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,2000005}.[$oldPilotName]]" priority="2" sound="notification_warning"
+                timeout="15s" />
             </do_else>
             <remove_value name="$iteration" />
             <remove_value name="$oldPilotName" />
