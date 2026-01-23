@@ -295,6 +295,17 @@
                 $iteration = 0
               ]"
               delay="200ms" />
+            <remove_value name="$cadetHiringFee" />
+            <remove_value name="$cadetTemplate" />
+            <remove_value name="$cadetMacro" />
+            <remove_value name="$selectedFaction" />
+            <remove_value name="$factionsListFiltered" />
+            <remove_value name="$factionNames" />
+            <remove_value name="$friendFactions" />
+            <remove_value name="$factionsListAll" />
+            <remove_value name="$academyObject" />
+            <remove_value name="$combinedskill" />
+            <remove_value name="$ship" />
           </actions>
         </cue>
 
