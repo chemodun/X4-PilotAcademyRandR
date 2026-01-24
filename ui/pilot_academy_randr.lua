@@ -2506,6 +2506,30 @@ function pilotAcademy.autoAssignPilots()
     return
   end
   trace(string.format("Auto-assigning pilots: found %d pilots and %d candidate ships", #pilots, #candidateShips))
+  for i = #pilots, 1, -1 do
+    local pilot = pilots[i]
+    if pilot == nil then
+      trace("Pilot is nil, skipping")
+    else
+      local candidateShip = candidateShips[1]
+      if candidateShip ~= nil then
+        local data = {
+          ship = ConvertStringToLuaID(tostring(candidateShip.shipId)),
+          academyObject = ConvertStringToLuaID(tostring(pilotAcademy.commonData.locationId)),
+          newPilotTemplate = ConvertStringToLuaID(tostring(pilot.id)),
+          iteration = 0
+        }
+        SignalObject(pilotAcademy.playerId, "AcademyMoveNewPilotRequest", data)
+        trace(string.format("Assigned pilot '%s' (skill: %d) to ship '%s' (idcode: %s)",
+          pilot.name, pilot.skill, candidateShip.shipName, candidateShip.shipIdCode))
+        table.remove(candidateShips, 1)
+        if #candidateShips == 0 then
+          trace("No more candidate ships available, ending auto-assign")
+          break
+        end
+      end
+    end
+  end
 end
 
 function pilotAcademy.fetchCandidatesForReplacement()
