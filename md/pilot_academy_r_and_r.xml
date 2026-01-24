@@ -399,6 +399,18 @@
           </actions>
         </cue>
 
+        <cue name="Process_Pilot_Assigned" instantiate="true" version="1">
+          <conditions>
+            <event_player_assigned_hired_actor />
+          </conditions>
+          <actions>
+            <debug_text
+              text="'Pilot Academy: Process_Pilot_Assigned: actor: %s (%s), object: %s (%s), post or role: %s (type %s)' .
+                [@event.param, @event.param.debugname, @event.param2, @event.param2.debugname, @event.param3, typeof @event.param3]"
+              chance="$debugchance" filter="scripts" />
+          </actions>
+        </cue>
+
       </cues>
     </cue>
   </cues>
