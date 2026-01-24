@@ -1598,6 +1598,7 @@ function pilotAcademy.fetchPotentialWingmans(existingWing, existingWingLeader)
   local allShipsCount = C.GetNumAllFactionShips("player")
   local allShips = ffi.new("UniverseID[?]", allShipsCount)
   allShipsCount = C.GetAllFactionShips(allShips, allShipsCount, "player")
+  local academyShips = pilotAcademy.fetchAllAcademyShipsForExclusion()
   for i = 0, allShipsCount - 1 do
     local shipId = ConvertStringTo64Bit(tostring(allShips[i]))
     local shipMacro, isDeployable, shipName, pilot, classId, idcode, icon = GetComponentData(shipId, "macro", "isdeployable", "name", "assignedaipilot",
@@ -1608,12 +1609,7 @@ function pilotAcademy.fetchPotentialWingmans(existingWing, existingWingLeader)
       local subordinates = GetSubordinates(shipId)
       local commander = GetCommander(shipId)
       if #subordinates == 0 and commander == nil then
-        local buf = ffi.new("Order")
-        local currentOrderDef = ""
-        if C.GetDefaultOrder(buf, shipId) then
-          currentOrderDef = ffi.string(buf.orderdef)
-        end
-        if currentOrderDef ~= pilotAcademy.orderId then
+        if academyShips[tostring(shipId)] ~= true then
           local candidate = {}
           candidate.shipId = shipId
           candidate.shipName = shipName
@@ -1923,6 +1919,29 @@ function pilotAcademy.fetchWingmans(wingLeaderId)
     end
   end
   return mimicGroupId, wingmans
+end
+
+function pilotAcademy.fetchAllAcademyShipsForExclusion()
+  local academyShips = {}
+  local wings = pilotAcademy.wings
+  if wings == nil then
+    return academyShips
+  end
+  for _, wingData in pairs(wings) do
+
+    local wingLeaderId = wingData.wingLeaderId
+    if wingLeaderId ~= nil then
+      academyShips[tostring(wingLeaderId)] = true
+      local mimicGroupId, wingmans = pilotAcademy.fetchWingmans(wingLeaderId)
+      for i = 1, #wingmans do
+        local wingman = wingmans[i]
+        if wingman ~= nil and wingman.shipId ~= nil then
+          academyShips[tostring(wingman.shipId)] = true
+        end
+      end
+    end
+  end
+  return academyShips
 end
 
 function pilotAcademy.onSelectWingLeader(id)
@@ -2539,6 +2558,7 @@ function pilotAcademy.fetchCandidatesForReplacement()
   local allShipsCount = C.GetNumAllFactionShips("player")
   local allShips = ffi.new("UniverseID[?]", allShipsCount)
   allShipsCount = C.GetAllFactionShips(allShips, allShipsCount, "player")
+  local academyShips = pilotAcademy.fetchAllAcademyShipsForExclusion()
   for i = 0, allShipsCount - 1 do
     local shipId = ConvertStringTo64Bit(tostring(allShips[i]))
     local shipMacro, isDeployable, shipName, pilot, classId, idcode, purpose = GetComponentData(shipId, "macro", "isdeployable", "name", "assignedaipilot",
@@ -2546,12 +2566,7 @@ function pilotAcademy.fetchCandidatesForReplacement()
     local isLasertower, shipWare = GetMacroData(shipMacro, "islasertower", "ware")
     local isUnit = C.IsUnit(shipId)
     if shipWare and (not isUnit) and (not isLasertower) and (not isDeployable) and not Helper.isComponentClass(classId, "ship_xs") and pilot and IsValidComponent(pilot) then
-      local buf = ffi.new("Order")
-      local currentOrderDef = ""
-      if C.GetDefaultOrder(buf, shipId) then
-        currentOrderDef = ffi.string(buf.orderdef)
-      end
-      if currentOrderDef ~= pilotAcademy.orderId then
+      if academyShips[tostring(shipId)] ~= true then
         local pilotName, pilotSkill, pilotMacro = GetComponentData(pilot, "name", "combinedskill", "macro")
         local pilotRace = GetMacroData(pilotMacro)
         local skillBase = pilotAcademy.skillBase(pilotSkill)
