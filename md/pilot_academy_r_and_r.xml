@@ -1,13 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mdscript name="Pilot_Academy_Ranks_And_Relations" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <cues>
-    <cue name="Main" version="2">
+    <cue name="Main" version="3">
       <actions>
         <debug_text text="'Pilot Academy: Main'" chance="100" filter="scripts" />
         <set_value name="$debugchance" exact="100" />
+        <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r'" />
+        <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_wings_3'" />
+        <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_wings_5'" />
+        <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_wings_7'" />
+        <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_wings_9'" />
+        <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_auto_hire'" />
+        <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_auto_assign'" />
       </actions>
       <patch sinceversion="2">
         <set_value name="$debugchance" exact="100" />
+      </patch>
+      <patch sinceversion="3">
+        <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r'" />
+        <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_wings_3'" />
+        <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_wings_5'" />
+        <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_wings_7'" />
+        <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_wings_9'" />
+        <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_auto_hire'" />
+        <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_auto_assign'" />
       </patch>
       <cues>
         <cue name="On_Reload" instantiate="true">
