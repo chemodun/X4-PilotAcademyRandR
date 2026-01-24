@@ -64,8 +64,8 @@
             />
             <do_if value="$pilotsSwappingResult">
               <debug_text
-                text="'Pilot Academy: Process_Pilot_Swapping: pilot %s is can be replaced on %s by new pilot %s.' .
-                  [$oldPilotName, $ship.debugname, $replacementPilotName]"
+                text="'Pilot Academy: Process_Pilot_Swapping: pilot %s (%s) is can be replaced on %s by new pilot %s.' .
+                  [$oldPilotName, $oldPilot.debugname, $ship.debugname, $replacementPilotName]"
                 chance="$debugchance" />
               <assign_hired_actor actor="[$ship, $replacementPilotTemplate]" target="$ship"
                 post="controlpost.aipilot" success="$pilotsSwappingResult" failed="$pilotsSwappingMessage" />
@@ -214,6 +214,9 @@
             <set_value name="$ship" exact="@event.param2.$ship" />
             <set_value name="$shipName" exact="{1016,6}.[$ship.knownname, $ship.idcode]" />
             <set_value name="$newPilotTemplate" exact="@event.param2.$newPilotTemplate" />
+            <do_if value="@event.param2.$newPilot != null">
+              <set_value name="$newPilotTemplate" exact="@event.param2.$newPilot.npctemplate" />
+            </do_if>
             <set_value name="$academyObject" exact="@event.param2.$academyObject" />
             <set_value name="$newPilotName" exact="$academyObject.availablepeople.{$newPilotTemplate}.name" />
             <set_value name="$iteration" exact="@event.param2.$iteration" />
