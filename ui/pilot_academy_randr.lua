@@ -2516,7 +2516,7 @@ function pilotAcademy.autoAssignPilots()
         local data = {
           ship = ConvertStringToLuaID(tostring(candidateShip.shipId)),
           academyObject = ConvertStringToLuaID(tostring(pilotAcademy.commonData.locationId)),
-          newPilotTemplate = ConvertStringToLuaID(tostring(pilot.id)),
+          newPilot = ConvertStringToLuaID(tostring(pilot.entity)),
           iteration = 0
         }
         SignalObject(pilotAcademy.playerId, "AcademyMoveNewPilotRequest", data)
@@ -2546,30 +2546,37 @@ function pilotAcademy.fetchCandidatesForReplacement()
     local isLasertower, shipWare = GetMacroData(shipMacro, "islasertower", "ware")
     local isUnit = C.IsUnit(shipId)
     if shipWare and (not isUnit) and (not isLasertower) and (not isDeployable) and not Helper.isComponentClass(classId, "ship_xs") and pilot and IsValidComponent(pilot) then
-      local pilotName, pilotSkill, pilotMacro = GetComponentData(pilot, "name", "combinedskill", "macro")
-      local pilotRace = GetMacroData(pilotMacro)
-      local skillBase = pilotAcademy.skillBase(pilotSkill)
-      if skillBase < targetRankLevel and pilotRace ~= "drone" then
-        local class = Helper.isComponentClass(classId, "ship_s") and "ship_s" or Helper.isComponentClass(classId, "ship_m") and "ship_m" or Helper.isComponentClass(classId, "ship_l") and "ship_l" or  Helper.isComponentClass(classId, "ship_xl") and "ship_xl" or "unknown"
-        trace(string.format("Evaluating ship '%s' (idcode: %s, class: %s, purpose: %s) with pilot '%s' (skill: %d, base rank: %d)",
-          shipName, idcode, class, purpose, pilotName, pilotSkill, skillBase))
-        if class ~= "unknown" then
-          if purpose == "mine" or purpose == "salvage" then
-            purpose = "mine"
-          elseif purpose == "fight" or purpose == "auxiliary" then
-            purpose = "military"
-          else
-            purpose = "trade"
+      local buf = ffi.new("Order")
+      local currentOrderDef = ""
+      if C.GetDefaultOrder(buf, shipId) then
+        currentOrderDef = ffi.string(buf.orderdef)
+      end
+      if currentOrderDef ~= pilotAcademy.orderId then
+        local pilotName, pilotSkill, pilotMacro = GetComponentData(pilot, "name", "combinedskill", "macro")
+        local pilotRace = GetMacroData(pilotMacro)
+        local skillBase = pilotAcademy.skillBase(pilotSkill)
+        if skillBase < targetRankLevel and pilotRace ~= "drone" then
+          local class = Helper.isComponentClass(classId, "ship_s") and "ship_s" or Helper.isComponentClass(classId, "ship_m") and "ship_m" or Helper.isComponentClass(classId, "ship_l") and "ship_l" or  Helper.isComponentClass(classId, "ship_xl") and "ship_xl" or "unknown"
+          trace(string.format("Evaluating ship '%s' (idcode: %s, class: %s, purpose: %s) with pilot '%s' (skill: %d, base rank: %d)",
+            shipName, idcode, class, purpose, pilotName, pilotSkill, skillBase))
+          if class ~= "unknown" then
+            if purpose == "mine" or purpose == "salvage" then
+              purpose = "mine"
+            elseif purpose == "fight" or purpose == "auxiliary" then
+              purpose = "military"
+            else
+              purpose = "trade"
+            end
+            candidateShips[#candidateShips + 1] = {
+              shipId = shipId,
+              shipName = shipName,
+              shipIdCode = idcode,
+              class = class,
+              purpose = purpose,
+              pilotName = pilotName,
+              pilotSkill = pilotSkill,
+            }
           end
-          candidateShips[#candidateShips + 1] = {
-            shipId = shipId,
-            shipName = shipName,
-            shipIdCode = idcode,
-            class = class,
-            purpose = purpose,
-            pilotName = pilotName,
-            pilotSkill = pilotSkill,
-          }
         end
       end
     end
