@@ -1935,8 +1935,8 @@ function pilotAcademy.fetchAllAcademyShipsForExclusion()
       local mimicGroupId, wingmans = pilotAcademy.fetchWingmans(wingLeaderId)
       for i = 1, #wingmans do
         local wingman = wingmans[i]
-        if wingman ~= nil and wingman.shipId ~= nil then
-          academyShips[tostring(wingman.shipId)] = true
+        if wingman ~= nil and wingman.id ~= nil then
+          academyShips[tostring(wingman.id)] = true
         end
       end
     end
