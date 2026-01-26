@@ -77,6 +77,7 @@ local texts = {
   wing = ReadText(1972092412, 10021),                         -- "Wing %s"
   addNewWing = ReadText(1972092412, 10029),                   -- "Add new Wing"
   location = ReadText(1972092412, 10101),                     -- "Location:"
+  locationRentCost = ReadText(1972092412, 10102),             -- "Location rent cost: %s a month."
   noAvailableLocations = ReadText(1972092412, 10109),         -- "No available locations"
   targetRankLevel = ReadText(1972092412, 10111),              --"Target Rank:",
   autoHire = ReadText(1972092412, 10121),                     -- "Auto hire:"
@@ -154,7 +155,6 @@ local pilotAcademy = {
   },
   classOrderSmallToLarge = { ship_xl = 4, ship_l = 3, ship_m = 2, ship_s = 1 },
   classOrderLargeToSmall = { ship_xl = 1, ship_l = 2, ship_m = 3, ship_s = 4 },
-  lastAutoAssignTime = 0,
   autoAssignCoolDown = 120, -- seconds
 }
 
@@ -189,7 +189,7 @@ local function hasItemsExcept(table, excludedKey)
 end
 
 function pilotAcademy.Init(menuMap, menuPlayerInfo)
-  trace("pilotAcademy.Init called")
+  trace("pilotAcademy.Init called at " .. tostring(C.GetCurrentGameTime()))
   pilotAcademy.sideBarIsCreated = false
   if menuMap ~= nil and type(menuMap.registerCallback) == "function" and type(menuMap.uix_getConfig) == "function" then
     pilotAcademy.menuMap = menuMap
@@ -519,6 +519,7 @@ function pilotAcademy.setAcademyContentColumnWidths(tableHandle, menu, config)
 end
 
 function pilotAcademy.displayAcademyInfo(frame, menu, config)
+  trace("displayAcademyInfo called at " .. tostring(C.GetCurrentGameTime()) .. " CurTime: " .. tostring(GetCurTime()) .. "Real: " .. tostring(GetCurRealTime()))
   if frame == nil then
     trace("Frame is nil; cannot display wing info")
     return nil
@@ -1312,6 +1313,10 @@ function pilotAcademy.loadCommonData()
     pilotAcademy.commonData.autoHire = false
   elseif pilotAcademy.commonData.autoHire == 1 then
     pilotAcademy.commonData.autoHire = true
+  end
+
+  if pilotAcademy.commonData.lastAutoAssignTime == nil then
+    pilotAcademy.commonData.lastAutoAssignTime = C.GetCurrentGameTime()
   end
 
   debug("loadCommonData: locationId is " .. tostring(pilotAcademy.commonData.locationId))
@@ -2529,12 +2534,13 @@ function pilotAcademy.autoAssignPilots()
     trace("Auto-assign is disabled, returning")
     return
   end
-  local currentTime = getElapsedTime()
-  if pilotAcademy.lastAutoAssignTime ~= nil and currentTime - pilotAcademy.lastAutoAssignTime < pilotAcademy.autoAssignCoolDown then
+  local currentTime = C.GetCurrentGameTime()()
+  if pilotAcademy.commonData.lastAutoAssignTime ~= nil and currentTime - pilotAcademy.commonData.lastAutoAssignTime < pilotAcademy.autoAssignCoolDown then
     trace("Auto-assign cool down not yet elapsed, returning")
     return
   end
-  pilotAcademy.lastAutoAssignTime = currentTime
+  pilotAcademy.commonData.lastAutoAssignTime = currentTime
+  pilotAcademy.saveCommonData()
   local cadets, pilots = pilotAcademy.fetchAcademyPersonnel(false, true)
   if pilots == nil or #pilots == 0 then
     trace("No available pilots found, returning")
