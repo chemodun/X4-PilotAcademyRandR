@@ -613,7 +613,7 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
   local autoHireActive = C.HasResearched("research_pilot_academy_r_and_r_auto_hire")
 
   row = tableTop:addRow("auto_hire", { fixed = true })
-  row[2]:createCheckBox(autoHire == autoHireActive, { active = #factions > 0 }) -- ToDo: add check on own stations with hiring possibility
+  row[2]:createCheckBox(autoHire == autoHireActive, { active = #factions > 0 })
   row[2].handlers.onClick = function(_, checked) return pilotAcademy.onToggleAutoHire(checked) end
   row[3]:createText(texts.autoHire, { halign = "left", titleColor = Color["row_title"] })
   tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
@@ -1177,15 +1177,13 @@ function pilotAcademy.fetchAcademyPersonnel(toOneTable, onlyArrived)
     local roleId = ffi.string(role.id)
     trace("Processing role ID: " .. tostring(roleId) .. " with amount: " .. tostring(role.amount))
     if roleId == pilotAcademy.role and role.amount > 0 then
-      local amount = role.amount
       local personsTable = GetRoleTierNPCs(locationId, roleId, 0)
       for j = 1, #personsTable do
         local person = personsTable[j]
         if person ~= nil then
           local personId = C.ConvertStringTo64Bit(tostring(person.seed))
           local skill = C.GetPersonCombinedSkill(locationId, personId, nil, "aipilot")
-          local fee = pilotAcademy.calculateHiringFee(skill) -- ToDo: to delete!
-          trace("Found person: " .. tostring(person.name) .. " with skill: " .. tostring(skill) .. " and hiring fee: " .. tostring(fee))
+          trace("Found person: " .. tostring(person.name) .. " with skill: " .. tostring(skill))
           local skillBase = pilotAcademy.skillBase(skill)
           local skillInStars = string.format("%s", Helper.displaySkill(skill * 15 / 100))
           local transferScheduled = C.IsPersonTransferScheduled(locationId, personId)
