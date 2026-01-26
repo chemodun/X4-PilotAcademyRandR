@@ -1815,7 +1815,10 @@ function pilotAcademy.createWingmanContextMenu(contextFrame, contextMenuData)
     trace("Menu or config is nil; cannot create wingman context menu")
     return
   end
-  local holomapColor = menu.holomapcolor or Helper.getHoloMapColors()
+  local holomapColor = menu.holomapcolor
+  if holomapColor == nil or holomapColor.playercolor == nil then
+    holomapColor = Helper.getHoloMapColors()
+  end
   local commanderId = ConvertStringTo64Bit(tostring(commander))
   local commanderShortName = ffi.string(C.GetComponentName(commanderId))
   commanderShortName = Helper.convertColorToText(holomapColor.playercolor) .. commanderShortName
