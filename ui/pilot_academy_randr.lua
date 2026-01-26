@@ -310,10 +310,10 @@ function pilotAcademy.createInfoFrame()
   tabsTable:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
 
   local wingsCountMax = 3
-  if C.HasResearched("research_pilot_academy_r_and_r_wings_5") then
-    wingsCountMax = 5
-  elseif C.HasResearched("research_pilot_academy_r_and_r_wings_9") then
+  if C.HasResearched("research_pilot_academy_r_and_r_wings_9") then
     wingsCountMax = 9
+  elseif C.HasResearched("research_pilot_academy_r_and_r_wings_5") then
+    wingsCountMax = 5
   end
 
   local academyExists = pilotAcademy.commonData.locationId ~= nil
@@ -574,12 +574,12 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
   tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local targetRankLevel = editData.targetRankLevel or academyData.targetRankLevel or 2
   local maxRankLevel = 2
-  if C.HasResearched("research_pilot_academy_r_and_r_3_star") then
-    maxRankLevel = 3
+  if C.HasResearched("research_pilot_academy_r_and_r_5_star") then
+    maxRankLevel = 5
   elseif C.HasResearched("research_pilot_academy_r_and_r_4_star") then
     maxRankLevel = 4
-  elseif C.HasResearched("research_pilot_academy_r_and_r_5_star") then
-    maxRankLevel = 5
+  elseif C.HasResearched("research_pilot_academy_r_and_r_3_star") then
+    maxRankLevel = 3
   end
   row = tableTop:addRow(nil, { fixed = true })
   row[2]:setColSpan(2):createText(texts.targetRankLevel, { halign = "left", titleColor = Color["row_title"] })
