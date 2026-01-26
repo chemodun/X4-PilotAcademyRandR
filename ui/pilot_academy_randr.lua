@@ -2534,7 +2534,7 @@ function pilotAcademy.autoAssignPilots()
     trace("Auto-assign is disabled, returning")
     return
   end
-  local currentTime = C.GetCurrentGameTime()()
+  local currentTime = C.GetCurrentGameTime()
   if pilotAcademy.commonData.lastAutoAssignTime ~= nil and currentTime - pilotAcademy.commonData.lastAutoAssignTime < pilotAcademy.autoAssignCoolDown then
     trace("Auto-assign cool down not yet elapsed, returning")
     return
