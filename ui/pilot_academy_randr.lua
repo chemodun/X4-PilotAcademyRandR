@@ -613,7 +613,7 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
   local autoHireActive = C.HasResearched("research_pilot_academy_r_and_r_auto_hire")
 
   row = tableTop:addRow("auto_hire", { fixed = true })
-  row[2]:createCheckBox(autoHire == autoHireActive, { active = #factions > 0 })
+  row[2]:createCheckBox(autoHire == true, { active = autoHireActive and #factions > 0 })
   row[2].handlers.onClick = function(_, checked) return pilotAcademy.onToggleAutoHire(checked) end
   row[3]:createText(texts.autoHire, { halign = "left", titleColor = Color["row_title"] })
   tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
