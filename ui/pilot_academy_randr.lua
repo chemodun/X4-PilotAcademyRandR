@@ -61,6 +61,8 @@ ffi.cdef [[
 	uint32_t GetPeople2(PeopleInfo* result, uint32_t resultlen, UniverseID controllableid, bool includearriving);
 
   const char* AssignHiredActor(GenericActor actor, UniverseID targetcontrollableid, const char* postid, const char* roleid, bool checkonly);
+
+	bool HasResearched(const char* wareid);
 ]]
 
 local traceEnabled = true
@@ -307,12 +309,19 @@ function pilotAcademy.createInfoFrame()
   tabsTable:setDefaultCellProperties("button", { height = config.mapRowHeight })
   tabsTable:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
 
+  local wingsCountMax = 3
+  if C.HasResearched("research_pilot_academy_r_and_r_wings_5") then
+    wingsCountMax = 5
+  elseif C.HasResearched("research_pilot_academy_r_and_r_wings_9") then
+    wingsCountMax = 9
+  end
+
   local academyExists = pilotAcademy.commonData.locationId ~= nil
   if maxNumCategoryColumns > 0 then
     local wingsCount = pilotAcademy.wingsCount()
     local rowCount = 1
     local placesCount = 1
-    if wingsCount == pilotAcademy.wingsCountMax then
+    if wingsCount == wingsCountMax then
       placesCount = wingsCount + 3
     elseif wingsCount == 0 then
       placesCount = academyExists and 4 or 1
@@ -564,6 +573,14 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
   end
   tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local targetRankLevel = editData.targetRankLevel or academyData.targetRankLevel or 2
+  local maxRankLevel = 2
+  if C.HasResearched("research_pilot_academy_r_and_r_3_star") then
+    maxRankLevel = 3
+  elseif C.HasResearched("research_pilot_academy_r_and_r_4_star") then
+    maxRankLevel = 4
+  elseif C.HasResearched("research_pilot_academy_r_and_r_5_star") then
+    maxRankLevel = 5
+  end
   row = tableTop:addRow(nil, { fixed = true })
   row[2]:setColSpan(2):createText(texts.targetRankLevel, { halign = "left", titleColor = Color["row_title"] })
   row = tableTop:addRow("target_rank_level", { fixed = true })
@@ -572,8 +589,8 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
     bgColor = Color["slider_background_transparent"],
     min = 2,
     minSelect = 2,
-    max = 5,
-    maxSelect = 5,
+    max = maxRankLevel,
+    maxSelect = maxRankLevel,
     start = targetRankLevel,
     step = 1,
   })
@@ -593,8 +610,10 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
     autoHire = false
   end
 
+  local autoHireActive = C.HasResearched("research_pilot_academy_r_and_r_auto_hire")
+
   row = tableTop:addRow("auto_hire", { fixed = true })
-  row[2]:createCheckBox(autoHire == true, { active = #factions > 0 }) -- ToDo: add check on own stations with hiring possibility
+  row[2]:createCheckBox(autoHire == autoHireActive, { active = #factions > 0 }) -- ToDo: add check on own stations with hiring possibility
   row[2].handlers.onClick = function(_, checked) return pilotAcademy.onToggleAutoHire(checked) end
   row[3]:createText(texts.autoHire, { halign = "left", titleColor = Color["row_title"] })
   tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
@@ -649,6 +668,7 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
 
   local assign = editData.assign or academyData.assign or "manual"
   local assignOptions = pilotAcademy.getAssignOptions()
+  local autoAssignActive = C.HasResearched("research_pilot_academy_r_and_r_auto_assign")
 
   row = tableAssign:addRow(nil, { fixed = true })
   row[2]:setColSpan(2):createText(texts.assign, { halign = "left", titleColor = Color["row_title"] })
@@ -658,7 +678,7 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
     assignOptions,
     {
       startOption = assign or "manual",
-      active = true,
+      active = autoAssignActive,
       textOverride = (#locationOptions == 0) and "" or nil,
     }
   )
