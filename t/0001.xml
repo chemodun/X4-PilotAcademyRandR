@@ -82,9 +82,9 @@
       <t id="9000103">Extends the Academy capacity to support nine wings</t>
       <t id="9000111">Adds possibility to automate cadet hiring from desired factions.</t>
       <t id="9000112">Adds possibility to automate pilot assignment to ships outside the Academy.</t>
-      <t id="9000211">Allows training of 3-star pilots in the Academy.</t>
-      <t id="9000212">Allows training of 4-star pilots in the Academy.</t>
-      <t id="9000213">Allows training of 5-star pilots in the Academy.</t>
+      <t id="9000121">Allows training of 3-star pilots in the Academy.</t>
+      <t id="9000122">Allows training of 4-star pilots in the Academy.</t>
+      <t id="9000123">Allows training of 5-star pilots in the Academy.</t>
     </page>
   </add>
 </diff>
