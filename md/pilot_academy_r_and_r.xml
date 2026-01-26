@@ -98,7 +98,7 @@
                     $academyObject = $academyObject,
                     $iteration = 0
                   ]"
-                delay="500ms" />
+                delay="900ms" />
               <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,1000002}.[$replacementPilotName, $shipName]]" timeout="15s" />
             </do_if>
             <do_else>
