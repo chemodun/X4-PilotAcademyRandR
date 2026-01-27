@@ -770,7 +770,7 @@ function pilotAcademy.fetchPotentialLocations(selectable, currentLocationId, fac
       factions = {}
       emptyText = texts.insufficientFundsForRent
     end
-    if --[[ #stations == 0 and ]] #factions > 0 then -- ToDo - to be uncommented!
+    if #stations == 0 and #factions > 0 then
       for i = 1, #factions do
         local faction = factions[i]
         local relation = GetUIRelation(faction.id)
@@ -2414,7 +2414,7 @@ function pilotAcademy.addAppointAsCadetRowToContextMenu(contextFrame, contextMen
 
   local skillBase = pilotAcademy.skillBase(skill)
 
-  if pilotAcademy.commonData == nil or pilotAcademy.commonData.targetRankLevel == nil --[[ or skillBase - pilotAcademy.commonData.targetRankLevel > 0 ]] then
+  if pilotAcademy.commonData == nil or pilotAcademy.commonData.targetRankLevel == nil or skillBase - pilotAcademy.commonData.targetRankLevel > 0 then
     trace("Person or entity has pilot skill at or above cadet max rank, returning")
     return result
   end
