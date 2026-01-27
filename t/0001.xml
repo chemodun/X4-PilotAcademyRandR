@@ -14,7 +14,8 @@
       <t id="10021">Wing %s</t>
       <t id="10029">Add new Wing</t>
       <t id="10101">Location:</t>
-      <t id="10102">Location rent cost: %s a month.</t>
+      <t id="10102">Location rent cost: %s a day.</t>
+      <t id="10108">Insufficient funds for rent</t>
       <t id="10109">No available locations</t>
       <t id="10111">Target Rank:</t>
       <t id="10121">Auto hire:</t>

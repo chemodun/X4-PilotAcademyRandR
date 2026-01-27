@@ -63,6 +63,8 @@ ffi.cdef [[
   const char* AssignHiredActor(GenericActor actor, UniverseID targetcontrollableid, const char* postid, const char* roleid, bool checkonly);
 
 	bool HasResearched(const char* wareid);
+
+  double GetCurrentGameTime(void);
 ]]
 
 local traceEnabled = true
@@ -77,7 +79,8 @@ local texts = {
   wing = ReadText(1972092412, 10021),                         -- "Wing %s"
   addNewWing = ReadText(1972092412, 10029),                   -- "Add new Wing"
   location = ReadText(1972092412, 10101),                     -- "Location:"
-  locationRentCost = ReadText(1972092412, 10102),             -- "Location rent cost: %s a month."
+  locationRentCost = ReadText(1972092412, 10102),             -- "Location rent cost: %s a day."
+  insufficientFundsForRent = ReadText(1972092412, 10108),     -- "Insufficient funds for rent"
   noAvailableLocations = ReadText(1972092412, 10109),         -- "No available locations"
   targetRankLevel = ReadText(1972092412, 10111),              --"Target Rank:",
   autoHire = ReadText(1972092412, 10121),                     -- "Auto hire:"
@@ -156,6 +159,7 @@ local pilotAcademy = {
   classOrderSmallToLarge = { ship_xl = 4, ship_l = 3, ship_m = 2, ship_s = 1 },
   classOrderLargeToSmall = { ship_xl = 1, ship_l = 2, ship_m = 3, ship_s = 4 },
   autoAssignCoolDown = 120, -- seconds
+  rentInterval = 24 * 60 * 60, -- seconds
 }
 
 local config = {}
@@ -224,6 +228,9 @@ function pilotAcademy.Init(menuMap, menuPlayerInfo)
   RegisterEvent("PilotAcademyRAndR.PilotReturned", pilotAcademy.onPilotReturned)
   RegisterEvent("PilotAcademyRAndR.RefreshPilots", pilotAcademy.onRefreshPilots)
   pilotAcademy.loadCommonData()
+  if pilotAcademy.setRentCost() then
+    pilotAcademy.saveCommonData()
+  end
 end
 
 function pilotAcademy.resetData()
@@ -519,7 +526,7 @@ function pilotAcademy.setAcademyContentColumnWidths(tableHandle, menu, config)
 end
 
 function pilotAcademy.displayAcademyInfo(frame, menu, config)
-  trace("displayAcademyInfo called at " .. tostring(C.GetCurrentGameTime()) .. " CurTime: " .. tostring(GetCurTime()) .. "Real: " .. tostring(GetCurRealTime()))
+  trace("displayAcademyInfo called at " .. tostring(C.GetCurrentGameTime()))
   if frame == nil then
     trace("Frame is nil; cannot display wing info")
     return nil
@@ -543,10 +550,10 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
   tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local locationId = editData.locationId or academyData.locationId or nil
   local locationSelectable = locationId == nil or editData.locationId ~= nil and editData.locationId ~= academyData.locationId or
-  editData.toChangeLocation == true
+      editData.toChangeLocation == true
 
   local factions, maxShortNameWidth, maxRelationNameWidth = pilotAcademy.getFactions(config, false)
-  local locationOptions = pilotAcademy.fetchPotentialLocations(locationSelectable, academyData.locationId, factions)
+  local emptyText, locationOptions = pilotAcademy.fetchPotentialLocations(locationSelectable, academyData.locationId, factions)
 
   row = tableTop:addRow(nil, { fixed = true })
   row[2]:setColSpan(2):createText(texts.location, { halign = "left", titleColor = Color["row_title"] })
@@ -558,7 +565,7 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
       {
         startOption = locationId or -1,
         active = true,
-        textOverride = (#locationOptions == 0) and texts.noAvailableLocations or nil,
+        textOverride = (#locationOptions == 0) and emptyText or nil,
       }
     )
     row[2]:setTextProperties({ halign = "left" })
@@ -573,6 +580,13 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
     row[2].handlers.onClick = function() return pilotAcademy.onToChangeLocation() end
   end
   tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  local owner = GetComponentData(academyData.locationId, "owner")
+  if owner ~= "player" then
+    local rentCost = academyData.rentCost or 0
+    row = tableTop:addRow(nil, { fixed = true })
+    row[2]:setColSpan(2):createText(string.format(texts.locationRentCost, ConvertMoneyString(rentCost, false, true, nil, true) .. " " .. ReadText(1001, 101)), { halign = "left", titleColor = Color["row_title"] })
+    tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  end
   local targetRankLevel = editData.targetRankLevel or academyData.targetRankLevel or 2
   local maxRankLevel = 2
   if C.HasResearched("research_pilot_academy_r_and_r_5_star") then
@@ -737,6 +751,7 @@ end
 function pilotAcademy.fetchPotentialLocations(selectable, currentLocationId, factions)
   local locations = {}
   local stations = {}
+  local emptyText = texts.noAvailableLocations
   if selectable then
     local numOwnedStations = C.GetNumAllFactionStations("player")
     local allOwnedStations = ffi.new("UniverseID[?]", numOwnedStations)
@@ -750,7 +765,12 @@ function pilotAcademy.fetchPotentialLocations(selectable, currentLocationId, fac
         end
       end
     end
-    if --[[ #stations == 0 and ]] #factions > 0 then
+    local playerMoney = GetPlayerMoney()
+    if playerMoney < pilotAcademy.commonData.rentCost then
+      factions = {}
+      emptyText = texts.insufficientFundsForRent
+    end
+    if --[[ #stations == 0 and ]] #factions > 0 then -- ToDo - to be uncommented!
       for i = 1, #factions do
         local faction = factions[i]
         local relation = GetUIRelation(faction.id)
@@ -792,7 +812,7 @@ function pilotAcademy.fetchPotentialLocations(selectable, currentLocationId, fac
       }
     end
   end
-  return locations
+  return emptyText, locations
 end
 
 function pilotAcademy.getStationInfo(stationId)
@@ -953,7 +973,12 @@ function pilotAcademy.buttonSaveAcademy()
   if editData.locationId ~= nil then
     local newLocationId = ConvertStringTo64Bit(tostring(editData.locationId))
     pilotAcademy.transferPersonnel(academyData.locationId, newLocationId)
+    if academyData.locationId ~= nil then
+      academyData.rentCost = 0
+      academyData.rentLastPaid = 0
+    end
     academyData.locationId = newLocationId
+    pilotAcademy.payRent(true)
   end
   if academyData.locationId ~= nil then
     academyData.locationObject = ConvertStringToLuaID(tostring(academyData.locationId))
@@ -1005,6 +1030,56 @@ function pilotAcademy.buttonSaveAcademy()
     SignalObject(pilotAcademy.playerId, "AcademyTargetRankLevelChanged")
   end
   menu.refreshInfoFrame()
+end
+
+function pilotAcademy.payRent(skipSave)
+  trace("payRent called")
+
+  pilotAcademy.loadCommonData()
+
+  skipSave = skipSave or false
+
+  local academyData = pilotAcademy.commonData or {}
+  if academyData.locationId == nil then
+    trace("No location ID for pilot academy; cannot pay rent")
+    return
+  end
+
+
+  local owner = GetComponentData(academyData.locationId, "owner")
+  if owner == "player" then
+    trace("Pilot academy located at player-owned station; no rent to pay")
+    return
+  end
+
+  pilotAcademy.setRentCost()
+
+  local currentTime = C.GetCurrentGameTime()
+  local rentLastPaid = academyData.rentLastPaid or 0
+
+  local timeElapsed = currentTime - rentLastPaid
+  if timeElapsed >= pilotAcademy.rentInterval then
+    local numIntervals = math.floor(timeElapsed / pilotAcademy.rentInterval)
+    local totalRent = academyData.rentCost * numIntervals
+    C.AddPlayerMoney(-totalRent * 100)
+  end
+  academyData.rentLastPaid = currentTime
+  if skipSave then
+    return
+  end
+  pilotAcademy.saveCommonData()
+end
+
+function pilotAcademy.setRentCost()
+  if pilotAcademy.commonData == nil then
+    return false
+  end
+  if pilotAcademy.commonData.rentCost == nil or pilotAcademy.commonData.rentCost <= 0 then
+    pilotAcademy.commonData.rentCost = pilotAcademy.calculateHiringFee(40)
+    return true
+  end
+
+  return false
 end
 
 function pilotAcademy.transferPersonnel(oldLocationId, newLocationId)
@@ -2517,6 +2592,7 @@ end
 function pilotAcademy.onRefreshPilots()
   trace("onRefreshPilots called")
   pilotAcademy.autoAssignPilots()
+  pilotAcademy.payRent()
 end
 
 function pilotAcademy.autoAssignPilots()
