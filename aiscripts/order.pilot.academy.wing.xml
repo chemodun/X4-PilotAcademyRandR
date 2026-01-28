@@ -39,7 +39,7 @@
           <set_value name="$factionNames" exact="if @$wingData.$factions != null then @$wingData.$factions else []" />
           <set_value name="$primaryGoal" exact="if @$wingData.$primaryGoal != null then @$wingData.$primaryGoal else 'rank'" />
           <set_value name="$tradeInfoRefreshInterval"
-            exact="if @$wingData.$tradeInfoRefreshInterval != null then (@$wingData.$tradeInfoRefreshInterval * 60)s else 1800s" />
+            exact="if @$wingData.$refreshInterval != null then (@$wingData.$refreshInterval * 60)s else 1800s" />
           <debug_text
             text="'Pilot Academy [%s]: extracted from wingData: factionNames count: %s, primaryGoal: %s, tradeInfoRefreshInterval: %s' .
               [this.assignedcontrolled.debugname, $factionNames.count, $primaryGoal, $tradeInfoRefreshInterval]"
