@@ -1949,6 +1949,9 @@ function pilotAcademy.createWingmanContextMenu(contextFrame, contextMenuData)
     trace("Menu or config is nil; cannot create wingman context menu")
     return
   end
+
+  local menuMap = pilotAcademy.menuMap
+
   local holomapColor = menu.holomapcolor
   if holomapColor == nil or holomapColor.playercolor == nil then
     holomapColor = Helper.getHoloMapColors()
@@ -1991,9 +1994,34 @@ function pilotAcademy.createWingmanContextMenu(contextFrame, contextMenuData)
   row[1].properties.color = color
   height = height + row:getHeight() + Helper.borderSize
 
+  if menuMap ~= nil then
+    row = ftable:addRow(true, {})
+    local button = row[1]:setColSpan(5):createButton({
+      bgColor = Color["button_background_hidden"],
+      highlightColor = Color["button_highlight_default"],
+      mouseOverText = "",
+      -- helpOverlayID = entry.helpOverlayID,
+      -- helpOverlayText = entry.helpOverlayText,
+      -- helpOverlayHighlightOnly = entry.helpOverlayHighlightOnly,
+    }):setText(ReadText(1001, 2427), { color = Color["text_normal"] })
+    row[1].handlers.onClick = function()
+      if pilotAcademy.contextFrame ~= nil then
+        pilotAcademy.contextFrame:close()
+        pilotAcademy.contextFrame = nil
+      end
+      menuMap.openDetails(wingmanId)
+      menuMap.closeContextMenu()
+    end
+    height = height + row:getHeight() + Helper.borderSize
+    ftable:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+    height = height + Helper.standardTextHeight / 2 + Helper.borderSize
+  end
+
+
   row = ftable:addRow(false, {})
   row[1]:createText(string.format(ReadText(1001, 7803), commanderShortName),
     { font = Helper.standardFontBold, mouseOverText = commanderName, titleColor = Color["row_title"] })
+
   row[4]:createText("[" .. GetComponentData(wingmanId, "assignmentname") .. "]",
     { font = Helper.standardFontBold, halign = "right", height = Helper.subHeaderHeight, titleColor = Color["row_title"] })
   height = height + row:getHeight() + Helper.borderSize
