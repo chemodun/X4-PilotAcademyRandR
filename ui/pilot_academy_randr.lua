@@ -1882,7 +1882,7 @@ function pilotAcademy.onTableRightMouseClick(uiTable, row, posX, posY)
     trace("Row data is nil; cannot process onSelectElement")
     return
   end
-  if tableName == "table_wing_wingmans" then
+  if tableName == "table_wing_leader" or tableName == "table_wing_wingmans" then
     config = pilotAcademy.menuMapConfig
     menu.contextMenuMode = "academyWingman"
     if posX == nil or posY == nil then
@@ -1939,10 +1939,7 @@ function pilotAcademy.createWingmanContextMenu(contextFrame, contextMenuData)
   end
   local wingmanId = ConvertStringTo64Bit(tostring(rowData.id))
   local commander = GetCommander(wingmanId)
-  if commander == nil then
-    trace("Wingman has no commander; cannot create wingman context menu")
-    return
-  end
+
   local menu = pilotAcademy.menuInteractMenu
   local config = pilotAcademy.menuInteractMenuConfig
   if menu == nil or config == nil then
@@ -2013,29 +2010,32 @@ function pilotAcademy.createWingmanContextMenu(contextFrame, contextMenuData)
       menuMap.closeContextMenu()
     end
     height = height + row:getHeight() + Helper.borderSize
-    ftable:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-    height = height + Helper.standardTextHeight / 2 + Helper.borderSize
   end
 
+  if commander ~= nil then
+    if menuMap ~= nil then
+      ftable:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+      height = height + Helper.standardTextHeight / 2 + Helper.borderSize
+    end
+    row = ftable:addRow(false, {})
+    row[1]:createText(string.format(ReadText(1001, 7803), commanderShortName),
+      { font = Helper.standardFontBold, mouseOverText = commanderName, titleColor = Color["row_title"] })
 
-  row = ftable:addRow(false, {})
-  row[1]:createText(string.format(ReadText(1001, 7803), commanderShortName),
-    { font = Helper.standardFontBold, mouseOverText = commanderName, titleColor = Color["row_title"] })
-
-  row[4]:createText("[" .. GetComponentData(wingmanId, "assignmentname") .. "]",
-    { font = Helper.standardFontBold, halign = "right", height = Helper.subHeaderHeight, titleColor = Color["row_title"] })
-  height = height + row:getHeight() + Helper.borderSize
-  row = ftable:addRow(true, {})
-  local button = row[1]:setColSpan(5):createButton({
-    bgColor = Color["button_background_hidden"],
-    highlightColor = Color["button_highlight_default"],
-    mouseOverText = "",
-    -- helpOverlayID = entry.helpOverlayID,
-    -- helpOverlayText = entry.helpOverlayText,
-    -- helpOverlayHighlightOnly = entry.helpOverlayHighlightOnly,
-  }):setText(ReadText(1001, 7810), { color = Color["text_normal"] })
-  row[1].handlers.onClick = function() return pilotAcademy.wingmanRemoveAssignment(wingmanId) end
-  height = height + row:getHeight() + Helper.borderSize
+    row[4]:createText("[" .. GetComponentData(wingmanId, "assignmentname") .. "]",
+      { font = Helper.standardFontBold, halign = "right", height = Helper.subHeaderHeight, titleColor = Color["row_title"] })
+    height = height + row:getHeight() + Helper.borderSize
+    row = ftable:addRow(true, {})
+    local button = row[1]:setColSpan(5):createButton({
+      bgColor = Color["button_background_hidden"],
+      highlightColor = Color["button_highlight_default"],
+      mouseOverText = "",
+      -- helpOverlayID = entry.helpOverlayID,
+      -- helpOverlayText = entry.helpOverlayText,
+      -- helpOverlayHighlightOnly = entry.helpOverlayHighlightOnly,
+    }):setText(ReadText(1001, 7810), { color = Color["text_normal"] })
+    row[1].handlers.onClick = function() return pilotAcademy.wingmanRemoveAssignment(wingmanId) end
+    height = height + row:getHeight() + Helper.borderSize
+  end
 end
 
 function pilotAcademy.wingmanRemoveAssignment(wingmanId)
