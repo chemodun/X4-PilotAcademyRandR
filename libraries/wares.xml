@@ -3,32 +3,32 @@
     <ware id="research_pilot_academy_r_and_r_wings_5" name="{1972092412,9000002}" description="{1972092412,9000102}" transport="research" volume="1"
       tags="research" sortorder="2801">
       <price min="1" average="1" max="1" />
-      <research time="400">
+      <research time="480">
         <primary>
           <ware ware="energycells" amount="15000" />
-          <ware ware="claytronics" amount="30" />
-          <ware ware="advancedcomposites" amount="20" />
-          <ware ware="advancedelectronics" amount="60" />
-          <ware ware="antimatterconverters" amount="20" />
-          <ware ware="microchips" amount="25" />
-          <ware ware="quantumtubes" amount="18" />
-          <ware ware="plasmaconductors" amount="20" />
+          <ware ware="claytronics" amount="50" />
+          <ware ware="advancedcomposites" amount="40" />
+          <ware ware="advancedelectronics" amount="20" />
+          <ware ware="antimatterconverters" amount="40" />
+          <ware ware="microchips" amount="50" />
+          <ware ware="quantumtubes" amount="50" />
+          <ware ware="plasmaconductors" amount="50" />
         </primary>
       </research>
     </ware>
     <ware id="research_pilot_academy_r_and_r_wings_9" name="{1972092412,9000003}" description="{1972092412,9000103}" transport="research" volume="1"
       tags="research" sortorder="2801">
       <price min="1" average="1" max="1" />
-      <research time="400">
+      <research time="960">
         <primary>
-          <ware ware="energycells" amount="15000" />
-          <ware ware="claytronics" amount="30" />
-          <ware ware="advancedcomposites" amount="20" />
-          <ware ware="advancedelectronics" amount="60" />
-          <ware ware="antimatterconverters" amount="20" />
-          <ware ware="microchips" amount="25" />
-          <ware ware="quantumtubes" amount="18" />
-          <ware ware="plasmaconductors" amount="20" />
+          <ware ware="energycells" amount="30000" />
+          <ware ware="claytronics" amount="100" />
+          <ware ware="advancedcomposites" amount="80" />
+          <ware ware="advancedelectronics" amount="40" />
+          <ware ware="antimatterconverters" amount="80" />
+          <ware ware="microchips" amount="100" />
+          <ware ware="quantumtubes" amount="100" />
+          <ware ware="plasmaconductors" amount="100" />
         </primary>
         <research>
           <ware ware="research_pilot_academy_r_and_r_wings_5" />
@@ -38,26 +38,26 @@
     <ware id="research_pilot_academy_r_and_r_3_star" name="{1972092412,9000021}" description="{1972092412,9000121}" transport="research" volume="1"
       tags="research" sortorder="2802">
       <price min="1" average="1" max="1" />
-      <research time="400">
+      <research time="600">
         <primary>
-          <ware ware="energycells" amount="30000" />
-          <ware ware="claytronics" amount="70" />
-          <ware ware="antimatterconverters" amount="40" />
-          <ware ware="microchips" amount="60" />
-          <ware ware="quantumtubes" amount="70" />
+          <ware ware="energycells" amount="14000" />
+          <ware ware="claytronics" amount="80" />
+          <ware ware="antimatterconverters" amount="50" />
+          <ware ware="microchips" amount="80" />
+          <ware ware="quantumtubes" amount="80" />
         </primary>
       </research>
     </ware>
     <ware id="research_pilot_academy_r_and_r_4_star" name="{1972092412,9000022}" description="{1972092412,9000122}" transport="research" volume="1"
       tags="research" sortorder="2802">
       <price min="1" average="1" max="1" />
-      <research time="400">
+      <research time="900">
         <primary>
-          <ware ware="energycells" amount="30000" />
-          <ware ware="claytronics" amount="70" />
-          <ware ware="antimatterconverters" amount="40" />
-          <ware ware="microchips" amount="60" />
-          <ware ware="quantumtubes" amount="70" />
+          <ware ware="energycells" amount="21000" />
+          <ware ware="claytronics" amount="120" />
+          <ware ware="antimatterconverters" amount="75" />
+          <ware ware="microchips" amount="120" />
+          <ware ware="quantumtubes" amount="120" />
         </primary>
         <research>
           <ware ware="research_pilot_academy_r_and_r_3_star" />
@@ -67,13 +67,13 @@
     <ware id="research_pilot_academy_r_and_r_5_star" name="{1972092412,9000023}" description="{1972092412,9000123}" transport="research" volume="1"
       tags="research" sortorder="2802">
       <price min="1" average="1" max="1" />
-      <research time="400">
+      <research time="1200">
         <primary>
-          <ware ware="energycells" amount="30000" />
-          <ware ware="claytronics" amount="70" />
-          <ware ware="antimatterconverters" amount="40" />
-          <ware ware="microchips" amount="60" />
-          <ware ware="quantumtubes" amount="70" />
+          <ware ware="energycells" amount="28000" />
+          <ware ware="claytronics" amount="160" />
+          <ware ware="antimatterconverters" amount="100" />
+          <ware ware="microchips" amount="160" />
+          <ware ware="quantumtubes" amount="160" />
         </primary>
         <research>
           <ware ware="research_pilot_academy_r_and_r_4_star" />
@@ -83,26 +83,26 @@
     <ware id="research_pilot_academy_r_and_r_auto_hire" name="{1972092412,9000011}" description="{1972092412,9000111}" transport="research" volume="1"
       tags="research" sortorder="2803">
       <price min="1" average="1" max="1" />
-      <research time="400">
+      <research time="600">
         <primary>
-          <ware ware="energycells" amount="20000" />
-          <ware ware="claytronics" amount="50" />
-          <ware ware="antimatterconverters" amount="30" />
-          <ware ware="microchips" amount="40" />
-          <ware ware="quantumtubes" amount="50" />
+          <ware ware="energycells" amount="15000" />
+          <ware ware="claytronics" amount="150" />
+          <ware ware="antimatterconverters" amount="100" />
+          <ware ware="microchips" amount="150" />
+          <ware ware="quantumtubes" amount="150" />
         </primary>
       </research>
     </ware>
     <ware id="research_pilot_academy_r_and_r_auto_assign" name="{1972092412,9000012}" description="{1972092412,9000112}" transport="research" volume="1"
       tags="research" sortorder="2804">
       <price min="1" average="1" max="1" />
-      <research time="400">
+      <research time="600">
         <primary>
-          <ware ware="energycells" amount="30000" />
-          <ware ware="claytronics" amount="70" />
-          <ware ware="antimatterconverters" amount="40" />
-          <ware ware="microchips" amount="60" />
-          <ware ware="quantumtubes" amount="70" />
+          <ware ware="energycells" amount="15000" />
+          <ware ware="claytronics" amount="150" />
+          <ware ware="antimatterconverters" amount="100" />
+          <ware ware="microchips" amount="150" />
+          <ware ware="quantumtubes" amount="150" />
         </primary>
       </research>
     </ware>
