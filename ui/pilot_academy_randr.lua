@@ -1558,7 +1558,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   pilotAcademy.topRows.tableWingsFactions[wingKey] = nil
 
   local tableWingLeader = frame:addTable(12, { tabOrder = 2, reserveScrollBar = false })
-  tableWingLeader.name = "table_wing_wing_leader"
+  tableWingLeader.name = "table_wing_leader"
   tableWingLeader:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
   tableWingLeader:setDefaultCellProperties("button", { height = config.mapRowHeight })
   tableWingLeader:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
@@ -1827,14 +1827,16 @@ function pilotAcademy.onSelectElement(uiTable, modified, row, isDoubleClick, inp
     trace("Row data is nil; cannot process onSelectElement")
     return
   end
-  if tableName == "table_wing_wing_leader" or tableName == "table_wing_wingmans" then
+  if tableName == "table_wing_leader" or tableName == "table_wing_wingmans" then
     if rowData.id == nil then
       trace("Row data id is nil; cannot process onSelectElement")
       return
     end
     if isDoubleClick or (input ~= "mouse") then
+      trace("Double click or non-mouse input detected; setting focus to component " .. tostring(rowData.id))
       C.SetFocusMapComponent(menu.holomap, ConvertStringTo64Bit(tostring(rowData.id)), true)
     else
+      trace("Single click detected; selecting component " .. tostring(rowData.id))
       menu.selectedcomponents = {}
       menu.addSelectedComponent(rowData.id, true, true)
       menu.setSelectedMapComponents()
