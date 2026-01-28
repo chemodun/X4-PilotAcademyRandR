@@ -104,12 +104,14 @@ local texts = {
   gainReputation = ReadText(1972092412, 10303),               -- "Gain Reputation"
   noAvailablePrimaryGoals = ReadText(1972092412, 10309),      -- "No available primary goals"
   factions = ReadText(1972092412, 10311),                     -- "Factions:"
-  wingLeader = ReadText(1972092412, 10321),                   -- "Wing Leader:"
-  noAvailableWingLeaders = ReadText(1972092412, 10329),       -- "No available wing leaders"
-  addWingman = ReadText(1972092412, 10331),                   -- "Add Wingman"
-  noAvailableWingmanCandidates = ReadText(1972092412, 10339), -- "No available wingman candidates"
-  wingmans = ReadText(1972092412, 10341),                     -- "Wingmans:"
-  noAvailableWingmans = ReadText(1972092412, 10349),          -- "No wingmans assigned"
+  noAvailableFactions = ReadText(1972092412, 10319),          -- "No available factions"
+  tradeDataRefreshInterval = ReadText(1972092412, 10321),     -- "Trade data refresh interval:"
+  wingLeader = ReadText(1972092412, 10331),                   -- "Wing Leader:"
+  noAvailableWingLeaders = ReadText(1972092412, 10339),       -- "No available wing leaders"
+  addWingman = ReadText(1972092412, 10341),                   -- "Add Wingman"
+  noAvailableWingmanCandidates = ReadText(1972092412, 10349), -- "No available wingman candidates"
+  wingmans = ReadText(1972092412, 10351),                     -- "Wingmans:"
+  noAvailableWingmans = ReadText(1972092412, 10359),          -- "No wingmans assigned"
   dismissWing = ReadText(1972092412, 10901),                  -- "Dismiss"
   cancel = ReadText(1972092412, 10902),                       -- "Cancel"
   update = ReadText(1972092412, 10903),                       -- "Update"
@@ -159,7 +161,14 @@ local pilotAcademy = {
   classOrderSmallToLarge = { ship_xl = 4, ship_l = 3, ship_m = 2, ship_s = 1 },
   classOrderLargeToSmall = { ship_xl = 1, ship_l = 2, ship_m = 3, ship_s = 4 },
   autoAssignCoolDown = 120, -- seconds
-  rentInterval = 24 * 60 * 60, -- seconds
+  rentInterval = 24 * 60 * 60, -- seconds,
+  tradeDataRefreshIntervals = {
+    5,
+    10,
+    15,
+    30,
+    60,
+  }
 }
 
 local config = {}
@@ -1478,6 +1487,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   local editData = pilotAcademy.editData or {}
   local primaryGoal = editData.primaryGoal or wingData.primaryGoal or "rank"
   local selectedFactions = pilotAcademy.combineFactionsSelections(editData, wingData)
+  local refreshInterval = editData.refreshInterval or wingData.refreshInterval or 30
 
   local wingLeaderId = editData.wingLeaderId or wingData.wingLeaderId or nil
 
@@ -1555,6 +1565,24 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   pilotAcademy.setInfoContentColumnWidths(tableWingLeader, menu, config, maxShortNameWidth, maxRelationNameWidth)
   tableWingLeader:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local row = tableWingLeader:addRow(nil, { fixed = true })
+  row[2]:setColSpan(10):createText(texts.tradeDataRefreshInterval, { halign = "left", titleColor = Color["row_title"] })
+  local refreshIntervalOptions = pilotAcademy.getRefreshIntervalOptions()
+  row = tableWingLeader:addRow("wing_refresh_interval", { fixed = true })
+  row[1]:createText("", { halign = "left" })
+  row[2]:setColSpan(10):createDropDown(
+    refreshIntervalOptions,
+    {
+      startOption = refreshInterval or -1,
+      active = true,
+      textOverride = (#refreshIntervalOptions == 0) and "0" or nil,
+    }
+  )
+  row[2]:setTextProperties({ halign = "right" })
+  row[2].handlers.onDropDownConfirmed = function(_, id)
+    return pilotAcademy.onSelectRefreshInterval(id)
+  end
+  tableWingLeader:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  row = tableWingLeader:addRow(nil, { fixed = true })
   local wingLeaderOptions = pilotAcademy.fetchPotentialWingmans(existingWing, wingLeaderId)
   row[2]:setColSpan(10):createText(texts.wingLeader, { halign = "left", titleColor = Color["row_title"] })
   if existingWing then
@@ -1686,6 +1714,21 @@ function pilotAcademy.onSelectPrimaryGoal(id)
   end
   pilotAcademy.storeTopRows()
   menu.refreshInfoFrame()
+end
+
+function pilotAcademy.getRefreshIntervalOptions()
+  local options = {}
+  for i = 1, #pilotAcademy.tradeDataRefreshIntervals do
+    local interval = pilotAcademy.tradeDataRefreshIntervals[i]
+    options[#options + 1] = {
+      id = tostring(interval),
+      icon = "",
+      text = string.format("%d %s", interval, ReadText(1001, 103)), -- "minutes"
+      text2 = "",
+      displayremoveoption = false,
+    }
+  end
+  return options
 end
 
 function pilotAcademy.fetchPotentialWingmans(existingWing, existingWingLeader)
@@ -2045,6 +2088,20 @@ function pilotAcademy.fetchAllAcademyShipsForExclusion()
   return academyShips
 end
 
+function pilotAcademy.onSelectRefreshInterval(id)
+  trace("onSelectRefreshInterval called with id: " .. tostring(id))
+  if id == nil then
+    trace("id is nil; cannot process")
+    return
+  end
+  local interval = tonumber(id)
+  if interval == nil then
+    trace("id could not be converted to number; cannot process")
+    return
+  end
+  pilotAcademy.editData.refreshInterval = interval
+end
+
 function pilotAcademy.onSelectWingLeader(id)
   trace("onSelectWingLeader called with id: " .. tostring(id))
   if id == nil then
@@ -2187,6 +2244,9 @@ function pilotAcademy.buttonSaveWing()
   end
   if editData.factions ~= nil then
     wingData.factions = editData.factions
+  end
+  if editData.refreshInterval ~= nil then
+    wingData.refreshInterval = editData.refreshInterval
   end
   if editData.wingLeaderId ~= nil then
     wingData.wingLeaderId = editData.wingLeaderId

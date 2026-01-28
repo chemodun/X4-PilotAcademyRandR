@@ -38,9 +38,11 @@
         <do_if value="@$wingData != null">
           <set_value name="$factionNames" exact="if @$wingData.$factions != null then @$wingData.$factions else []" />
           <set_value name="$primaryGoal" exact="if @$wingData.$primaryGoal != null then @$wingData.$primaryGoal else 'rank'" />
+          <set_value name="$tradeInfoRefreshInterval"
+            exact="if @$wingData.$tradeInfoRefreshInterval != null then (@$wingData.$tradeInfoRefreshInterval * 60)s else 1800s" />
           <debug_text
-            text="'Pilot Academy [%s]: extracted from wingData: factionNames count: %s, primaryGoal: %s' .
-              [this.assignedcontrolled.debugname, $factionNames.count, $primaryGoal]"
+            text="'Pilot Academy [%s]: extracted from wingData: factionNames count: %s, primaryGoal: %s, tradeInfoRefreshInterval: %s' .
+              [this.assignedcontrolled.debugname, $factionNames.count, $primaryGoal, $tradeInfoRefreshInterval]"
             chance="$debugchance" />
           <include_interrupt_actions ref="GetTargetRankLevel" />
         </do_if>
@@ -94,6 +96,7 @@
             $selectedFaction = $selectedFaction,
             $selectedBuyOffer = $selectedBuyOffer,
             $selectedSellOffer = $selectedSellOffer,
+            $lastTradeInfoRefresh = $lastTradeInfoRefresh
           ]" />
       </actions>
       <actions name="PilotAcademyResetCurrentTradeInfo">
@@ -102,6 +105,7 @@
         <set_value name="$selectedFaction" exact="null" />
         <set_value name="$selectedBuyOffer" exact="null" />
         <set_value name="$selectedSellOffer" exact="null" />
+        <set_value name="$lastTradeInfoRefresh" exact="0s" />
       </actions>
       <actions name="PilotAcademyPrintStats">
         <debug_text
@@ -362,6 +366,8 @@
     <set_value name="$isMovingToTradeTarget" exact="false" />
     <set_value name="$currentShip" exact="this.assignedcontrolled" />
     <set_value name="$rankUpReported" exact="false" />
+    <set_value name="$lastTradeInfoRefresh" exact="0s" />
+    <set_value name="$tradeInfoRefreshInterval" exact="1800s" />
   </init>
   <attention min="unknown">
     <actions>
@@ -385,6 +391,7 @@
           <set_value name="$selectedFaction" exact="$lastTradeInfo.$selectedFaction" />
           <set_value name="$selectedBuyOffer" exact="$lastTradeInfo.$selectedBuyOffer" />
           <set_value name="$selectedSellOffer" exact="$lastTradeInfo.$selectedSellOffer" />
+          <set_value name="$lastTradeInfoRefresh" exact="$lastTradeInfo.$lastTradeInfoRefresh" />
           <debug_text
             text="'Pilot Academy [%s]: reusing last trade info from %s ago. Completed %s on %s.' . [this.assignedcontrolled.debugname, player.age - $lastTradeInfo.$timeStamp, $tradeOperation, if @$tradeOperation == 'sell' then @$selectedBuyOffer.owner.debugname else @$selectedSellOffer.owner.debugname]"
             chance="$debugchance" />
@@ -836,6 +843,7 @@
         </do_else>
         <do_if value="@$selectedFaction != null and @$selectedBuyOffer != null and @$selectedSellOffer != null">
           <set_value name="$tradeFound" exact="true" />
+          <set_value name="$lastTradeInfoRefresh" exact="player.age" />
         </do_if>
         <do_if value="not $tradeFound">
           <debug_text text="'Pilot Academy [%s]: no qualifying trade found after evaluating all factions' .[this.assignedcontrolled.debugname]"
@@ -933,6 +941,14 @@
         <include_interrupt_actions ref="PilotAcademyReportRankUp" />
         <do_if value="@$rankUpReported == true">
           <wait exact="600ms" />
+        </do_if>
+        <do_if value="this.assignedcontrolled.commander == null and player.age - $lastTradeInfoRefresh ge $tradeInfoRefreshInterval">
+          <debug_text
+            text="'Pilot Academy [%s]: there is wing commander and trade info is stale (last refresh at %s, current time %s, refresh interval %s)' .
+            [this.assignedcontrolled.debugname, $lastTradeInfoRefresh, player.age, $tradeInfoRefreshInterval]"
+            chance="$debugchance" />
+          <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
+          <resume label="prepareTrade" />
         </do_if>
         <set_value name="$tradeTarget" exact="$seller" />
         <set_value name="$targetType" exact="'seller'" />
