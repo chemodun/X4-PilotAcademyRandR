@@ -1557,17 +1557,17 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   end
   pilotAcademy.topRows.tableWingsFactions[wingKey] = nil
 
-  local tableWingLeader = frame:addTable(12, { tabOrder = 2, reserveScrollBar = false })
-  tableWingLeader.name = "table_wing_leader"
-  tableWingLeader:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
-  tableWingLeader:setDefaultCellProperties("button", { height = config.mapRowHeight })
-  tableWingLeader:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-  pilotAcademy.setInfoContentColumnWidths(tableWingLeader, menu, config, maxShortNameWidth, maxRelationNameWidth)
-  tableWingLeader:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-  local row = tableWingLeader:addRow(nil, { fixed = true })
+  local tableRefreshInterval = frame:addTable(12, { tabOrder = 2, reserveScrollBar = false })
+  tableRefreshInterval.name = "table_refresh_interval"
+  tableRefreshInterval:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
+  tableRefreshInterval:setDefaultCellProperties("button", { height = config.mapRowHeight })
+  tableRefreshInterval:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
+  pilotAcademy.setInfoContentColumnWidths(tableRefreshInterval, menu, config, maxShortNameWidth, maxRelationNameWidth)
+  tableRefreshInterval:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  local row = tableRefreshInterval:addRow(nil, { fixed = true })
   row[2]:setColSpan(10):createText(texts.tradeDataRefreshInterval, { halign = "left", titleColor = Color["row_title"] })
   local refreshIntervalOptions = pilotAcademy.getRefreshIntervalOptions()
-  row = tableWingLeader:addRow("wing_refresh_interval", { fixed = true })
+  row = tableRefreshInterval:addRow("wing_refresh_interval", { fixed = true })
   row[1]:createText("", { halign = "left" })
   row[2]:setColSpan(10):createDropDown(
     refreshIntervalOptions,
@@ -1581,8 +1581,17 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   row[2].handlers.onDropDownConfirmed = function(_, id)
     return pilotAcademy.onSelectRefreshInterval(id)
   end
-  tableWingLeader:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-  row = tableWingLeader:addRow(nil, { fixed = true })
+  tableRefreshInterval:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+
+  tables[#tables + 1] = { table = tableRefreshInterval, height = tableRefreshInterval:getFullHeight() }
+
+  local tableWingLeader = frame:addTable(12, { tabOrder = 2, reserveScrollBar = false })
+  tableWingLeader.name = "table_wing_leader"
+  tableWingLeader:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
+  tableWingLeader:setDefaultCellProperties("button", { height = config.mapRowHeight })
+  tableWingLeader:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
+  pilotAcademy.setInfoContentColumnWidths(tableWingLeader, menu, config, maxShortNameWidth, maxRelationNameWidth)
+  local row = tableWingLeader:addRow(nil, { fixed = true })
   local wingLeaderOptions = pilotAcademy.fetchPotentialWingmans(existingWing, wingLeaderId)
   row[2]:setColSpan(10):createText(texts.wingLeader, { halign = "left", titleColor = Color["row_title"] })
   if existingWing then
