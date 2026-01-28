@@ -367,7 +367,6 @@
     <set_value name="$currentShip" exact="this.assignedcontrolled" />
     <set_value name="$rankUpReported" exact="false" />
     <set_value name="$lastTradeInfoRefresh" exact="0s" />
-    <set_value name="$tradeInfoRefreshInterval" exact="1800s" />
   </init>
   <attention min="unknown">
     <actions>
@@ -942,7 +941,7 @@
         <do_if value="@$rankUpReported == true">
           <wait exact="600ms" />
         </do_if>
-        <do_if value="this.assignedcontrolled.commander == null and player.age - $lastTradeInfoRefresh ge $tradeInfoRefreshInterval">
+        <do_if value="this.assignedcontrolled.commander == null and (player.age - $lastTradeInfoRefresh) ge $tradeInfoRefreshInterval">
           <debug_text
             text="'Pilot Academy [%s]: there is wing commander and trade info is stale (last refresh at %s, current time %s, refresh interval %s)' .
             [this.assignedcontrolled.debugname, $lastTradeInfoRefresh, player.age, $tradeInfoRefreshInterval]"
