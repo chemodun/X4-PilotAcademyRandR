@@ -4,7 +4,9 @@
     <params>
       <param name="runMode" type="internal" text="Run Mode" comment="Run Mode" default="false" />
       <param name="wingId" type="internal" text="Wing ID" comment="Wing ID" default="''" />
-      <param name="debugchance" type="bool" default="0" advanced="true" text="{1041, 10086}" comment="Print debug output">
+      <param name="debugchance" type="bool"
+        default="if @player.entity.$pilotAcademyRAndRData.$debugLevel == 'debug' or @player.entity.$pilotAcademyRAndRData.$debugLevel == 'trace' then 100 else 0"
+        advanced="true" text="{1041, 10086}" comment="Print debug output">
         <input_param name="truevalue" value="100" />
       </param>
     </params>
