@@ -2,8 +2,8 @@
 <aiscript name="order.pilot.academy.wing" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="1">
   <order id="PilotAcademyWing" name="{1972092412,101}" description="{1972092412,102}" category="trade" infinite="true" allowinloop="false">
     <params>
-      <param name="runMode" type="internal" text="Run Mode" comment="Run Mode" default="false" />
       <param name="wingId" type="internal" text="Wing ID" comment="Wing ID" default="''" />
+      <param name="runMode" type="internal" text="Run Mode" comment="Run Mode" default="false" />
       <param name="debugchance" type="bool"
         default="if @player.entity.$pilotAcademyRAndRData.$debugLevel == 'debug' or @player.entity.$pilotAcademyRAndRData.$debugLevel == 'trace' then 100 else 0"
         advanced="true" text="{1041, 10086}" comment="Print debug output">

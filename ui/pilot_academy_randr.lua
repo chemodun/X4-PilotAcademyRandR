@@ -2359,9 +2359,9 @@ function pilotAcademy.setOrderForWingLeader(wingLeaderId, wingId, existingWing)
   if C.GetPlannedDefaultOrder(buf, wingLeaderId) then
     local newOrderIdx = tonumber(buf.queueidx)
     local orderDef = ffi.string(buf.orderdef)
-    SetOrderParam(wingLeaderId, "planneddefault", 1, nil, true)
     SetOrderParam(wingLeaderId, "planneddefault", 2, nil, wingId)
-    SetOrderParam(wingLeaderId, "planneddefault", 3, nil, true)
+    SetOrderParam(wingLeaderId, "planneddefault", 1, nil, true)
+    SetOrderParam(wingLeaderId, "planneddefault", 3, nil, debugLevel == 'debug' or debugLevel == 'trace')
     C.EnablePlannedDefaultOrder(wingLeaderId, false)
   end
   C.SetFleetName(wingLeaderId, string.format(texts.wingFleetName, texts.wingNames[wingId]))
