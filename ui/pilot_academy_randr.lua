@@ -67,7 +67,7 @@ ffi.cdef [[
   double GetCurrentGameTime(void);
 ]]
 
-local traceEnabled = true
+local debugLevel = "debug" -- "none", "debug", "trace"
 
 local texts = {
   pilotAcademyFull = ReadText(1972092412, 1),                 -- "Pilot Academy: Ranks and Relations"
@@ -173,15 +173,17 @@ local pilotAcademy = {
 
 local config = {}
 local function debug(message)
-  local text = "Pilot Academy: " .. message
-  if type(DebugError) == "function" then
-    DebugError(text)
+  if debugLevel ~= "none" then
+    local text = "Pilot Academy: " .. message
+    if type(DebugError) == "function" then
+      DebugError(text)
+    end
   end
 end
 
 local function trace(message)
   ---@diagnostic disable-next-line: unnecessary-if
-  if traceEnabled then
+  if debugLevel == "trace" then
     debug(message)
   end
 end
@@ -236,7 +238,9 @@ function pilotAcademy.Init(menuMap, menuPlayerInfo)
   RegisterEvent("PilotAcademyRAndR.RankLevelReached", pilotAcademy.onRankLevelReached)
   RegisterEvent("PilotAcademyRAndR.PilotReturned", pilotAcademy.onPilotReturned)
   RegisterEvent("PilotAcademyRAndR.RefreshPilots", pilotAcademy.onRefreshPilots)
+  RegisterEvent("PilotAcademyRAndR.DebugLevelChanged", pilotAcademy.onDebugLevelChanged)
   pilotAcademy.loadCommonData()
+  pilotAcademy.onDebugLevelChanged()
   if pilotAcademy.setRentCost() then
     pilotAcademy.saveCommonData()
   end
@@ -1420,6 +1424,16 @@ function pilotAcademy.saveCommonData()
   SetNPCBlackboard(pilotAcademy.playerId, variableId, pilotAcademy.commonData)
   debug("saveCommonData: saved common data to saved data")
   -- Save common data to persistent storage
+end
+
+
+function pilotAcademy.onDebugLevelChanged(event)
+  if event ~= "PilotAcademyRAndR.DebugLevelChanged" then
+    pilotAcademy.loadCommonData()
+  end
+  if pilotAcademy.commonData ~= nil then
+    debugLevel = pilotAcademy.commonData.debugLevel or "none"
+  end
 end
 
 function pilotAcademy.setInfoContentColumnWidths(tableHandle, menu, config, maxShortNameWidth, maxRelationNameWidth)

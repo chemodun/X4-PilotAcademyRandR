@@ -15,7 +15,7 @@
   </order>
   <interrupts>
     <library>
-      <actions name="GetTargetRankLevel">
+      <actions name="PilotAcademyGetTargetRankLevel">
         <set_value name="$targetRankLevel" exact="3" />
         <set_value name="$commonData" exact="@player.entity.$pilotAcademyRAndRData" />
         <debug_text text="'Pilot Academy [%s]: loaded commonData: %s' . [this.assignedcontrolled.debugname, @$commonData]" chance="$debugchance" />
@@ -44,7 +44,7 @@
             text="'Pilot Academy [%s]: extracted from wingData: factionNames count: %s, primaryGoal: %s, tradeInfoRefreshInterval: %s' .
               [this.assignedcontrolled.debugname, $factionNames.count, $primaryGoal, $tradeInfoRefreshInterval]"
             chance="$debugchance" />
-          <include_interrupt_actions ref="GetTargetRankLevel" />
+          <include_interrupt_actions ref="PilotAcademyGetTargetRankLevel" />
         </do_if>
         <do_else>
           <set_value name="$runMode" exact="false" />
@@ -154,7 +154,7 @@
           <set_value name="$shipInfo.$LastRankUpReportTime" exact="player.age" />
         </do_if>
       </actions>
-      <actions name="SearchForDemandOffers">
+      <actions name="PilotAcademySearchForDemandOffers">
         <set_value name="$demandOffers" exact="null" />
         <do_if value="$offerType == 'buy'">
           <find_buy_offer tradepartner="this.assignedcontrolled" space="player.galaxy" result="$demandOffers" multiple="true">
@@ -182,7 +182,7 @@
           text="'Pilot Academy [%s]: found %s %s offers from faction %s' . [this.assignedcontrolled.debugname, @$demandOffers.count, $offerType, @$faction.name]"
           chance="$debugchance" />
       </actions>
-      <actions name="SearchForSupplyOffers">
+      <actions name="PilotAcademySearchForSupplyOffers">
         <set_value name="$supplyOffers" exact="null" />
         <do_if value="$offerType == 'buy'">
           <find_sell_offer tradepartner="this.assignedcontrolled" space="player.galaxy" result="$supplyOffers" wares="$demandOffer.ware"
@@ -208,10 +208,21 @@
             </match_buyer>
           </find_buy_offer>
         </do_else>
-
         <debug_text
           text="'Pilot Academy [%s]: found %s opposite offers to %s of %s' . [this.assignedcontrolled.debugname, @$supplyOffers.count, $offerType, $demandOffer.ware.id]"
           chance="$debugchance" />
+      </actions>
+      <actions name="PilotAcademyDebugApply">
+        <debug_text text="'Pilot Academy [%s]: Debug Apply interrupt actions invoked.' . [this.assignedcontrolled.debugname]" chance="$debugchance" />
+        <do_if value="@$isInit == null or @$isInit != true">
+          <set_value name="$debugchance" exact="0" />
+          <do_if value="@$commonData.$debugLevel == 'debug' or @$commonData.$debugLevel == 'trace'">
+            <set_value name="$debugchance" exact="100" />
+            <debug_text
+              text="'Pilot Academy [%s]: Debug level is %s, setting debug chance to %s.' . [this.assignedcontrolled.debugname, @$commonData.$debugLevel, $debugchance]"
+              chance="$debugchance" />
+          </do_if>
+        </do_if>
       </actions>
     </library>
     <handler ref="AttackHandler" />
@@ -328,7 +339,7 @@
       </conditions>
       <actions>
         <debug_text text="'Pilot Academy [%s]: received target rank level change notification' . [this.assignedcontrolled.debugname]" chance="$debugchance" />
-        <include_interrupt_actions ref="GetTargetRankLevel" />
+        <include_interrupt_actions ref="PilotAcademyGetTargetRankLevel" />
       </actions>
     </handler>
     <handler>
@@ -344,8 +355,21 @@
         <abort_called_scripts resume="pilotReplacement" />
       </actions>
     </handler>
+    <handler consume="false">
+      <conditions>
+        <event_object_signalled object="player.entity" param="'AcademyDebugLevelChanged'" />
+      </conditions>
+      <actions>
+        <debug_text
+          text="'Pilot Academy [%s]: received debug level change notification' . [this.assignedcontrolled.debugname]"
+          chance="$debugchance" />
+        <include_interrupt_actions ref="PilotAcademyDebugApply" />
+      </actions>
+    </handler>
   </interrupts>
   <init>
+    <set_value name="$isInit" exact="true" />
+    <include_interrupt_actions ref="PilotAcademyDebugApply" />
     <debug_text
       text="'Pilot Academy [%s]: initialized order with wingId: %s, wingData: %s' .
         [this.assignedcontrolled.debugname, @$wingId, @$wingData]"
@@ -367,6 +391,7 @@
     <set_value name="$currentShip" exact="this.assignedcontrolled" />
     <set_value name="$rankUpReported" exact="false" />
     <set_value name="$lastTradeInfoRefresh" exact="0s" />
+    <remove_value name="$isInit" />
   </init>
   <attention min="unknown">
     <actions>
@@ -500,7 +525,7 @@
 
               <do_for_each name="$offerType" in="$tradeOfferTypes">
 
-                <include_interrupt_actions ref="SearchForDemandOffers" />
+                <include_interrupt_actions ref="PilotAcademySearchForDemandOffers" />
 
                 <do_if value="$demandOffers.count gt 0">
 
@@ -529,7 +554,7 @@
 
                     <set_value name="$demandOwner" exact="$demandOffer.owner" />
 
-                    <include_interrupt_actions ref="SearchForSupplyOffers" />
+                    <include_interrupt_actions ref="PilotAcademySearchForSupplyOffers" />
 
                     <do_if value="$supplyOffers.count == 0">
                       <debug_text
@@ -675,7 +700,7 @@
 
               <do_for_each name="$offerType" in="$tradeOfferTypes">
 
-                <include_interrupt_actions ref="SearchForDemandOffers" />
+                <include_interrupt_actions ref="PilotAcademySearchForDemandOffers" />
 
                 <do_if value="$demandOffers.count gt 0">
 
@@ -704,7 +729,7 @@
 
                     <set_value name="$demandOwner" exact="$demandOffer.owner" />
 
-                    <include_interrupt_actions ref="SearchForSupplyOffers" />
+                    <include_interrupt_actions ref="PilotAcademySearchForSupplyOffers" />
 
                     <do_if value="$supplyOffers.count == 0">
                       <debug_text

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mdscript name="Pilot_Academy_Options_Menu" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <cues>
+    <cue name="Init" instantiate="false">
+      <actions>
+      </actions>
+      <cues>
+        <cue name="Register_Menu" instantiate="true">
+          <conditions>
+            <event_cue_signalled cue="md.Simple_Menu_API.Reloaded" />
+          </conditions>
+          <actions>
+            <debug_text text="'Pilot Academy Options: Registering Options Menus'" context="false" filter="scripts" />
+            <signal_cue_instantly cue="md.Simple_Menu_API.Register_Options_Menu"
+              param="table[
+                $id      = 'Pilot_Academy_options_menu',
+                $columns = 8,
+                $title   = {1972092412, 1},
+                $onOpen  = Pilot_Academy_Options_Menu,
+              ]" />
+          </actions>
+        </cue>
+
+        <cue name="Pilot_Academy_Options_Menu" instantiate="true">
+          <conditions>
+            <event_cue_signalled />
+          </conditions>
+          <actions>
+            <debug_text text="'Pilot Academy Options: Opening Pilot Academy Options Menu'" context="false" filter="scripts" />
+            <set_value name="$commonData" exact="@player.entity.$pilotAcademyRAndRData" />
+            <do_if value="@$commonData != null">
+              <do_if value="@$commonData.$debugLevel == null">
+                <set_value name="$commonData.$debugLevel" exact="'none'" />
+              </do_if>
+              <debug_text text="'Pilot Academy Options: Current debug level is %s' .[@$commonData.$debugLevel]" context="false" filter="scripts" />
+              <create_list name="$debugLevelOptions" />
+              <append_to_list name="$debugLevelOptions" exact="table[ $text = {1972092412, 90011}, $value = 'none' ]" />
+              <append_to_list name="$debugLevelOptions" exact="table[ $text = {1972092412, 90012}, $value = 'debug' ]" />
+              <append_to_list name="$debugLevelOptions" exact="table[ $text = {1972092412, 90013}, $value = 'trace' ]" />
+              <set_value name="$debugLevelIndexes" exact="['none', 'debug', 'trace']" />
+              <set_value name="$debugLevelCurrentIndex" exact="$debugLevelIndexes.indexof.{$commonData.$debugLevel}" />
+              <do_if value="$debugLevelCurrentIndex == 0">
+                <set_value name="$debugLevelCurrentIndex" exact="1" />
+              </do_if>
+              <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row" />
+              <signal_cue_instantly cue="md.Simple_Menu_API.Make_Text"
+                param="table[
+                $col = 1,
+                $colSpan = 5,
+                $text = {1972092412, 90001},
+              ]" />
+              <signal_cue_instantly cue="md.Simple_Menu_API.Make_Dropdown"
+                param="table[
+                $col = 6,
+                $colSpan = 3,
+                $options = $debugLevelOptions,
+                $startOption = $debugLevelCurrentIndex,
+                $onDropDownConfirmed = Pilot_Academy_Handle_Debug_Level,
+                ]" />
+            </do_if>
+            <do_else>
+              <debug_text text="'Pilot Academy Options: Unable to open options menu - missing pilot academy data on player entity.'" context="false"
+                filter="scripts" />
+            </do_else>
+            <remove_value name="$commonData" />
+            <remove_value name="$debugLevelOptions" />
+            <remove_value name="$debugLevelIndexes" />
+            <remove_value name="$debugLevelCurrentIndex" />
+          </actions>
+        </cue>
+
+
+        <cue name="Pilot_Academy_Handle_Debug_Level" instantiate="true">
+          <conditions>
+            <event_cue_signalled />
+          </conditions>
+          <actions>
+            <debug_text text="'Pilot Academy Options: Debug Level changed to %s' .[event.param.$option.$value]" context="false" filter="scripts" />
+            <set_value name="$commonData" exact="@player.entity.$pilotAcademyRAndRData" />
+            <do_if value="@$commonData != null">
+              <set_value name="$commonData.$debugLevel" exact="event.param.$option.$value" />
+              <signal_objects object="player.entity" param="'AcademyDebugLevelChanged'" />
+              <raise_lua_event name="'PilotAcademyRAndR.DebugLevelChanged'" />
+            </do_if>
+            <remove_value name="$commonData" />
+          </actions>
+        </cue>
+
+      </cues>
+    </cue>
+
+
+  </cues>
+</mdscript>

@@ -52,6 +52,10 @@
       <t id="10903">Update</t>
       <t id="10904">Create</t>
       <t id="20001">Appoint as a cadet</t>
+      <t id="90001">Debug level:</t>
+      <t id="90011">No debug</t>
+      <t id="90012">Debug</t>
+      <t id="90013">Trace</t>
       <t id="100001">Alpha</t>
       <t id="100002">Bravo</t>
       <t id="100003">Charlie</t>
@@ -81,7 +85,8 @@
       <t id="9000021">Pilot Academy: R&amp;R. 3-star pilots</t>
       <t id="9000022">Pilot Academy: R&amp;R. 4-star pilots</t>
       <t id="9000023">Pilot Academy: R&amp;R. 5-star pilots</t>
-      <t id="9000101">Base version of the Academy with only two wings available \npossibility to train up-to 2-start pilot \nand without any possible automation features for the cadet hiring and pilot management.</t>
+      <t id="9000101">Base version of the Academy with only two wings available \npossibility to train up-to 2-start pilot \nand without any possible automation
+        features for the cadet hiring and pilot management.</t>
       <t id="9000102">Extends the Academy capacity to support five wings</t>
       <t id="9000103">Extends the Academy capacity to support nine wings</t>
       <t id="9000111">Adds possibility to automate cadet hiring from desired factions.</t>
