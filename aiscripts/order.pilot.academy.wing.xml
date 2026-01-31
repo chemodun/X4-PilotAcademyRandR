@@ -574,6 +574,15 @@
                     <do_for_each name="$supplyOffer" in="$supplyOffers" counter="$k">
 
 
+                      <get_wares_illegal_to result="$illegalWaresSupply" faction="$supplyOffer.owner.trueowner" />
+                      <do_if value="$illegalWaresSupply.indexof.{$supplyOffer.ware} gt 0">
+                        <debug_text
+                          text="'Pilot Academy [%s]: skipping opposite offer for %s as ware is illegal for faction %s' .
+                          [this.assignedcontrolled.debugname, $supplyOffer.ware.id, $supplyOffer.owner.trueowner.name]"
+                          chance="$debugchance" />
+                        <continue />
+                      </do_if>
+
                       <set_value name="$distanceCoefficient" exact="if $demandOffer.owner.trueowner.id == $supplyOffer.owner.trueowner.id then 1 else 2" />
                       <set_value name="$gateDistance"
                         exact="$demandOwner.gatedistance.{$supplyOffer.owner}.{$blacklistGroup}.{this.assignedcontrolled} * $distanceCoefficient" />
@@ -748,6 +757,14 @@
 
                     <do_for_each name="$supplyOffer" in="$supplyOffers" counter="$k">
 
+                      <get_wares_illegal_to result="$illegalWaresSupply" faction="$supplyOffer.owner.trueowner" />
+                      <do_if value="$illegalWaresSupply.indexof.{$supplyOffer.ware} gt 0">
+                        <debug_text
+                          text="'Pilot Academy [%s]: skipping opposite offer for %s as ware is illegal for faction %s' .
+                          [this.assignedcontrolled.debugname, $supplyOffer.ware.id, $supplyOffer.owner.trueowner.name]"
+                          chance="$debugchance" />
+                        <continue />
+                      </do_if>
 
                       <set_value name="$distanceCoefficient" exact="if $demandOffer.owner.trueowner.id == $supplyOffer.owner.trueowner.id then 1 else 2" />
                       <set_value name="$gateDistance"
