@@ -36,11 +36,12 @@
           </actions>
         </cue>
 
-        <cue name="Reloaded" instantiate="true" version="3">
+        <cue name="Reloaded" instantiate="true" version="4">
           <conditions>
             <event_cue_signalled />
           </conditions>
           <actions>
+            <include_actions ref="Process_Debug_Level" />
             <debug_text text="'Pilot Academy: Reloaded. Data: %s. Wings: %s'. [@player.entity.$pilotAcademyRAndRData, @player.entity.$pilotAcademyRAndRWings]"
               chance="$debugchance" filter="scripts" />
           </actions>
@@ -440,6 +441,35 @@
               chance="$debugchance" filter="scripts" />
           </actions>
         </cue>
+
+        <cue name="On_Debug_Level_Changed" instantiate="true">
+          <conditions>
+            <event_object_signalled object="player.entity" param="'AcademyDebugLevelChanged'" />
+          </conditions>
+          <actions>
+            <debug_text text="'Pilot Academy: On_Debug_Level_Changed'" chance="$debugchance" filter="scripts" />
+            <include_actions ref="Process_Debug_Level" />
+          </actions>
+        </cue>
+
+        <library name="Process_Debug_Level" purpose="include_actions">
+          <actions>
+            <set_value name="$commonData" exact="@player.entity.$pilotAcademyRAndRData" />
+            <do_if value="@$commonData != null">
+              <do_if value="@$commonData.$debugLevel == 'debug' or @$commonData.$debugLevel == 'trace'">
+                <set_value name="$debugchance" exact="100" />
+              </do_if>
+              <do_else>
+                <set_value name="$debugchance" exact="0" />
+              </do_else>
+            </do_if>
+            <debug_text
+              text="'Pilot Academy: Process_Debug_Level: Debug level is %s. Debug chance set to %s.' .
+                [@$commonData.$debugLevel, $debugchance]"
+              chance="100" filter="scripts" />
+            <remove_value name="$commonData" />
+          </actions>
+        </library>
 
       </cues>
     </cue>
