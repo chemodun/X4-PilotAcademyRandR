@@ -67,7 +67,7 @@ ffi.cdef [[
   double GetCurrentGameTime(void);
 ]]
 
-local debugLevel = "debug" -- "none", "debug", "trace"
+local debugLevel = "none" -- "none", "debug", "trace"
 
 local texts = {
   pilotAcademyFull = ReadText(1972092412, 1),                 -- "Pilot Academy: Ranks and Relations"
