@@ -1428,7 +1428,7 @@ end
 
 
 function pilotAcademy.onDebugLevelChanged(event)
-  if event ~= "PilotAcademyRAndR.DebugLevelChanged" then
+  if event == "PilotAcademyRAndR.DebugLevelChanged" then
     pilotAcademy.loadCommonData()
   end
   if pilotAcademy.commonData ~= nil then
@@ -2359,8 +2359,8 @@ function pilotAcademy.setOrderForWingLeader(wingLeaderId, wingId, existingWing)
   if C.GetPlannedDefaultOrder(buf, wingLeaderId) then
     local newOrderIdx = tonumber(buf.queueidx)
     local orderDef = ffi.string(buf.orderdef)
-    SetOrderParam(wingLeaderId, "planneddefault", 2, nil, wingId)
-    SetOrderParam(wingLeaderId, "planneddefault", 1, nil, true)
+    SetOrderParam(wingLeaderId, "planneddefault", 1, nil, wingId)
+    SetOrderParam(wingLeaderId, "planneddefault", 2, nil, true)
     SetOrderParam(wingLeaderId, "planneddefault", 3, nil, debugLevel == 'debug' or debugLevel == 'trace')
     C.EnablePlannedDefaultOrder(wingLeaderId, false)
   end
