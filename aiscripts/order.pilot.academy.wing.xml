@@ -991,6 +991,7 @@
           text="'Pilot Academy [%s]: unable to clamp trade amount to %s on %s'.[this.assignedcontrolled.debugname, $tradeOperation, $tradeOffer.owner.debugname]"
           chance="$debugchance" />
         <wait min="500ms" max="1s" />
+        <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
         <resume label="prepareTrade" />
       </do_if>
 
