@@ -75,7 +75,8 @@
           <set_value name="$shipInfo.$dataIsUpdated" exact="false" />
         </do_if>
         <debug_text
-          text="'Pilot Academy [%s]: initialized shipInfo: %s, for idcode: %s.' . [this.assignedcontrolled.debugname, @$shipInfo, $idCode]" />
+          text="'Pilot Academy [%s]: initialized shipInfo: %s, for idcode: %s.' . [this.assignedcontrolled.debugname, @$shipInfo, $idCode]"
+          chance="$debugchance" />
         <remove_value name="$idCode" />
       </actions>
       <actions name="PilotAcademyRemoveShipVariables">
