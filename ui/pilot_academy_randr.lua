@@ -25,6 +25,17 @@ ffi.cdef [[
 	typedef struct {
 		const char* id;
 		const char* name;
+		const char* icon;
+		const char* description;
+		const char* category;
+		const char* categoryname;
+		bool infinite;
+		uint32_t requiredSkill;
+	} OrderDefinition;
+
+	typedef struct {
+		const char* id;
+		const char* name;
 		const char* desc;
 		uint32_t amount;
 		uint32_t numtiers;
@@ -41,6 +52,7 @@ ffi.cdef [[
 
 	uint32_t CreateOrder(UniverseID controllableid, const char* orderid, bool default);
 	bool EnablePlannedDefaultOrder(UniverseID controllableid, bool checkonly);
+	bool GetOrderDefinition(OrderDefinition* result, const char* orderdef);
 
   void SetFleetName(UniverseID controllableid, const char* fleetname);
 
@@ -2357,8 +2369,6 @@ function pilotAcademy.setOrderForWingLeader(wingLeaderId, wingId, existingWing)
   C.CreateOrder(wingLeaderId, pilotAcademy.orderId, true)
   local buf = ffi.new("Order")
   if C.GetPlannedDefaultOrder(buf, wingLeaderId) then
-    local newOrderIdx = tonumber(buf.queueidx)
-    local orderDef = ffi.string(buf.orderdef)
     SetOrderParam(wingLeaderId, "planneddefault", 1, nil, wingId)
     SetOrderParam(wingLeaderId, "planneddefault", 2, nil, true)
     SetOrderParam(wingLeaderId, "planneddefault", 3, nil, debugLevel == 'debug' or debugLevel == 'trace')
@@ -2366,6 +2376,42 @@ function pilotAcademy.setOrderForWingLeader(wingLeaderId, wingId, existingWing)
   end
   C.SetFleetName(wingLeaderId, string.format(texts.wingFleetName, texts.wingNames[wingId]))
 end
+
+function pilotAcademy.CheckOrdersOnWings()
+  local wings = pilotAcademy.wings or {}
+  for wingId, wingData in pairs(wings) do
+    local wingIsOk = false
+    if wingData.wingLeaderId ~= nil then
+      local wingLeaderId = wingData.wingLeaderId
+      trace("Checking orders for wing leader " .. tostring(GetComponentData(wingLeaderId, "name")) .. " of wing " .. tostring(wingId))
+      for i = 1, 2 do
+        local buf = ffi.new("Order")
+        local isDefaultOrder = nil
+        if i == 1 then
+          isDefaultOrder = C.GetDefaultOrder(buf, wingLeaderId)
+        else
+          isDefaultOrder = C.GetPlannedDefaultOrder(buf, wingLeaderId)
+        end
+        if isDefaultOrder then
+          local currentOrderDef = ffi.string(buf.orderdef)
+          local orderDefinition = ffi.new("OrderDefinition")
+          if currentOrderDef ~= nil and C.GetOrderDefinition(orderDefinition, currentOrderDef) then
+            local orderId = ffi.string(orderDefinition.id)
+            if orderId == pilotAcademy.orderId then
+              wingIsOk = true
+              break
+            end
+          end
+        end
+      end
+    end
+    if not wingIsOk then
+      debug("Wing leader " .. tostring(GetComponentData(wingData.wingLeaderId, "name")) .. " of wing " .. tostring(wingId) .. " is missing proper orders for its wing leader; reapplying orders")
+      pilotAcademy.setOrderForWingLeader(wingData.wingLeaderId, wingId, true)
+    end
+  end
+end
+
 
 function pilotAcademy.loadWings()
   pilotAcademy.wings = {}
@@ -2704,6 +2750,7 @@ end
 
 function pilotAcademy.onRefreshPilots()
   trace("onRefreshPilots called")
+  pilotAcademy.CheckOrdersOnWings()
   pilotAcademy.autoAssignPilots()
   pilotAcademy.payRent()
 end
