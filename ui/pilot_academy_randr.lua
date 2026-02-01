@@ -180,7 +180,8 @@ local pilotAcademy = {
     15,
     30,
     60,
-  }
+  },
+  maxWingErrors = 5,
 }
 
 local config = {}
@@ -2216,13 +2217,24 @@ end
 
 function pilotAcademy.buttonDismissWing()
   trace("buttonDismissWing called")
+  local wingId = pilotAcademy.selectedTab
+  pilotAcademy.dismissWing(wingId)
+  local menu = pilotAcademy.menuMap
+  if menu == nil then
+    trace("Menu is nil; cannot refresh info frame")
+    return
+  end
+  menu.refreshInfoFrame()
+end
+
+function pilotAcademy.dismissWing(wingId)
+  trace("dismissWing called for wingId: " .. tostring(wingId))
   local wings = pilotAcademy.wings
   if wings == nil then
     trace("Wings is nil; cannot dismiss wing")
     return
   end
-  local wingId = pilotAcademy.selectedTab
-  if wingId == nil then
+  if wingId == nil or wingId == "settings" or wingId == "personnel" then
     trace("No wing selected or invalid index; cannot dismiss wing")
     return
   end
@@ -2230,11 +2242,16 @@ function pilotAcademy.buttonDismissWing()
   pilotAcademy.topRows.tableWingsWingmans[wingId] = nil
   if wings[wingId] and wings[wingId].wingLeaderId ~= nil then
     SignalObject(wings[wingId].wingLeaderId, "PilotAcademyRAndR.DismissWingRequest")
+    local name, idcode = GetComponentData(wings[wingId].wingLeaderId, "name", "idcode")
+    C.SetFleetName(wings[wingId].wingLeaderId, string.format("%s (%s)", name, idcode))
   end
   wings[wingId] = nil
+  local currentWingIsSelected = pilotAcademy.selectedTab == wingId
   if next(wings) == nil then
-    pilotAcademy.selectedTab = nil
-  else
+    if pilotAcademy.selectedTab ~= "settings" and pilotAcademy.selectedTab ~= "personnel" then
+      pilotAcademy.selectedTab = nil
+    end
+  elseif currentWingIsSelected then
     local fromCurrent = false
     for i = 1, #pilotAcademy.wingIds do
       local currentWingId = pilotAcademy.wingIds[i]
@@ -2270,12 +2287,6 @@ function pilotAcademy.buttonDismissWing()
     wingsInfo[wingId] = nil
     SetNPCBlackboard(pilotAcademy.playerId, variableId, wingsInfo)
   end
-  local menu = pilotAcademy.menuMap
-  if menu == nil then
-    trace("Menu is nil; cannot refresh info frame")
-    return
-  end
-  menu.refreshInfoFrame()
 end
 
 function pilotAcademy.buttonCancelChanges()
@@ -2378,11 +2389,12 @@ function pilotAcademy.setOrderForWingLeader(wingLeaderId, wingId, existingWing)
 end
 
 function pilotAcademy.CheckOrdersOnWings()
+  pilotAcademy.loadWings()
   local wings = pilotAcademy.wings or {}
   for wingId, wingData in pairs(wings) do
     local wingIsOk = false
-    if wingData.wingLeaderId ~= nil then
-      local wingLeaderId = wingData.wingLeaderId
+    local wingLeaderId = wingData.wingLeaderId
+    if wingLeaderId ~= nil then
       trace("Checking orders for wing leader " .. tostring(GetComponentData(wingLeaderId, "name")) .. " of wing " .. tostring(wingId))
       for i = 1, 2 do
         local buf = ffi.new("Order")
@@ -2407,9 +2419,22 @@ function pilotAcademy.CheckOrdersOnWings()
     end
     if not wingIsOk then
       debug("Wing leader " .. tostring(GetComponentData(wingData.wingLeaderId, "name")) .. " of wing " .. tostring(wingId) .. " is missing proper orders for its wing leader; reapplying orders")
-      pilotAcademy.setOrderForWingLeader(wingData.wingLeaderId, wingId, true)
+      if wingData.errorsCount ~= nil and wingData.errorsCount >= pilotAcademy.maxOrderErrors then
+        debug("Maximum order errors reached for wing leader " .. tostring(GetComponentData(wingData.wingLeaderId, "name")) .. " of wing " .. tostring(wingId) .. "; skipping reapplication of orders")
+        pilotAcademy.dismissWing(wingId)
+        local subordinates = GetSubordinates(wingLeaderId)
+        if #subordinates > 0 then
+          C.SetFleetName(wingLeaderId, string.format(texts.wingFleetName, texts.wingNames[wingId]))
+        end
+      else
+        pilotAcademy.setOrderForWingLeader(wingData.wingLeaderId, wingId, true)
+        wingData.errorsCount = (wingData.errorsCount or 0) + 1
+      end
+    else
+      wingData.errorsCount = 0
     end
   end
+  pilotAcademy.saveWings()
 end
 
 
