@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mdscript name="Pilot_Academy_Options_Menu" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <cues>
-    <cue name="Init" instantiate="false">
+    <cue name="Init" instantiate="false" version="1">
       <actions>
+        <set_value name="$debugLevelIndexes" exact="['none', 'debug', 'trace']" />
       </actions>
       <cues>
-        <cue name="Register_Menu" instantiate="true">
+        <cue name="Register_Menu" instantiate="true" version="1">
           <conditions>
             <event_cue_signalled cue="md.Simple_Menu_API.Reloaded" />
           </conditions>
@@ -21,7 +22,7 @@
           </actions>
         </cue>
 
-        <cue name="Pilot_Academy_Options_Menu" instantiate="true">
+        <cue name="Pilot_Academy_Options_Menu" instantiate="true" version="1">
           <conditions>
             <event_cue_signalled />
           </conditions>
@@ -34,10 +35,10 @@
               </do_if>
               <debug_text text="'Pilot Academy Options: Current debug level is %s' .[@$commonData.$debugLevel]" context="false" filter="scripts" />
               <create_list name="$debugLevelOptions" />
-              <append_to_list name="$debugLevelOptions" exact="table[ $text = {1972092412, 90011}, $value = 'none' ]" />
-              <append_to_list name="$debugLevelOptions" exact="table[ $text = {1972092412, 90012}, $value = 'debug' ]" />
-              <append_to_list name="$debugLevelOptions" exact="table[ $text = {1972092412, 90013}, $value = 'trace' ]" />
-              <set_value name="$debugLevelIndexes" exact="['none', 'debug', 'trace']" />
+              <do_for_each name="$debugLevelIndexes" in="$indexValue" counter="$index">
+                <append_to_list name="$debugLevelOptions"
+                  exact="table[ $text = {1972092412, 90010 + ($index + 1)}, $value = $indexValue ]" />
+              </do_for_each>
               <set_value name="$debugLevelCurrentIndex" exact="$debugLevelIndexes.indexof.{$commonData.$debugLevel}" />
               <do_if value="$debugLevelCurrentIndex == 0">
                 <set_value name="$debugLevelCurrentIndex" exact="1" />
@@ -70,7 +71,7 @@
         </cue>
 
 
-        <cue name="Pilot_Academy_Handle_Debug_Level" instantiate="true">
+        <cue name="Pilot_Academy_Handle_Debug_Level" instantiate="true" version="1">
           <conditions>
             <event_cue_signalled />
           </conditions>
