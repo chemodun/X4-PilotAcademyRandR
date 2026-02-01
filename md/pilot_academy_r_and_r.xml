@@ -38,7 +38,7 @@
 
         <cue name="Process_Pilot_Swapping" instantiate="true" version="1">
           <conditions>
-            <event_object_signalled object="player.entity" param="'AcademyPilotSwapRequest'" />
+            <event_object_signalled object="player.entity" param="'PilotAcademyRAndR.PilotSwapRequest'" />
             <check_value value="@event.param2 != null" />
             <check_value value="typeof @event.param2 == datatype.table" />
           </conditions>
@@ -74,7 +74,7 @@
                 text="'Pilot Academy: Process_Pilot_Swapping: pilot %s (%s) successfully assigned to %s, replacing %s.' .
                   [$replacementPilotName, $replacementPilotTemplate, $ship.debugname, $oldPilotName]"
                 chance="$debugchance" />
-              <signal_objects object="player.entity" param="'AcademyOldPilotReturnRequest'"
+              <signal_objects object="player.entity" param="'PilotAcademyRAndR.OldPilotReturnRequest'"
                 param2="table[
                     $oldPilotTemplate = $oldPilotTemplate,
                     $ship = $ship,
@@ -90,7 +90,7 @@
                   [$oldPilotName, $ship.debugname, $replacementPilotName, $replacementPilotTemplate, $pilotsSwappingMessage]"
                 chance="$debugchance" />
               <do_if value="$iteration le 5">
-                <signal_objects object="player.entity" param="'AcademyPilotSwapRequest'"
+                <signal_objects object="player.entity" param="'PilotAcademyRAndR.PilotSwapRequest'"
                   param2="table[
                     $ship = $ship,
                     $replacementPilotTemplate = $replacementPilotTemplate,
@@ -124,7 +124,7 @@
 
         <cue name="Process_Old_Pilot_Return" instantiate="true" version="1">
           <conditions>
-            <event_object_signalled object="player.entity" param="'AcademyOldPilotReturnRequest'" />
+            <event_object_signalled object="player.entity" param="'PilotAcademyRAndR.OldPilotReturnRequest'" />
             <check_value value="@event.param2 != null" />
             <check_value value="typeof @event.param2 == datatype.table" />
           </conditions>
@@ -173,7 +173,7 @@
                     text="'Pilot Academy: Process_Old_Pilot_Return: failed to transfer old pilot %s (%s) to %s. Going to repeat.' .
                       [$oldPilotName, $oldPilotTemplate, $academyObject.debugname]"
                     chance="$debugchance" />
-                  <signal_objects object="player.entity" param="'AcademyOldPilotReturnRequest'"
+                  <signal_objects object="player.entity" param="'PilotAcademyRAndR.OldPilotReturnRequest'"
                     param2="table[
                     $oldPilotTemplate = $oldPilotTemplate,
                     $ship = $ship,
@@ -215,7 +215,7 @@
 
         <cue name="Process_Move_New_Pilot" instantiate="true" version="1">
           <conditions>
-            <event_object_signalled object="player.entity" param="'AcademyMoveNewPilotRequest'" />
+            <event_object_signalled object="player.entity" param="'PilotAcademyRAndR.MoveNewPilotRequest'" />
             <check_value value="@event.param2 != null" />
             <check_value value="typeof @event.param2 == datatype.table" />
           </conditions>
@@ -249,7 +249,7 @@
                       [$newPilotName, $newPilotTemplate, $ship.debugname]"
                   chance="$debugchance" />
                 <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,1000005}.[$shipName, $newPilotName]]" timeout="15s" />
-                <signal_objects object="player.entity" param="'AcademyPilotSwapRequest'"
+                <signal_objects object="player.entity" param="'PilotAcademyRAndR.PilotSwapRequest'"
                   param2="table[
                     $ship = $ship,
                     $replacementPilotTemplate = $personTransferred.{1},
@@ -264,7 +264,7 @@
                     text="'Pilot Academy: Process_Move_New_Pilot: failed to transfer new pilot %s (%s) to %s. Going to repeat.' .
                       [$newPilotName, $newPilotTemplate, $shipName]"
                     chance="$debugchance" />
-                  <signal_objects object="player.entity" param="'AcademyMoveNewPilotRequest'"
+                  <signal_objects object="player.entity" param="'PilotAcademyRAndR.MoveNewPilotRequest'"
                     param2="table[
                     $newPilotTemplate = $newPilotTemplate,
                     $ship = $ship,
@@ -304,7 +304,7 @@
 
         <cue name="Process_No_Cadets_Available" instantiate="true" version="1">
           <conditions>
-            <event_object_signalled object="player.entity" param="'AcademyNoCadetsAvailable'" />
+            <event_object_signalled object="player.entity" param="'PilotAcademyRAndR.NoCadetsAvailableInfo'" />
           </conditions>
           <actions>
             <debug_text
@@ -317,7 +317,7 @@
 
         <cue name="Process_Pilot_Auto_Hire" instantiate="true" version="1">
           <conditions>
-            <event_object_signalled object="player.entity" param="'AcademyCadetAutoHire'" />
+            <event_object_signalled object="player.entity" param="'PilotAcademyRAndR.CadetAutoHireRequest'" />
           </conditions>
           <actions>
             <debug_text
@@ -390,7 +390,7 @@
               text="'Pilot Academy: Process_Pilot_Auto_Hire: Academy object is %s.' .
                 [$academyObject.debugname]"
               chance="$debugchance" />
-            <signal_objects object="player.entity" param="'AcademyPilotSwapRequest'"
+            <signal_objects object="player.entity" param="'PilotAcademyRAndR.PilotSwapRequest'"
               param2="table[
                 $ship = $ship,
                 $replacementPilotTemplate = $cadetTemplate,
@@ -426,7 +426,7 @@
 
         <cue name="On_Debug_Level_Changed" instantiate="true" version="1">
           <conditions>
-            <event_object_signalled object="player.entity" param="'AcademyDebugLevelChanged'" />
+            <event_object_signalled object="player.entity" param="'PilotAcademyRAndR.DebugLevelChangedSignal'" />
           </conditions>
           <actions>
             <debug_text text="'Pilot Academy: On_Debug_Level_Changed'" chance="$debugchance" filter="scripts" />

@@ -80,7 +80,7 @@
             <set_value name="$commonData" exact="@player.entity.$pilotAcademyRAndRData" />
             <do_if value="@$commonData != null">
               <set_value name="$commonData.$debugLevel" exact="event.param.$option.$value" />
-              <signal_objects object="player.entity" param="'AcademyDebugLevelChanged'" />
+              <signal_objects object="player.entity" param="'PilotAcademyRAndR.DebugLevelChangedSignal'" />
               <raise_lua_event name="'PilotAcademyRAndR.DebugLevelChanged'" />
             </do_if>
             <remove_value name="$commonData" />

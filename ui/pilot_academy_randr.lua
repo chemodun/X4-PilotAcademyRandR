@@ -1040,7 +1040,7 @@ function pilotAcademy.buttonSaveAcademy()
 
   pilotAcademy.saveCommonData()
   if rankLevelChanged then
-    SignalObject(pilotAcademy.playerId, "AcademyTargetRankLevelChanged")
+    SignalObject(pilotAcademy.playerId, "PilotAcademyRAndR.TargetRankLevelChangedSignal")
   end
   menu.refreshInfoFrame()
 end
@@ -2062,7 +2062,7 @@ function pilotAcademy.wingmanRemoveAssignment(wingmanId)
     pilotAcademy.contextFrame:close()
     pilotAcademy.contextFrame = nil
   end
-  SignalObject(wingmanId, "AcademyOrderRemoveFromWing")
+  SignalObject(wingmanId, "PilotAcademyRAndR.RemoveFromWingRequest")
   local menu = pilotAcademy.menuMap
   if menu == nil then
     trace("Menu is nil; cannot refresh info frame")
@@ -2217,7 +2217,7 @@ function pilotAcademy.buttonDismissWing()
   pilotAcademy.topRows.tableWingsFactions[wingId] = nil
   pilotAcademy.topRows.tableWingsWingmans[wingId] = nil
   if wings[wingId] and wings[wingId].wingLeaderId ~= nil then
-    SignalObject(wings[wingId].wingLeaderId, "AcademyOrderDismissWing")
+    SignalObject(wings[wingId].wingLeaderId, "PilotAcademyRAndR.DismissWingRequest")
   end
   wings[wingId] = nil
   if next(wings) == nil then
@@ -2342,7 +2342,7 @@ function pilotAcademy.setOrderForWingLeader(wingLeaderId, wingId, existingWing)
     local currentOrderDef = ffi.string(buf.orderdef)
     if currentOrderDef == pilotAcademy.orderId then
       debug("Wing leader already has " .. pilotAcademy.orderId .. " order; sending appropriate signal")
-      SignalObject(wingLeaderId, "AcademyOrderDataIsUpdated")
+      SignalObject(wingLeaderId, "PilotAcademyRAndR.WingDataIsUpdatedSignal")
       return
     end
   end
@@ -2659,11 +2659,11 @@ function pilotAcademy.onRankLevelReached(_, param)
   if cadets == nil or #cadets == 0 then
     if pilotAcademy.commonData.autoHire then
       trace("No cadets found, auto-hire is enabled, attempting to hire new cadet")
-      SignalObject(pilotAcademy.playerId, "AcademyCadetAutoHire", ConvertStringToLuaID(tostring(controllable)), pilotAcademy.commonData.factions)
+      SignalObject(pilotAcademy.playerId, "PilotAcademyRAndR.CadetAutoHireRequest", ConvertStringToLuaID(tostring(controllable)), pilotAcademy.commonData.factions)
       return
     else
       trace("No cadets found, signalling and returning")
-      SignalObject(pilotAcademy.playerId, "AcademyNoCadetsAvailable")
+      SignalObject(pilotAcademy.playerId, "PilotAcademyRAndR.NoCadetsAvailableInfo")
       return
     end
   end
@@ -2673,7 +2673,7 @@ function pilotAcademy.onRankLevelReached(_, param)
     return
   end
   trace("Promoting cadet with name: " .. tostring(cadet.name) .. " (entity: " .. tostring(cadet.entity) .. ") and skill: " .. tostring(cadet.skill))
-  SignalObject(controllable, "AcademyOrderPrepareForPilotReplacement", ConvertStringToLuaID(tostring(cadet.entity)))
+  SignalObject(controllable, "PilotAcademyRAndR.PrepareForPilotReplacementRequest", ConvertStringToLuaID(tostring(cadet.entity)))
 end
 
 function pilotAcademy.onPilotReturned(_, param)
@@ -2754,7 +2754,7 @@ function pilotAcademy.autoAssignPilots()
           newPilot = ConvertStringToLuaID(tostring(pilot.entity)),
           iteration = 0
         }
-        SignalObject(pilotAcademy.playerId, "AcademyMoveNewPilotRequest", data)
+        SignalObject(pilotAcademy.playerId, "PilotAcademyRAndR.MoveNewPilotRequest", data)
         trace(string.format("Assigned pilot '%s' (skill: %d) to ship '%s' (idcode: %s)",
           pilot.name, pilot.skill, candidateShip.shipName, candidateShip.shipIdCode))
         table.remove(candidateShips, 1)

@@ -118,7 +118,7 @@
       </actions>
       <actions name="PilotAcademyShareTradeInfo">
         <do_if value="@$shareInfoTarget != null and @$selectedFaction != null and @$selectedBuyOffer != null and @$selectedSellOffer != null">
-          <signal_objects object="$shareInfoTarget" param="'AcademyTradeInfoData'" param2="this.assignedcontrolled"
+          <signal_objects object="$shareInfoTarget" param="'PilotAcademyRAndR.TradeInfoDataUpdatedSignal'" param2="this.assignedcontrolled"
             param3="table[
               $selectedFaction = $selectedFaction,
               $selectedBuyOffer = $selectedBuyOffer,
@@ -238,7 +238,8 @@
     <handler ref="TideHandler" />
     <handler>
       <conditions>
-        <event_object_signalled object="this.assignedcontrolled" param="'AcademyTradeInfoData'" param2="this.assignedcontrolled.commander" />
+        <event_object_signalled object="this.assignedcontrolled" param="'PilotAcademyRAndR.TradeInfoDataUpdatedSignal'"
+          param2="this.assignedcontrolled.commander" />
         <check_value value="@event.param3 != null" />
         <check_value value="@event.param3.$selectedFaction != null" />
         <check_value value="@event.param3.$selectedBuyOffer != null" />
@@ -250,17 +251,12 @@
         <set_value name="$selectedFaction" exact="event.param3.$selectedFaction" />
         <set_value name="$selectedBuyOffer" exact="event.param3.$selectedBuyOffer" />
         <set_value name="$selectedSellOffer" exact="event.param3.$selectedSellOffer" />
-        <do_if value="@$shipInfo.$shipRegistered != true">
-          <debug_text text="'Pilot Academy [%s]: sending ship register request to Academy'.[this.assignedcontrolled.debugname]"
-            chance="$debugchance" />
-          <signal_objects object="player.entity" param="'AcademyPilotShipRegisterRequest'" param2="this.assignedcontrolled" />
-        </do_if>
         <abort_called_scripts resume="prepareTrade" />
       </actions>
     </handler>
     <handler>
       <conditions>
-        <event_object_signalled object="this.assignedcontrolled" param="'AcademyTradeInfoRequest'" />
+        <event_object_signalled object="this.assignedcontrolled" param="'PilotAcademyRAndR.TradeInfoDataRequest'" />
         <check_value value="@event.param2 != null" />
         <check_value value="this.assignedcontrolled.subordinates.indexof.{@event.param2} gt 0" />
       </conditions>
@@ -279,17 +275,6 @@
     </handler>
     <handler>
       <conditions>
-        <event_object_signalled object="this.assignedcontrolled" param="'AcademyPilotShipRegistered'" />
-      </conditions>
-      <actions>
-        <include_interrupt_actions ref="PilotAcademyInitShipVariables" />
-        <set_value name="$shipInfo.$shipRegistered" exact="true" />
-        <debug_text text="'Pilot Academy [%s]: ship registration confirmed'.[this.assignedcontrolled.debugname]"
-          chance="$debugchance" />
-      </actions>
-    </handler>
-    <handler>
-      <conditions>
         <event_player_subordinate_removed previous="this.assignedcontrolled" />
       </conditions>
       <actions>
@@ -299,7 +284,7 @@
     </handler>
     <handler>
       <conditions>
-        <event_object_signalled object="this.assignedcontrolled" param="'AcademyOrderDataIsUpdated'" />
+        <event_object_signalled object="this.assignedcontrolled" param="'PilotAcademyRAndR.WingDataIsUpdatedSignal'" />
       </conditions>
       <actions>
         <debug_text text="'Pilot Academy [%s]: received data update notification' . [this.assignedcontrolled.debugname]" chance="$debugchance" />
@@ -320,7 +305,7 @@
     </handler>
     <handler>
       <conditions>
-        <event_object_signalled object="this.assignedcontrolled" param="'AcademyOrderDismissWing'" />
+        <event_object_signalled object="this.assignedcontrolled" param="'PilotAcademyRAndR.DismissWingRequest'" />
       </conditions>
       <actions>
         <debug_text text="'Pilot Academy [%s]: received dismiss wing order, finishing.' . [this.assignedcontrolled.debugname]" chance="$debugchance" />
@@ -329,7 +314,7 @@
     </handler>
     <handler>
       <conditions>
-        <event_object_signalled object="this.assignedcontrolled" param="'AcademyOrderRemoveFromWing'" />
+        <event_object_signalled object="this.assignedcontrolled" param="'PilotAcademyRAndR.RemoveFromWingRequest'" />
       </conditions>
       <actions>
         <debug_text text="'Pilot Academy [%s]: received remove from wing order, finishing.' . [this.assignedcontrolled.debugname]" chance="$debugchance" />
@@ -338,7 +323,7 @@
     </handler>
     <handler>
       <conditions>
-        <event_object_signalled object="player.entity" param="'AcademyTargetRankLevelChanged'" />
+        <event_object_signalled object="player.entity" param="'PilotAcademyRAndR.TargetRankLevelChangedSignal'" />
       </conditions>
       <actions>
         <debug_text text="'Pilot Academy [%s]: received target rank level change notification' . [this.assignedcontrolled.debugname]" chance="$debugchance" />
@@ -347,7 +332,7 @@
     </handler>
     <handler>
       <conditions>
-        <event_object_signalled object="this.assignedcontrolled" param="'AcademyOrderPrepareForPilotReplacement'" />
+        <event_object_signalled object="this.assignedcontrolled" param="'PilotAcademyRAndR.PrepareForPilotReplacementRequest'" />
         <check_value value="@event.param2 != null" />
       </conditions>
       <actions>
@@ -360,7 +345,7 @@
     </handler>
     <handler consume="false">
       <conditions>
-        <event_object_signalled object="player.entity" param="'AcademyDebugLevelChanged'" />
+        <event_object_signalled object="player.entity" param="'PilotAcademyRAndR.DebugLevelChangedSignal'" />
       </conditions>
       <actions>
         <debug_text
@@ -939,7 +924,7 @@
         <do_for_each name="$subordinate" in="this.assignedcontrolled.subordinates">
           <debug_text text="'Pilot Academy [%s]: going to share trade info with subordinate %s'.[this.assignedcontrolled.debugname, $subordinate.debugname]"
             chance="$debugchance" />
-          <signal_objects object="$subordinate" param="'AcademyOrderDataIsUpdated'" />
+          <signal_objects object="$subordinate" param="'PilotAcademyRAndR.WingDataIsUpdatedSignal'" />
         </do_for_each>
       </do_if>
       <debug_text
@@ -1067,13 +1052,14 @@
       <set_command command="command.wait" />
       <set_command_action commandaction="commandaction.calculating" />
       <set_value name="$i" exact="[1,2,3,4,5].random" />
-      <signal_objects object="this.assignedcontrolled.commander" param="'AcademyTradeInfoRequest'" param2="this.assignedcontrolled" delay="$i * 150ms" />
+      <signal_objects object="this.assignedcontrolled.commander" param="'PilotAcademyRAndR.TradeInfoDataRequest'" param2="this.assignedcontrolled"
+        delay="$i * 150ms" />
       <debug_text text="'Pilot Academy [%s]: request was sent, waiting now for trade info update from commander' . [this.assignedcontrolled.debugname]"
         chance="$debugchance" />
       <wait exact="60s">
         <interrupt>
           <conditions>
-            <event_object_signalled object="this.assignedcontrolled" param="'AcademyOrderDataIsUpdated'" />
+            <event_object_signalled object="this.assignedcontrolled" param="'PilotAcademyRAndR.WingDataIsUpdatedSignal'" />
           </conditions>
           <actions>
             <debug_text text="'Pilot Academy [%s]: received trade info update notification from commander' . [this.assignedcontrolled.debugname]"
@@ -1110,7 +1096,7 @@
             text="'Pilot Academy [%s]: new pilot %s successfully transferred to %s. Going to swap with %s' .
             [this.assignedcontrolled.debugname, $replacementPilotTemplate, this.assignedcontrolled.debugname, this.debugname]"
             chance="$debugchance" />
-          <signal_objects object="player.entity" param="'AcademyPilotSwapRequest'"
+          <signal_objects object="player.entity" param="'PilotAcademyRAndR.PilotSwapRequest'"
             param2="table[
               $ship = this.assignedcontrolled,
               $replacementPilotTemplate = $personTransferred.{1},
@@ -1140,7 +1126,7 @@
       <do_for_each name="$subordinate" in="this.assignedcontrolled.subordinates">
         <debug_text text="'Pilot Academy [%s]: going to dismiss subordinate %s'.[this.assignedcontrolled.debugname, $subordinate.debugname]"
           chance="$debugchance" />
-        <signal_objects object="$subordinate" param="'AcademyOrderDismissWing'" />
+        <signal_objects object="$subordinate" param="'PilotAcademyRAndR.DismissWingRequest'" />
       </do_for_each>
       <include_interrupt_actions ref="PilotAcademyRemoveShipVariables" />
       <remove_object_commander object="this.assignedcontrolled" />
