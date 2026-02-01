@@ -996,6 +996,8 @@ function pilotAcademy.buttonSaveAcademy()
   local academyData = pilotAcademy.commonData or {}
   local editData = pilotAcademy.editData or {}
 
+  trace("Existing location ID: " .. tostring(academyData.locationId) .. "Updated location ID: " .. tostring(editData.locationId))
+  local toPayRent = false
   if editData.locationId ~= nil then
     local newLocationId = ConvertStringTo64Bit(tostring(editData.locationId))
     pilotAcademy.transferPersonnel(academyData.locationId, newLocationId)
@@ -1003,8 +1005,8 @@ function pilotAcademy.buttonSaveAcademy()
       academyData.rentCost = 0
       academyData.rentLastPaid = 0
     end
+    toPayRent = academyData.locationId ~= newLocationId
     academyData.locationId = newLocationId
-    pilotAcademy.payRent(true)
   end
   if academyData.locationId ~= nil then
     academyData.locationObject = ConvertStringToLuaID(tostring(academyData.locationId))
@@ -1052,6 +1054,9 @@ function pilotAcademy.buttonSaveAcademy()
   pilotAcademy.editData = {}
 
   pilotAcademy.saveCommonData()
+  if toPayRent then
+    pilotAcademy.payRent()
+  end
   if rankLevelChanged then
     SignalObject(pilotAcademy.playerId, "PilotAcademyRAndR.TargetRankLevelChangedSignal")
   end
