@@ -606,8 +606,8 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
     row[2].handlers.onClick = function() return pilotAcademy.onToChangeLocation() end
   end
   tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-  local owner = GetComponentData(academyData.locationId, "owner")
-  if owner ~= "player" then
+  local owner = academyData.locationId and GetComponentData(academyData.locationId, "owner") or nil
+  if owner ~= nil and owner ~= "player" then
     local rentCost = academyData.rentCost or 0
     row = tableTop:addRow(nil, { fixed = true })
     row[2]:setColSpan(2):createText(string.format(texts.locationRentCost, ConvertMoneyString(rentCost, false, true, nil, true) .. " " .. ReadText(1001, 101)), { halign = "left", titleColor = Color["row_title"] })
