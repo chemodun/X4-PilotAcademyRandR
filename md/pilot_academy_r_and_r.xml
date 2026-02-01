@@ -1,32 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mdscript name="Pilot_Academy_Ranks_And_Relations" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <cues>
-    <cue name="Main" version="3">
+    <cue name="Main" version="1">
       <actions>
         <debug_text text="'Pilot Academy: Main'" chance="100" filter="scripts" />
-        <set_value name="$debugchance" exact="100" />
-        <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_wings_5'" />
-        <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_wings_9'" />
-        <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_auto_hire'" />
-        <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_auto_assign'" />
-        <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_3_star'" />
-        <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_4_star'" />
-        <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_5_star'" />
+        <set_value name="$debugchance" exact="0" />
+        <include_actions ref="Prepare_Encyclopedia_Entries" />
       </actions>
-      <patch sinceversion="2">
-        <set_value name="$debugchance" exact="100" />
-      </patch>
-      <patch sinceversion="3">
-        <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_wings_5'" />
-        <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_wings_9'" />
-        <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_auto_hire'" />
-        <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_auto_assign'" />
-        <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_3_star'" />
-        <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_4_star'" />
-        <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_5_star'" />
-      </patch>
       <cues>
-        <cue name="On_Reload" instantiate="true">
+        <cue name="On_Reload" instantiate="true" version="1">
           <conditions>
             <event_ui_triggered screen="'PilotAcademyRAndR'" control="'Reloaded'" />
           </conditions>
@@ -36,7 +18,7 @@
           </actions>
         </cue>
 
-        <cue name="Reloaded" instantiate="true" version="4">
+        <cue name="Reloaded" instantiate="true" version="1">
           <conditions>
             <event_cue_signalled />
           </conditions>
@@ -47,7 +29,7 @@
           </actions>
         </cue>
 
-        <cue name="Refresh_Pilot_Academy_Pilots" instantiate="true" checkinterval="180s">
+        <cue name="Refresh_Pilot_Academy_Pilots" instantiate="true" checkinterval="180s" version="1">
           <actions>
             <debug_text text="'Pilot Academy: Refresh_Pilot_Academy_Pilots.'" chance="$debugchance" filter="scripts" />
             <raise_lua_event name="'PilotAcademyRAndR.RefreshPilots'" />
@@ -442,7 +424,7 @@
           </actions>
         </cue>
 
-        <cue name="On_Debug_Level_Changed" instantiate="true">
+        <cue name="On_Debug_Level_Changed" instantiate="true" version="1">
           <conditions>
             <event_object_signalled object="player.entity" param="'AcademyDebugLevelChanged'" />
           </conditions>
@@ -452,7 +434,7 @@
           </actions>
         </cue>
 
-        <library name="Process_Debug_Level" purpose="include_actions">
+        <library name="Process_Debug_Level" purpose="include_actions" version="1">
           <actions>
             <set_value name="$commonData" exact="@player.entity.$pilotAcademyRAndRData" />
             <do_if value="@$commonData != null">
@@ -468,6 +450,18 @@
                 [@$commonData.$debugLevel, $debugchance]"
               chance="100" filter="scripts" />
             <remove_value name="$commonData" />
+          </actions>
+        </library>
+
+        <library name="Prepare_Encyclopedia_Entries" purpose="include_actions" version="1">
+          <actions>
+            <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_wings_5'" />
+            <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_wings_9'" />
+            <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_auto_hire'" />
+            <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_auto_assign'" />
+            <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_3_star'" />
+            <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_4_star'" />
+            <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_5_star'" />
           </actions>
         </library>
 
