@@ -35,9 +35,18 @@
               </do_if>
               <debug_text text="'Pilot Academy Options: Current debug level is %s' .[@$commonData.$debugLevel]" context="false" filter="scripts" />
               <create_list name="$debugLevelOptions" />
-              <do_for_each name="$debugLevelIndexes" in="$indexValue" counter="$index">
+              <do_for_each name="$indexValue" in="$debugLevelIndexes" counter="$index">
+                <do_if value="$index == 1">
+                  <set_value name="$textValue" exact="{1972092412, 90011}" />
+                </do_if>
+                <do_elseif value="$index == 2">
+                  <set_value name="$textValue" exact="{1972092412, 90012}" />
+                </do_elseif>
+                <do_else>
+                  <set_value name="$textValue" exact="{1972092412, 90013}" />
+                </do_else>
                 <append_to_list name="$debugLevelOptions"
-                  exact="table[ $text = {1972092412, 90010 + ($index + 1)}, $value = $indexValue ]" />
+                  exact="table[ $text = $textValue, $value = $indexValue ]" />
               </do_for_each>
               <set_value name="$debugLevelCurrentIndex" exact="$debugLevelIndexes.indexof.{$commonData.$debugLevel}" />
               <do_if value="$debugLevelCurrentIndex == 0">
@@ -65,7 +74,6 @@
             </do_else>
             <remove_value name="$commonData" />
             <remove_value name="$debugLevelOptions" />
-            <remove_value name="$debugLevelIndexes" />
             <remove_value name="$debugLevelCurrentIndex" />
           </actions>
         </cue>
