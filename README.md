@@ -58,6 +58,11 @@ Or via Nexus Mods - [Pilot Academy: Ranks and Relations](https://www.nexusmods.c
 ![alt text](docs/images/wing_leader_context_menu.png)
 ![alt text](docs/images/wingman_context_menu.png)
 
+![alt text](docs/images/researches.png)
+
+![alt text](docs/images/extension_options.png)
+![alt text](docs/images/debug_level.png)
+
 ## Video
 
 [Video demonstration of the mod. Version 1.00](https://www.youtube.com/watch?v=)
