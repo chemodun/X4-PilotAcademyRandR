@@ -604,7 +604,7 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
     end
   else
     local isAnyPersonNotArrived = pilotAcademy.isAnyPersonNotArrived()
-    row[2]:setColSpan(2):createButton({ active = not isAnyPersonNotArrived }):setText(locationOptions[1].text, { halign = "left" }):setText2(locationOptions[1].text2,
+    row[2]:setColSpan(2):createButton({ active = not isAnyPersonNotArrived, mouseOverText = string.format("%s\027X %s", locationOptions[1].text, locationOptions[1].text2) }):setText(locationOptions[1].text, { halign = "left" }):setText2(locationOptions[1].text2,
       { halign = "right" })
     row[2].handlers.onClick = function() return pilotAcademy.onToChangeLocation() end
   end
