@@ -63,6 +63,12 @@ Or via Nexus Mods - [Pilot Academy: Ranks and Relations](https://www.nexusmods.c
 ![alt text](docs/images/extension_options.png)
 ![alt text](docs/images/debug_level.png)
 
+![alt text](docs/images/appoint_as_cadet_from_personnel.png)
+![alt text](docs/images/appoint_as_cadet_from_crew.png)
+
+![alt text](docs/images/personnel_with_cadets.png)
+![alt text](docs/images/personnel_context_menu.png)
+
 ## Video
 
 [Video demonstration of the mod. Version 1.00](https://www.youtube.com/watch?v=)
