@@ -216,15 +216,23 @@
           chance="$debugchance" />
       </actions>
       <actions name="PilotAcademyDebugApply">
-        <debug_text text="'Pilot Academy [%s]: Debug Apply interrupt actions invoked.' . [this.assignedcontrolled.debugname]" chance="$debugchance" />
+        <debug_text
+          text="'Pilot Academy [%s]: Debug Apply interrupt actions invoked. Is Init: %s. Current debug chance: %s. Debug level: %s' .
+          [this.assignedcontrolled.debugname, @$isInit, $debugchance, @player.entity.$pilotAcademyRAndRData.$debugLevel]"
+        />
         <do_if value="@$isInit == null or @$isInit != true">
           <set_value name="$debugchance" exact="0" />
-          <do_if value="@$commonData.$debugLevel == 'debug' or @$commonData.$debugLevel == 'trace'">
-            <set_value name="$debugchance" exact="100" />
-            <debug_text
-              text="'Pilot Academy [%s]: Debug level is %s, setting debug chance to %s.' . [this.assignedcontrolled.debugname, @$commonData.$debugLevel, $debugchance]"
-              chance="$debugchance" />
-          </do_if>
+        </do_if>
+        <do_if value="@player.entity.$pilotAcademyRAndRData.$debugLevel == 'debug' or @player.entity.$pilotAcademyRAndRData.$debugLevel == 'trace'">
+          <set_value name="$debugchance" exact="100" />
+          <debug_text
+            text="'Pilot Academy [%s]: Debug level is %s, setting debug chance to %s.' .
+            [this.assignedcontrolled.debugname, @player.entity.$pilotAcademyRAndRData.$debugLevel, $debugchance]"
+            chance="$debugchance"
+          />
+        </do_if>
+        <do_if value="this.assignedcontrolled.order.id == 'PilotAcademyWing'">
+          <edit_order_param order="this.assignedcontrolled.order" param="debugchance" value="$debugchance" />
         </do_if>
       </actions>
     </library>
