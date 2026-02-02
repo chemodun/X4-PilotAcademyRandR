@@ -597,7 +597,9 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
     )
     row[2]:setTextProperties({ halign = "left" })
     row[2]:setText2Properties({ halign = "right" })
+    row[2].handlers.onDropDownActivated = function () menu.noupdate = true end
     row[2].handlers.onDropDownConfirmed = function(_, id)
+      menu.noupdate = false
       return pilotAcademy.onSelectLocation(id)
     end
   else
@@ -725,7 +727,9 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
     }
   )
   row[2]:setTextProperties({ halign = "left" })
+  row[2].handlers.onDropDownActivated = function () menu.noupdate = true end
   row[2].handlers.onDropDownConfirmed = function(_, id)
+    menu.noupdate = false
     return pilotAcademy.onSelectAssign(id)
   end
 
@@ -746,7 +750,9 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
       }
     )
     row[2]:setTextProperties({ halign = "left" })
+    row[2].handlers.onDropDownActivated = function () menu.noupdate = true end
     row[2].handlers.onDropDownConfirmed = function(_, id)
+      menu.noupdate = false
       return pilotAcademy.onSelectAssignPriority(id)
     end
   end
@@ -1544,7 +1550,9 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
     }
   )
   row[7]:setTextProperties({ halign = "left" })
+  row[7].handlers.onDropDownActivated = function () menu.noupdate = true end
   row[7].handlers.onDropDownConfirmed = function(_, id)
+    menu.noupdate = false
     return pilotAcademy.onSelectPrimaryGoal(id)
   end
   tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
@@ -1611,7 +1619,9 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
     }
   )
   row[2]:setTextProperties({ halign = "right" })
+  row[2].handlers.onDropDownActivated = function () menu.noupdate = true end
   row[2].handlers.onDropDownConfirmed = function(_, id)
+    menu.noupdate = false
     return pilotAcademy.onSelectRefreshInterval(id)
   end
   tableRefreshInterval:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
@@ -1647,7 +1657,9 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
     )
     row[2]:setTextProperties({ halign = "left" })
     row[2]:setText2Properties({ halign = "right", color = Color["text_skills"] })
+    row[2].handlers.onDropDownActivated = function () menu.noupdate = true end
     row[2].handlers.onDropDownConfirmed = function(_, id)
+      menu.noupdate = false
       return pilotAcademy.onSelectWingLeader(id)
     end
   end
@@ -1680,7 +1692,9 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
     )
     row[2]:setTextProperties({ halign = "left" })
     row[2]:setText2Properties({ halign = "right", color = Color["text_skills"] })
+    row[2].handlers.onDropDownActivated = function () menu.noupdate = true end
     row[2].handlers.onDropDownConfirmed = function(_, id)
+      menu.noupdate = false
       return pilotAcademy.onSelectWingman(id, wingLeaderId, mimicGroupId)
     end
     tableWingmans:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
