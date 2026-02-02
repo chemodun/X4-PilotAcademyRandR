@@ -73,6 +73,8 @@ Or via Nexus Mods - [Pilot Academy: Ranks and Relations](https://www.nexusmods.c
 
 ![alt text](docs/images/notifications_no_free_cadets_at_academy.png)
 ![alt text](docs/images/notifications_pilot_reached_rank.png)
+![alt text](docs/images/notifications_cadet_assigned.png)
+![alt text](docs/images/notifications_pilot_moved_back.png)
 
 ## Video
 
