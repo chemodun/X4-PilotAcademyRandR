@@ -85,6 +85,7 @@ local texts = {
   pilotAcademyFull = ReadText(1972092412, 1),                 -- "Pilot Academy: Ranks and Relations"
   pilotAcademy = ReadText(1972092412, 11),                    -- "Pilot Academy R&R"
   wingFleetName = ReadText(1972092412, 111),                  -- "Wing %s of Pilot Academy R&R"
+  wingBroken = ReadText(1972092412, 119),                     -- "Wing %s is broken!"
   academySettings = ReadText(1972092412, 10001),              -- "Academy Settings"
   cadetsAndPilots = ReadText(1972092412, 10011),              -- "Cadets and Pilots"
   cadetsAndPilotsTitle = ReadText(1972092412, 10019),         -- "Pilot Academy: Cadets and Pilots"
@@ -181,7 +182,7 @@ local pilotAcademy = {
     30,
     60,
   },
-  maxWingErrors = 5,
+  maxOrderErrors = 3,
 }
 
 local config = {}
@@ -2386,7 +2387,7 @@ function pilotAcademy.setOrderForWingLeader(wingLeaderId, wingId, existingWing)
   local buf = ffi.new("Order")
   if C.GetPlannedDefaultOrder(buf, wingLeaderId) then
     SetOrderParam(wingLeaderId, "planneddefault", 1, nil, wingId)
-    SetOrderParam(wingLeaderId, "planneddefault", 2, nil, true)
+    SetOrderParam(wingLeaderId, "planneddefault", 4, nil, true)
     SetOrderParam(wingLeaderId, "planneddefault", 3, nil, debugLevel == 'debug' or debugLevel == 'trace')
     C.EnablePlannedDefaultOrder(wingLeaderId, false)
   end
@@ -2422,18 +2423,18 @@ function pilotAcademy.CheckOrdersOnWings()
         end
       end
     end
-    if not wingIsOk then
-      debug("Wing leader " .. tostring(GetComponentData(wingData.wingLeaderId, "name")) .. " of wing " .. tostring(wingId) .. " is missing proper orders for its wing leader; reapplying orders")
+    if not wingIsOk and wingLeaderId ~= nil then
+      wingData.errorsCount = (wingData.errorsCount or 0) + 1
+      debug("Wing leader " .. tostring(GetComponentData(wingData.wingLeaderId, "name")) .. " of wing " .. tostring(wingId) .. " is missing proper orders for its wing leader; reapplying orders. Current errors count: " .. tostring(wingData.errorsCount or 0))
       if wingData.errorsCount ~= nil and wingData.errorsCount >= pilotAcademy.maxOrderErrors then
         debug("Maximum order errors reached for wing leader " .. tostring(GetComponentData(wingData.wingLeaderId, "name")) .. " of wing " .. tostring(wingId) .. "; skipping reapplication of orders")
         pilotAcademy.dismissWing(wingId)
         local subordinates = GetSubordinates(wingLeaderId)
         if #subordinates > 0 then
-          C.SetFleetName(wingLeaderId, string.format(texts.wingFleetName, texts.wingNames[wingId]))
+          C.SetFleetName(wingLeaderId, string.format(texts.wingBroken, texts.wingNames[wingId]))
         end
       else
         pilotAcademy.setOrderForWingLeader(wingData.wingLeaderId, wingId, true)
-        wingData.errorsCount = (wingData.errorsCount or 0) + 1
       end
     else
       wingData.errorsCount = 0
