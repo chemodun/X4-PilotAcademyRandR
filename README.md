@@ -71,6 +71,9 @@ Or via Nexus Mods - [Pilot Academy: Ranks and Relations](https://www.nexusmods.c
 
 ![alt text](docs/images/personnel_with_pilots.png)
 
+![alt text](docs/images/notifications_no_free_cadets_at_academy.png)
+![alt text](docs/images/notifications_pilot_reached_rank.png)
+
 ## Video
 
 [Video demonstration of the mod. Version 1.00](https://www.youtube.com/watch?v=)
