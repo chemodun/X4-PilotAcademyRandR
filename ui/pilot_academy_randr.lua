@@ -455,8 +455,8 @@ function pilotAcademy.getFactions(config, sortAscending)
   local maxRelationNameWidth = 0
   for i, faction in ipairs(factionsAll) do
     if faction.id ~= "player" then
-      local shortName, isAtDockRelation = GetFactionData(faction.id, "shortname", "isatdockrelation")
-      if isAtDockRelation then
+      local shortName, isAtDockRelation, isRelationLocked = GetFactionData(faction.id, "shortname", "isatdockrelation", "isrelationlocked")
+      if isAtDockRelation and not isRelationLocked then
         faction.shortName = shortName
         faction.isAtDockRelation = isAtDockRelation
         faction.uiRelation = GetUIRelation(faction.id)

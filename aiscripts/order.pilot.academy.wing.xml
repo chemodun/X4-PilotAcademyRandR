@@ -458,9 +458,10 @@
         <create_list name="$filteredFactions" />
         <do_for_each name="$faction" in="$factionsListAll" counter="$i">
 
-          <do_if value="not ($faction.isactive and $faction.knowntoplayer) or $faction.isvisitor">
+          <do_if value="not ($faction.isactive and $faction.knowntoplayer) or $faction.isvisitor or @$faction.isrelationlocked">
             <debug_text
-              text="'Pilot Academy [%s]: skipping faction %s due to inactive (%s) or unknown (%s)  or visitor (%s) status' . [this.assignedcontrolled.debugname, @$faction.name, not @$faction.isactive, not @$faction.knowntoplayer, @$faction.isvisitor]"
+              text="'Pilot Academy [%s]: skipping faction %s due to inactive (%s) or unknown (%s) or visitor (%s) status or relation is locked (%s)' .
+              [this.assignedcontrolled.debugname, @$faction.name, not @$faction.isactive, not @$faction.knowntoplayer, @$faction.isvisitor, @$faction.isrelationlocked]"
               chance="$debugchance" />
             <continue />
           </do_if>
@@ -564,6 +565,14 @@
                         <debug_text
                           text="'Pilot Academy [%s]: skipping opposite offer for %s as ware is illegal for faction %s' .
                           [this.assignedcontrolled.debugname, $supplyOffer.ware.id, $supplyOffer.owner.trueowner.name]"
+                          chance="$debugchance" />
+                        <continue />
+                      </do_if>
+
+                      <do_if value="@$supplyOffer.owner.isrelationlocked">
+                        <debug_text
+                          text="'Pilot Academy [%s]: skipping opposite offer for %s from %s as relation with %s is locked' .
+                          [this.assignedcontrolled.debugname, $supplyOffer.ware.id, @$supplyOffer.owner.trueowner.name, @$supplyOffer.owner.isrelationlocked]"
                           chance="$debugchance" />
                         <continue />
                       </do_if>
@@ -747,6 +756,14 @@
                         <debug_text
                           text="'Pilot Academy [%s]: skipping opposite offer for %s as ware is illegal for faction %s' .
                           [this.assignedcontrolled.debugname, $supplyOffer.ware.id, $supplyOffer.owner.trueowner.name]"
+                          chance="$debugchance" />
+                        <continue />
+                      </do_if>
+
+                      <do_if value="@$supplyOffer.owner.isrelationlocked">
+                        <debug_text
+                          text="'Pilot Academy [%s]: skipping opposite offer for %s from %s as relation with %s is locked' .
+                          [this.assignedcontrolled.debugname, $supplyOffer.ware.id, @$supplyOffer.owner.trueowner.name, @$supplyOffer.owner.isrelationlocked]"
                           chance="$debugchance" />
                         <continue />
                       </do_if>
