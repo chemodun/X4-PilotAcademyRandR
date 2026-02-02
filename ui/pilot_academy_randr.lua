@@ -2433,6 +2433,7 @@ function pilotAcademy.CheckOrdersOnWings()
         if #subordinates > 0 then
           C.SetFleetName(wingLeaderId, string.format(texts.wingBroken, texts.wingNames[wingId]))
         end
+        SignalObject(pilotAcademy.playerId, "PilotAcademyRAndR.WingIsBrokenInfo", texts.wingNames[wingId], ConvertStringToLuaID(tostring(wingLeaderId)))
       else
         pilotAcademy.setOrderForWingLeader(wingData.wingLeaderId, wingId, true)
       end

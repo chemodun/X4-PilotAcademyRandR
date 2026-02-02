@@ -8,7 +8,7 @@
       <t id="101">Wing of Pilot Academy R&amp;R</t>
       <t id="102">Wing of Pilot Academy R&amp;R</t>
       <t id="111">Wing %s of Pilot Academy R&amp;R</t>
-      <t id="119">Wing %s is broken!</t>
+      <t id="119">Broken wing %s</t>
       <t id="10001">Academy Settings</t>
       <t id="10011">Cadets and Pilots</t>
       <t id="10019">Pilot Academy: Cadets and Pilots</t>
@@ -78,7 +78,7 @@
       <t id="2000004">Can't return back pilot %s to the Academy! Please do it manually!</t>
       <t id="2000005">No free capacity at Academy to return back pilot %s! Please resolve it!</t>
       <t id="2000006">Can not move new pilot %s to the %s!</t>
-      <t id="2000007">Can not assign Academy training order on %s under %s command! Please report the issue!</t>
+      <t id="2000007">Can not assign Academy training order on wing %s with leader ship %s! Please report the issue!</t>
       <t id="9000001">Pilot Academy: Ranks and Relations</t>
       <t id="9000002">Pilot Academy: R&amp;R. Five wings</t>
       <t id="9000003">Pilot Academy: R&amp;R. Nine wings</t>

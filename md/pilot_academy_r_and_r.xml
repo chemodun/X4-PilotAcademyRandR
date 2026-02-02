@@ -315,6 +315,23 @@
           </actions>
         </cue>
 
+        <cue name="Process_Wing_Is_Broken" instantiate="true" version="1">
+          <conditions>
+            <event_object_signalled object="player.entity" param="'PilotAcademyRAndR.WingIsBrokenInfo'" />
+            <check_value value="@event.param2 != null" />
+          </conditions>
+          <actions>
+            <debug_text
+              text="'Pilot Academy: Process_Wing_Is_Broken: Received info about broken wing: %s, with leader: %s.' .
+                [@event.param2, @event.param3.debugname]"
+              chance="$debugchance" filter="scripts" />
+            <set_value name="$ship" exact="@event.param3.$ship" />
+            <set_value name="$shipName" exact="{1016,6}.[$ship.knownname, $ship.idcode]" />
+            <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,2000007}.[@event.param2, $shipName]]" priority="2" sound="notification_warning"
+              timeout="15s" />
+          </actions>
+        </cue>
+
         <cue name="Process_Pilot_Auto_Hire" instantiate="true" version="1">
           <conditions>
             <event_object_signalled object="player.entity" param="'PilotAcademyRAndR.CadetAutoHireRequest'" />
