@@ -79,7 +79,7 @@ ffi.cdef [[
   double GetCurrentGameTime(void);
 ]]
 
-local debugLevel = "none" -- "none", "debug", "trace"
+local debugLevel = "trace" -- "none", "debug", "trace"
 
 local texts = {
   pilotAcademyFull = ReadText(1972092412, 1),                 -- "Pilot Academy: Ranks and Relations"
@@ -255,6 +255,7 @@ function pilotAcademy.Init(menuMap, menuPlayerInfo)
   pilotAcademy.resetData()
   pilotAcademy.loadWings()
   pilotAcademy.loadCommonData()
+  debugLevel = "none"
   pilotAcademy.onDebugLevelChanged()
   if pilotAcademy.setRentCost() then
     pilotAcademy.saveCommonData()
@@ -2989,56 +2990,22 @@ function pilotAcademy.sortCandidatesForReplacement(candidates, assign, assignPri
   end)
 end
 
-local function preAddRowToMapMenuContext(contextMenuData, contextMenuMode, menu)
-  if contextMenuData.person then
-    trace("mode: " .. tostring(contextMenuMode) .. ", component: " .. (contextMenuData.component or "nil") .. "person: " ..
-      (contextMenuData.component and ffi.string(C.GetPersonName(contextMenuData.person, contextMenuData.component)) or "unknown") ..
-      ", combinedskill: " .. (contextMenuData.component and C.GetPersonCombinedSkill(contextMenuData.component, contextMenuData.person, nil, nil) or "unknown"))
-  end
-  local result = nil
-  return result
-end
-
-local function preAddRowToPlayerInfoMenuContext(contextMenuData, contextMenuMode, menu)
-  local result = nil
-  return result
-end
-
 
 local function Init()
   pilotAcademy.playerId = ConvertStringTo64Bit(tostring(C.GetPlayerID()))
   debug("Initializing Pilot Academy UI extension with PlayerID: " .. tostring(pilotAcademy.playerId))
   local menuMap = Helper.getMenu("MapMenu")
-  ---@diagnostic disable-next-line: undefined-field
-  if menuMap ~= nil and type(menuMap.registerCallback) == "function" then
-    ---@diagnostic disable-next-line: undefined-field
-    menuMap.registerCallback("createContextFrame_on_start", function(contextMenuData, contextMenuMode)
-      return preAddRowToMapMenuContext(contextMenuData, contextMenuMode, menuMap)
-    end)
-    menuMap.registerCallback("refreshContextFrame_on_start", function(contextMenuData, contextMenuMode)
-      return preAddRowToMapMenuContext(contextMenuData, contextMenuMode, menuMap)
-    end)
-    debug("Registered callback for Context Frame creation and refresh in MapMenu")
-    -- menuMap.registerCallback("createInfoFrame_on_menu_infoTableMode", fcm.createInfoFrame)
-  else
+  local menuMapIsOk = menuMap ~= nil and type(menuMap.registerCallback) == "function"
+  if not menuMapIsOk then
     debug("Failed to get MapMenu or registerCallback is not a function")
   end
   local menuPlayerInfo = Helper.getMenu("PlayerInfoMenu")
-  ---@diagnostic disable-next-line: undefined-field
-  if menuPlayerInfo ~= nil and type(menuPlayerInfo.registerCallback) == "function" then
-    ---@diagnostic disable-next-line: undefined-field
-    menuPlayerInfo.registerCallback("createContextFrame_on_start", function(contextMenuData, contextMenuMode)
-      return preAddRowToPlayerInfoMenuContext(contextMenuData, contextMenuMode, menuPlayerInfo)
-    end)
-    menuPlayerInfo.registerCallback("refreshContextFrame_on_start", function(contextMenuData, contextMenuMode)
-      return preAddRowToPlayerInfoMenuContext(contextMenuData, contextMenuMode, menuPlayerInfo)
-    end)
-    debug("Registered callback for Context Frame creation and refresh in PlayerInfoMenu")
-  else
+  local menuPlayerInfoIsOk = menuPlayerInfo ~= nil and type(menuPlayerInfo.registerCallback) == "function"
+  if not menuPlayerInfoIsOk then
     debug("Failed to get PlayerInfoMenu or registerCallback is not a function")
   end
   trace(string.format("menuMap is %s and menuPlayerInfo is %s", tostring(menuMap), tostring(menuPlayerInfo)))
-  if (menuMap ~= nil and menuPlayerInfo ~= nil) then
+  if (menuMapIsOk and menuPlayerInfoIsOk) then
     pilotAcademy.Init(menuMap, menuPlayerInfo)
   end
 end
