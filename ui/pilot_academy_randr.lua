@@ -232,7 +232,6 @@ function pilotAcademy.Init(menuMap, menuPlayerInfo)
     menuMap.registerCallback("ic_onSelectElement", pilotAcademy.onSelectElement)
     menuMap.registerCallback("ic_onTableRightMouseClick", pilotAcademy.onTableRightMouseClick)
     menuMap.registerCallback("createContextFrame_on_end", pilotAcademy.createInfoFrameContext)
-    pilotAcademy.resetData()
     AddUITriggeredEvent("PilotAcademyRAndR", "Reloaded")
     menuMap.registerCallback("createContextFrame_on_end", function(contextFrame, contextMenuData, contextMenuMode)
       return pilotAcademy.addAppointAsCadetRowToContextMenu(contextFrame, contextMenuData, contextMenuMode, menuMap)
@@ -253,6 +252,8 @@ function pilotAcademy.Init(menuMap, menuPlayerInfo)
   RegisterEvent("PilotAcademyRAndR.PilotReturned", pilotAcademy.onPilotReturned)
   RegisterEvent("PilotAcademyRAndR.RefreshPilots", pilotAcademy.onRefreshPilots)
   RegisterEvent("PilotAcademyRAndR.DebugLevelChanged", pilotAcademy.onDebugLevelChanged)
+  pilotAcademy.resetData()
+  pilotAcademy.loadWings()
   pilotAcademy.loadCommonData()
   pilotAcademy.onDebugLevelChanged()
   if pilotAcademy.setRentCost() then
@@ -262,7 +263,6 @@ end
 
 function pilotAcademy.resetData()
   pilotAcademy.editData = {}
-  pilotAcademy.loadWings()
   pilotAcademy.selectedTab = "settings"
   pilotAcademy.topRows = {
     tableWingsFactions = {},
