@@ -1303,10 +1303,10 @@ function pilotAcademy.fetchAcademyPersonnel(toOneTable, onlyArrived)
           local transferScheduled = C.IsPersonTransferScheduled(locationId, personId)
           local hasArrived = C.HasPersonArrived(locationId, personId)
           local entity = nil
-          if isPlayerOwned ~= true and hasArrived == true then
+          if hasArrived == true then
             trace("Person has arrived at non-player-owned location; checking entity ownership")
             entity = pilotAcademy.getOrCreateEntity(personId, locationId)
-            if entity ~= nil then
+            if isPlayerOwned ~= true and entity ~= nil then
               pilotAcademy.setNPCOwnedByPlayer(entity)
             end
           end
