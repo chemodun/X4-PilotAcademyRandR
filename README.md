@@ -40,6 +40,23 @@ Or via Nexus Mods - [Pilot Academy: Ranks and Relations](https://www.nexusmods.c
 
 ## Usage
 
+![alt text](docs/images/initial_screen.png)
+![alt text](docs/images/locations_other_factions.png)
+![alt text](docs/images/selected_location_other_faction.png)
+![alt text](docs/images/locations_player_owned.png)
+![alt text](docs/images/selected_location_player_owned.png)
+
+![alt text](docs/images/personnel_initial_screen.png)
+
+![alt text](docs/images/create_wing_initial_screen.png)
+![alt text](docs/images/create_wing_select_goal.png)
+![alt text](docs/images/create_wing_trade_refresh_interval.png)
+![alt text](docs/images/create_wing_select_wing_leader.png)
+![alt text](docs/images/wing_alpha_after_creation.png)
+![alt text](docs/images/wing_alpha_add_wingman.png)
+![alt text](docs/images/wing_alpha_with_wingman.png)
+![alt text](docs/images/wing_leader_context_menu.png)
+![alt text](docs/images/wingman_context_menu.png)
 
 ## Video
 
