@@ -69,6 +69,8 @@ Or via Nexus Mods - [Pilot Academy: Ranks and Relations](https://www.nexusmods.c
 ![alt text](docs/images/personnel_with_cadets.png)
 ![alt text](docs/images/personnel_context_menu.png)
 
+![alt text](docs/images/personnel_with_pilots.png)
+
 ## Video
 
 [Video demonstration of the mod. Version 1.00](https://www.youtube.com/watch?v=)
