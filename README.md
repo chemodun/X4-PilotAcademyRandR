@@ -76,6 +76,9 @@ Or via Nexus Mods - [Pilot Academy: Ranks and Relations](https://www.nexusmods.c
 ![alt text](docs/images/notifications_cadet_assigned.png)
 ![alt text](docs/images/notifications_pilot_moved_back.png)
 
+![alt text](docs/images/auto_hire_options.png)
+![alt text](docs/images/auto_assign_options.png)
+
 ## Video
 
 [Video demonstration of the mod. Version 1.00](https://www.youtube.com/watch?v=)
