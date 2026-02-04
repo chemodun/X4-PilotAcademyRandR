@@ -13,7 +13,10 @@
     <requires>
       <match shiptype="shiptype.lasertower" negate="true" />
       <match class="class.spacesuit" negate="true" />
+      <match class="class.ship_s" />
     </requires>
+    <location object="@$tradeTarget" condition="@$tradeTarget != null" />
+    <location object="this.assignedcontrolled" condition="@$tradeTarget == null" />
   </order>
   <interrupts>
     <library>
@@ -968,6 +971,7 @@
       <remove_value name="$cargoWares" />
       <label name="proceedWithTrade" />
 
+
       <debug_text text="'Pilot Academy [%s]: proceeding with trade operation %s'. [this.assignedcontrolled.debugname, @$tradeOperation]" chance="$debugchance" />
 
       <set_value name="$seller" exact="$selectedSellOffer.owner" />
@@ -1022,6 +1026,8 @@
           seller="$selectedSellOffer.owner" result="$tradeAmount" />
       </do_else>
 
+      <set_command command="command.trade" param="$tradeTarget" />
+      <set_command_action commandaction="commandaction.flyingto" />
 
       <do_if value="$tradeAmount le 0">
         <debug_text
