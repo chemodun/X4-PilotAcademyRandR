@@ -14,7 +14,7 @@ This mod introduces the Pilot Academy, allowing to the Player to train pilots an
   - Expand to 9 Wings.
   - Train pilots up to the 5-star rank.
   - Automatically hire `Cadets` from selected factions.
-  - Automatically assign trained pilots to Player ships based on priority.
+  - Automatically assign `Trained Pilots` to Player ships based on priority.
 
 ## Limitations
 
@@ -43,7 +43,7 @@ This is a complex mod and may have undiscovered issues. Please report any proble
 - After the location of `Academy` is set, Player will have possibility to create a first `Wing`.
 - When `Wing` is created any count of `Wingmans` can be added to the `Wing`.
 - Immediately after `Wing` creation the special order will search for the best deal to grow in rank and relation.
-- Every turn after sell the current rank of each pilots will be checked against a target level.
+- Every turn after sell the current rank of ship pilot will be checked against a target level.
 - If rank is reached the presence of `Cadets` on an `Academy` station will be checked, and first candidate will be transferred on a ship.
 - If no `Cadets` detected, the `Auto Hire` option will be checked, and if it is enable - the new `Cadet` will be hared to a ship with paying out appropriate fee.
 - If no `Cadets` available and no `Auto Hire` is enabled - script will repeat these checks in 3 minutes.
@@ -65,7 +65,7 @@ There are three type of tabs on an `Academy` window:
 
 ### Academy Settings tab
 
-The `Academy settings` tab includes controls for location, target skill level, auto-hiring, and auto-assigning pilots.
+The `Academy settings` tab includes controls for location, target skill level, auto-hiring, and auto-assigning `Trained Pilots`.
 
 ![Academy settings tab shoWing location selection, target skill level slider, and auto-hire/auto-assign controls.](docs/images/initial_screen.png)
 
@@ -142,7 +142,7 @@ Player can also use the context menu to manage them like any other employee.
 
 #### Managing Trained Pilots
 
-If auto-assign is not used, trained pilots will return to the `Academy`.
+If auto-assign is not used, `Trained Pilots` will return to the `Academy`.
 
 ![List of trained pilots.](docs/images/personnel_with_pilots.png)
 
@@ -250,11 +250,11 @@ There are several notifications implemented to keep Player informed about import
 
 - In case of no free space on a ship to transfer `Cadet` identified then the "No free crew capacity on %s to do pilot swapping!" warning will be shown.
 
-- When a new `Cadet` is assigned to a Wing the "Cadet %s assigned as pilot on %s." will be shown
+- When the a new `Cadet` is assigned to a Wing the "Cadet %s assigned as pilot on %s." will be shown
 
   ![Notification: "Cadet has been assigned to a Wing."](docs/images/notifications_cadet_assigned.png)
 
-- When a trained pilot is moved back to the academy the "Pilot %s has been moved back to Academy. You can now assign them to any new task." notification will arrive to a ticker.
+- When the `Trained Pilot` is moved back to the academy the "Pilot %s has been moved back to Academy. You can now assign them to any new task." notification will arrive to a ticker.
 
   ![Notification: "Trained pilot has been moved back to the academy."](docs/images/notifications_pilot_moved_back.png)
 
