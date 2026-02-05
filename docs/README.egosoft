@@ -253,6 +253,9 @@ Several notifications are implemented to keep the Player informed about importan
   [spoiler][img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/notifications_no_free_cadets_at_academy.png[/img][/spoiler]
 [list]
 [*] If a new [b]Cadet[/b] is hired: "Cadet %s has been hired for %s {1001,101}."
+[/list]
+  [spoiler][img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/notifications_cadet_hired.png[/img][/spoiler]
+[list]
 [*] If there is no free space on a ship to transfer a [b]Cadet[/b]: "No free crew capacity on %s to do pilot swapping!"
 [*] When a new [b]Cadet[/b] is assigned to a Wing: "Cadet %s assigned as pilot on %s."
 [/list]
@@ -263,8 +266,17 @@ Several notifications are implemented to keep the Player informed about importan
   [spoiler][img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/notifications_pilot_moved_back.png[/img][/spoiler]
 [list]
 [*] With [b]Auto Assign[/b], when a [b]Trained Pilot[/b] arrives on a new ship: "Pilot %s has been transferred on %s."
+[/list]
+  [spoiler][img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/notifications_pilot_transferred.png[/img][/spoiler]
+[list]
 [*] An then on pilots swapping: "Pilot %s assigned as pilot on %s."
+[/list]
+  [spoiler][img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/notifications_pilot_assigned.png[/img][/spoiler]
+[list]
 [*] After moving the "old" one to the [b]Academy[/b], the Player will be notified with: "Pilot %s appointed as new Academy cadet."
+[/list]
+  [spoiler][img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/notifications_pilot_appointe_as_cadet.png[/img][/spoiler]
+[list]
 [*] In case of errors in [b]Cadet[/b] and [b]Trained Pilot[/b] transfers and swaps, several warning messages will be displayed:
 [list]
 [*] "Can't perform pilot swapping on %s! Please do it manually!"
