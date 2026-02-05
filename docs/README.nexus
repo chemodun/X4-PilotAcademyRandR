@@ -1,0 +1,301 @@
+[size=4][u]Pilot Academy: Ranks and Relations[/u][/size]
+
+This mod introduces the Pilot Academy, allowing the Player to train pilots and improve faction relations through trade operations.
+
+[size=3][u][b]Features[/b][/u][/size]
+[list]
+[*] [b]Intuitive UI[/b]: Easily manage all Academy operations.
+[*] [b]Pilot Training[/b]: Train pilots effectively using trade operations.
+[*] [b]Faction Relations[/b]: Improve the Player's standing with other factions through trade.
+[*] [b]Wing Organization[/b]: Organize the Player's trainees into Wings for efficient management.
+[*] [b]Goal Selection[/b]: Prioritize either pilot training or improving relations.
+[*] [b]Faction Limiting[/b]: Restrict training and relation-building activities to specific factions for each Wing.
+[*] [b]Researchable Upgrades[/b]:
+[list]
+[*] Expand to 9 Wings.
+[*] Train pilots up to the 5-star rank.
+[*] Automatically hire [b]Cadets[/b] from selected factions.
+[*] Automatically assign [b]Trained Pilots[/b] to the Player's ships based on priority.
+[/list]
+[/list]
+[size=3][u][b]Limitations[/b][/u][/size]
+[list]
+[*] The Academy currently only supports small (S-class) ships.
+[/list]
+[size=3][u][b]Requirements[/b][/u][/size]
+[list]
+[*] [b]X4: Foundations[/b]: Version 8.00HF3 or newer.
+[*] [b]UI Extensions and HUD[/b]: Version 8.036 or higher by [url=https://next.nexusmods.com/profile/kuertee?gameId=2659]kuertee[/url].
+[list]
+[*] Available on Nexus Mods: [url=https://www.nexusmods.com/x4foundations/mods/552]UI Extensions and HUD[/url]
+[/list]
+[*] [b]Mod Support APIs[/b]: Version 1.93 or higher by [url=https://next.nexusmods.com/profile/sirnukes?gameId=2659]SirNukes[/url].
+[list]
+[*] Available on Steam: [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2042901274]SirNukes Mod Support APIs[/url]
+[*] Available on Nexus Mods: [url=https://www.nexusmods.com/x4foundations/mods/503]Mod Support APIs[/url]
+[/list]
+[/list]
+[size=3][u][b]Caution[/b][/u][/size]
+
+This is a complex mod and may have undiscovered issues. Please report any problems on the Nexus Mods or Steam Workshop pages.
+
+[size=3][u][b]Installation[/b][/u][/size]
+[list]
+[*] [b]Steam Workshop[/b]: [url=https://steamcommunity.com/sharedfiles/filedetails/?id=]Pilot Academy: Ranks and Relations[/url]
+[*] [b]Nexus Mods[/b]: [url=https://www.nexusmods.com/x4foundations/mods/]Pilot Academy: Ranks and Relations[/url]
+[/list]
+[size=3][u][b]Training Procedure[/b][/u][/size]
+[list]
+[*] After the [b]Academy[/b]'s location is set, the Player can create the first [b]Wing[/b].
+[*] Once a [b]Wing[/b] is created, any number of [b]Wingmen[/b] can be added to it.
+[*] Immediately after [b]Wing[/b] creation, a special order will search for the best trade deal to increase rank and relations.
+[*] After each sale, the ship pilot's current rank will be checked against the target level.
+[*] If the rank is reached, the presence of [b]Cadets[/b] at the [b]Academy[/b] station will be checked, and the first available candidate will be transferred to the ship.
+[*] If no [b]Cadets[/b] are detected, the [b]Auto Hire[/b] option will be checked. If enabled, a new [b]Cadet[/b] will be hired for the ship, and the appropriate fee will be paid.
+[*] If no [b]Cadets[/b] are available and [b]Auto Hire[/b] is disabled, the script will repeat these checks in 3 minutes.
+[*] Otherwise, the [b]Trained Pilot[/b] on the ship will be swapped with a [b]Cadet[/b] and then moved to the [b]Academy[/b] station.
+[*] If the [b]Assign[/b] option is not set to [b]Manual[/b], and the last assignment turn was finished at least 2 minutes ago, the [b]Auto Assign[/b] procedure will be initiated.
+[*] Based on the [b]Assign[/b] setting, a ship with a pilot who has a lower rank (and is below the target rank level) will be selected.
+[*] If such a ship is found, the [b]Trained Pilot[/b] will be assigned as its pilot, and the existing pilot will be transferred to the [b]Academy[/b] station as a new [b]Cadet[/b].
+[*] Every 3 minutes, the [b]Auto Assign[/b] procedure will repeat to check for available [b]Trained Pilots[/b].
+[/list]
+[size=3][u][b]Usage[/b][/u][/size]
+
+After installation, a new icon will appear on the left menu panel. Clicking it opens the [b]Academy[/b] management window.
+
+The [b]Academy[/b] window has three types of tabs:
+[list]
+[*] [b]Academy Settings[/b]
+[*] [b]Cadets and Pilots[/b]
+[*] Wings management tabs, including [b]Add New Wing[/b]
+[/list]
+[size=3][u][i]Academy Settings Tab[/i][/u][/size]
+
+The [b]Academy Settings[/b] tab includes controls for location, target skill level, auto-hiring, and auto-assigning [b]Trained Pilots[/b].
+
+[img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/initial_screen.png[/img]
+
+[size=3][u]Academy Location[/u][/size]
+
+The [b]Academy[/b] uses an assigned Player-owned or other faction's station as living quarters for [b]Cadets[/b] and [b]Trained Pilots[/b].
+
+In the early game, when the Player may not own any stations, other factions' wharfs, shipyards, or trading stations can be used, depending on the Player's reputation with them.
+
+[img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/locations_other_factions.png[/img]
+
+Any available station can be chosen.
+
+[img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/selected_location_other_faction.png[/img]
+
+If a non-Player-owned station is selected, the Player will be charged a daily rental fee.
+
+If the Player owns any stations, other factions' stations will not appear in the location list.
+
+[img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/locations_Player_owned.png[/img]
+
+Any Player-owned station can be selected, though using the HQ is not recommended to avoid interference with terraforming projects.
+
+[img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/selected_location_Player_owned.png[/img]
+
+[size=2][u][i]Resetting the Academy Location[/i][/u][/size]
+
+At any time, the Player can reset the [b]Academy[/b] location by pressing the button with the current station info. A new station can then be selected from the dropdown.
+After pressing the [b]Update[/b] button, the location will be changed, and [b]Cadets[/b] and [b]Trained Pilots[/b] will be moved to the new [b]Academy[/b] station.
+
+[size=3][u]Auto Hire Cadets[/u][/size]
+
+After completing the appropriate research, the Player can enable the auto-hire feature.
+
+[img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/auto_hire_options.png[/img]
+
+This will automatically hire new [b]Cadets[/b] from the selected factions, and the Player will be charged the standard hiring fees.
+
+[size=3][u]Auto Assign Trained Pilots[/u][/size]
+
+Once researched, the Player can enable auto-assign in the [b]Academy[/b] interface. This allows the Player to set priorities for assigning pilots who have reached the target rank, based on ship role and size.
+
+[img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/auto_assign_options.png[/img]
+
+When auto-assign is active, [b]Trained Pilots[/b] will replace existing pilots on the Player's ships who have a lower rank than the target. The replaced pilots will be reassigned to the [b]Academy[/b] as [b]Cadets[/b].
+
+[size=3][u][i]Cadets and Pilots[/i][/u][/size]
+
+This tab displays a list of the Player's [b]Cadets[/b] and [b]Trained Pilots[/b]. Initially, both lists will be empty.
+
+[img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/personnel_initial_screen.png[/img]
+
+[size=3][u]Hiring Cadets[/u][/size]
+
+The Player can manually hire [b]Cadets[/b] in two ways:
+[list]
+[*] From the global Personnel Management screen.
+[/list]
+  [img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/appoint_as_cadet_from_personnel.png[/img]
+[list]
+[*] From the crew tab of the Player's existing ships.
+[/list]
+  [img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/appoint_as_cadet_from_crew.png[/img]
+
+Use the [b]Appoint as cadet[/b] option in the context menu.
+
+It will take some time to transfer [b]Cadets[/b] from their original location, and they will be grayed out while in transit.
+
+[img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/personnel_with_cadets.png[/img]
+
+The Player can also use the context menu to manage them like any other employee.
+
+[img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/personnel_context_menu.png[/img]
+
+[size=3][u]Managing Trained Pilots[/u][/size]
+
+If auto-assign is not used, [b]Trained Pilots[/b] will return to the [b]Academy[/b].
+
+[img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/personnel_with_pilots.png[/img]
+
+The Player can then manage them in the same way as [b]Cadets[/b].
+
+[size=3][u][i]Wings[/i][/u][/size]
+
+All training functionality of the [b]Academy[/b] is based on [b]Wings[/b]. Each [b]Wing[/b] can contain any number of [b]Wingmen[/b]. The Player must select one ship as a [b]Wing Leader[/b] and then add any number of direct subordinates with the [b]Mimic[/b] directive.
+
+Initially, the Player can manage 3 Wings. To increase the number of available Wings, the Player must complete the appropriate research.
+
+To start, open the [b]Add New Wing[/b] tab.
+
+[size=3][u]Add New Wing[/u][/size]
+
+[img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/create_wing_initial_screen.png[/img]
+
+[size=2][u][i]Primary Goal[/i][/u][/size]
+
+First, the Player must select a [b]Primary Goal[/b] for the [b]Wing[/b]:
+[list]
+[*] [b]Increase Rank[/b]: Work with any faction to complete as many trade runs as possible in a given time.
+[*] [b]Gain Reputation[/b]: Focus on deals with specific factions to increase reputation with them.
+[/list]
+[img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/create_wing_select_goal.png[/img]
+
+[size=2][u][i]Trade Data Refresh Interval[/i][/u][/size]
+
+Since the market situation is not static, the [b]Wing Commander[/b] must re-check market data to be most effective. The Player can set a value from 5 minutes to one hour.
+
+[img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/create_wing_trade_refresh_interval.png[/img]
+
+[size=2][u][i]Wing Leader Selection[/i][/u][/size]
+
+The main part of [b]Wing[/b] creation is selecting the [b]Wing Leader[/b]. Use the appropriate dropdown, which will display all unassigned S-class ships, sorted by their pilots' ranks.
+
+[img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/create_wing_select_wing_leader.png[/img]
+
+[size=2][u][i]Create the Wing[/i][/u][/size]
+
+Simply press the [b]Create[/b] button to finalize the [b]Wing[/b] creation process.
+
+[size=3][u]Wing Management Tab[/u][/size]
+
+Immediately after [b]Wing[/b] creation, the current tab focus will switch to the newly created [b]Wing[/b]. The first one will be [b]Alpha[/b].
+
+[img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/wing_alpha_after_creation.png[/img]
+
+[size=2][u][i]Add Wingmen[/i][/u][/size]
+
+The Player can add any number of [b]Wingmen[/b] to an existing [b]Wing[/b] at any time on the appropriate [b]Wing...[/b] tab using the [b]Add Wingman[/b] dropdown.
+
+[img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/wing_alpha_add_wingman.png[/img]
+
+Note: It takes several seconds for an added [b]Wingman[/b] to appear in the [b]Wingmen[/b] list after selection.
+
+[img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/wing_alpha_with_wingman.png[/img]
+
+[size=2][u][i]Wing Leader and Wingman Context Menus and Hotkey[/i][/u][/size]
+
+The Player can use the standard [b]I[/b] key (or another, depending on key binding settings) to open the [b]Information[/b] window if a [b]Wing Leader[/b] or [b]Wingman[/b] is selected on the [b]Wing[/b] tab.
+
+The same action is available via the [b]Context Menu[/b].
+
+[img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/wing_leader_context_menu.png[/img]
+
+For a [b]Wingman[/b], the [b]Remove Assignment[/b] action is also available.
+
+[img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/wingman_context_menu.png[/img]
+
+[size=3][u][i]Research[/i][/u][/size]
+
+The previously mentioned researchable upgrades are available in the standard [b]Research[/b] interface under the [b]Pilot Academy RnR[/b] group:
+[list]
+[*] [b]Pilot Academy: R&R. Five wings[/b]: Extends the [b]Academy[/b] capacity to support five wings.
+[*] [b]Pilot Academy: R&R. Nine wings[/b]: Extends the [b]Academy[/b] capacity to support nine wings.
+[*] [b]Pilot Academy: R&R. 3-star pilots[/b]: Allows training of 3-star pilots in the Academy.
+[*] [b]Pilot Academy: R&R. 4-star pilots[/b]: Allows training of 4-star pilots in the Academy.
+[*] [b]Pilot Academy: R&R. 5-star pilots[/b]: Allows training of 5-star pilots in the Academy.
+[*] [b]Pilot Academy: R&R. Auto hire[/b]: Adds the ability to automate [b]Cadet[/b] hiring from desired factions.
+[*] [b]Pilot Academy: R&R. Auto assign[/b]: Adds the ability to automate pilot assignment to ships outside the Academy.
+[/list]
+[img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/researches.png[/img]
+
+[size=3][u][i]Options[/i][/u][/size]
+
+An options menu is available via the [b]Extension Options[/b] menu, where the Player can configure the debug level for the mod. By default, it is set to [b]No debug[/b].
+
+[img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/extension_options.png[/img]
+[img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/debug_level.png[/img]
+
+[size=3][u][i]Notifications[/i][/u][/size]
+
+Several notifications are implemented to keep the Player informed about important events related to [b]Academy[/b] operations. They will be shown in the standard notifications area (ticker):
+[list]
+[*] When a pilot has finished training and reached the target rank: "Pilot %s has reached the target skill level %s."
+[/list]
+  [img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/notifications_pilot_reached_rank.png[/img]
+[list]
+[*] When no free [b]Cadets[/b] are available at the academy to replace a trained pilot: "No free cadets available for pilots swapping!"
+[/list]
+  [img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/notifications_no_free_cadets_at_academy.png[/img]
+[list]
+[*] If a new [b]Cadet[/b] is hired: "Cadet %s has been hired for %s {1001,101}."
+[*] If there is no free space on a ship to transfer a [b]Cadet[/b]: "No free crew capacity on %s to do pilot swapping!"
+[*] When a new [b]Cadet[/b] is assigned to a Wing: "Cadet %s assigned as pilot on %s."
+[/list]
+  [img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/notifications_cadet_assigned.png[/img]
+[list]
+[*] When a [b]Trained Pilot[/b] is moved back to the academy: "Pilot %s has been moved back to Academy. You can now assign them to any new task."
+[/list]
+  [img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/notifications_pilot_moved_back.png[/img]
+[list]
+[*] With [b]Auto Assign[/b], when a [b]Trained Pilot[/b] arrives on a new ship: "Pilot %s has been transferred on %s."
+[*] An then on pilots swapping: "Pilot %s assigned as pilot on %s."
+[*] After moving the "old" one to the [b]Academy[/b], the Player will be notified with: "Pilot %s appointed as new Academy cadet."
+[*] In case of errors in [b]Cadet[/b] and [b]Trained Pilot[/b] transfers and swaps, several warning messages will be displayed:
+[list]
+[*] "Can't perform pilot swapping on %s! Please do it manually!"
+[*] "Can't return pilot %s to the Academy! Please do it manually!"
+[*] "No free capacity at Academy to return pilot %s! Please resolve it!"
+[*] "Can't move new pilot %s to %s!"
+[/list]
+[*] And hopefully, this warning will not be displayed: "Can't assign Academy training order on wing %s with leader ship %s! Please report the issue!"
+[/list]
+[size=3][u][b]Video[/b][/u][/size]
+
+Video demonstration of the mod (Version 1.00)
+[youtube]NUMBER[/youtube]
+
+[size=3][u][b]Credits[/b][/u][/size]
+[list]
+[*] [b]Author[/b]: Chem O`Dun, on [url=https://next.nexusmods.com/profile/ChemODun/mods?gameId=2659]Nexus Mods[/url] and [url=https://steamcommunity.com/id/chemodun/myworkshopfiles/?appid=392160]Steam Workshop[/url]
+[*] [i]"X4: Foundations"[/i] is a trademark of [url=https://www.egosoft.com]Egosoft[/url].
+[/list]
+[size=3][u][b]Acknowledgements[/b][/u][/size]
+[list]
+[*] [url=https://www.egosoft.com]EGOSOFT[/url] — for the X series.
+[*] [url=https://next.nexusmods.com/profile/kuertee?gameId=2659]kuertee[/url] — for the [b]UI Extensions and HUD[/b] that makes this extension possible.
+[*] [url=https://next.nexusmods.com/profile/sirnukes?gameId=2659]SirNukes[/url] — for the [b]Mod Support APIs[/b] that power the UI hooks.
+[/list]
+[size=3][u][b]Changelog[/b][/u][/size]
+
+[size=3][u][i][1.00] - 2024-02-10[/i][/u][/size]
+[list]
+[*] [b]Added[/b]
+[list]
+[*] Initial public version
+[/list]
+[/list]
