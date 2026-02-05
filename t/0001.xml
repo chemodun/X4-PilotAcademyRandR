@@ -3,10 +3,10 @@
   <add sel="/language">
     <page id="1972092412" voice="no" title="Pilot Academy: Ranks and Relations" descr="Pilot Academy: Ranks and Relations">
       <t id="1">Pilot Academy: Ranks and Relations</t>
-      <t id="2">Pilot Academy focuses on training pilot skills and improving relations with other factions in parallel, using the most effective and fast trading procedures.</t>
+      <t id="2">Pilot Academy focuses on training pilot skills and improving relations with other factions in parallel, using the fast and most effective trading procedures.</t>
       <t id="11">Pilot Academy R&amp;R</t>
       <t id="101">Wing of Pilot Academy R&amp;R</t>
-      <t id="102">Order used to train pilot skills and improve relations with other factions in parallel.</t>
+      <t id="102">Trains pilot skills and improves relations with other factions in parallel.</t>
       <t id="111">Wing %s of Pilot Academy R&amp;R</t>
       <t id="119">!!! Broken wing %s !!!</t>
       <t id="10001">Academy Settings</t>
@@ -46,8 +46,8 @@
       <t id="10339">No available wing leaders</t>
       <t id="10341">Add Wingman:</t>
       <t id="10349">No available wingman candidates</t>
-      <t id="10351">Wingmans:</t>
-      <t id="10359">No wingmans assigned</t>
+      <t id="10351">Wingmen:</t>
+      <t id="10359">No wingmen assigned</t>
       <t id="10901">Dismiss</t>
       <t id="10902">Cancel</t>
       <t id="10903">Update</t>
@@ -90,8 +90,8 @@
       <t id="9000101">Base version of the Academy with only two wings available, \nthe possibility to train up to 2-star pilots, \nand without any automation features for cadet hiring and pilot management.</t>
       <t id="9000102">Extends the Academy capacity to support five wings.</t>
       <t id="9000103">Extends the Academy capacity to support nine wings.</t>
-      <t id="9000111">Adds possibility to automate cadet hiring from desired factions.</t>
-      <t id="9000112">Adds possibility to automate pilot assignment to ships outside the Academy.</t>
+      <t id="9000111">Adds the possibility to automate cadet hiring from desired factions.</t>
+      <t id="9000112">Adds the possibility to automate pilot assignment to ships outside the Academy.</t>
       <t id="9000121">Allows training of 3-star pilots in the Academy.</t>
       <t id="9000122">Allows training of 4-star pilots in the Academy.</t>
       <t id="9000123">Allows training of 5-star pilots in the Academy.</t>
