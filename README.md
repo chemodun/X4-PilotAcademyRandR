@@ -248,6 +248,8 @@ Several notifications are implemented to keep the Player informed about importan
 
 - If a new `Cadet` is hired: "Cadet %s has been hired for %s {1001,101}."
 
+  ![Notification: "Cadet has been hired."](docs/images/notifications_cadet_hired.png)
+
 - If there is no free space on a ship to transfer a `Cadet`: "No free crew capacity on %s to do pilot swapping!"
 
 - When a new `Cadet` is assigned to a Wing: "Cadet %s assigned as pilot on %s."
@@ -259,8 +261,16 @@ Several notifications are implemented to keep the Player informed about importan
   ![Notification: "Trained pilot has been moved back to the academy."](docs/images/notifications_pilot_moved_back.png)
 
 - With `Auto Assign`, when a `Trained Pilot` arrives on a new ship: "Pilot %s has been transferred on %s."
+
+  ![Notification: "Pilot has been transferred."](docs/images/notifications_pilot_transferred.png)
+
 - An then on pilots swapping: "Pilot %s assigned as pilot on %s."
+
+  ![Notification: "Pilot has been assigned."](docs/images/notifications_pilot_assigned.png)
+
 - After moving the "old" one to the `Academy`, the Player will be notified with: "Pilot %s appointed as new Academy cadet."
+
+  ![Notification: "Pilot has been appointed as a new Academy cadet."](docs/images/notifications_pilot_appointe_as_cadet.png)
 
 - In case of errors in `Cadet` and `Trained Pilot` transfers and swaps, several warning messages will be displayed:
 
