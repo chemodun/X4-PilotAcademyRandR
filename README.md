@@ -10,7 +10,6 @@ This mod introduces the Pilot Academy, alloWing you to train pilots and improve 
 - **Wing Organization**: Organize your trainees into Wings for efficient management.
 - **Goal Selection**: Prioritize either pilot training or improving relations.
 - **Faction Limiting**: Restrict training and relation-building activities to specific factions for each Wing.
-- **Remote Academy**: Host your Academy on a non-player-owned station for a rental fee.
 - **Researchable Upgrades**:
   - Expand to 9 Wings.
   - Train pilots up to the 5-star rank.
@@ -44,6 +43,7 @@ This is a complex mod and may have undiscovered issues. Please report any proble
 After installation, a new icon will appear on the left menu panel. Clicking it opens the `Academy` management window.
 
 There are three type of tabs on an `Academy` window:
+
 - `Academy Settings`;
 - `Cadets and Pilots`;
 - Wings management tabs, including `Add new Wing`.
@@ -101,6 +101,7 @@ This tab displays a list of your cadets and trained pilots. Initially, both list
 #### Hiring Cadets
 
 You can manually hire cadets in two ways:
+
 - From the global Personnel Management screen.
 
   ![Hiring cadets from the Personnel Management screen.](docs/images/appoint_as_cadet_from_personnel.png)
@@ -142,9 +143,10 @@ To start - lets open `Add new Wing` tab.
 ##### Primary Goal
 
 At first you have to select a `Primary Goal` for the exact `Wing`:
+
 - `Increase Rank` - i.e. work with any faction to make as many as possible trade turns  in time;
 - `Gain Reputation` - to make a deals with specific factions to focus on increasing reputations with them.
-  
+
 ![Primary Goal selection dropdown.](docs/images/create_wing_select_goal.png)
 
 ##### Trade data refresh interval
@@ -193,19 +195,45 @@ For `Wingman` in addition is available `Remove Assignment` action.
 
 ### Research
 
-![Research tree interface shoWing locked and unlockable academy upgrades.](docs/images/researches.png)
+Previously mentioned researchable upgrades are available in the standard `Research` interface under the `Pilot Academy RnR` groups of researches:
+
+- `Pilot Academy: R&R. Five wings`: Extends the `Academy` capacity to support five wings;
+- `Pilot Academy: R&R. Nine wings`: Extends the `Academy` capacity to support nine wings;
+- `Pilot Academy: R&R. 3-star pilots`: Allows training of 3-star pilots in the Academy;
+- `Pilot Academy: R&R. 4-star pilots`: Allows training of 4-star pilots in the Academy;
+- `Pilot Academy: R&R. 5-star pilots`: Allows training of 5-star pilots in the Academy;
+- `Pilot Academy: R&R. Auto hire`: Adds possibility to automate cadet hiring from desired factions;
+- `Pilot Academy: R&R. Auto assign`: Adds possibility to automate pilot assignment to ships outside the Academy.
+
+![Group of Academy features upgrade researches.](docs/images/researches.png)
 
 ### Options
 
-![Extension options menu with various mod configuration settings.](docs/images/extension_options.png)
-![Debug level dropdown menu.](docs/images/debug_level.png)
+In addition there is an options menu available via `Extension Options` menu, where you can configure the current debug level for the mod. By default it is set to `No debug`.
+
+![Extension options menu with Academy item.](docs/images/extension_options.png)
+![Academy Options with Debug level dropdown.](docs/images/debug_level.png)
 
 ### Notifications
 
-![Notification: "No free cadets available at academy."](docs/images/notifications_no_free_cadets_at_academy.png)
-![Notification: "Pilot has reached a new rank."](docs/images/notifications_pilot_reached_rank.png)
-![Notification: "Cadet has been assigned to a Wing."](docs/images/notifications_cadet_assigned.png)
-![Notification: "Trained pilot has been moved back to the academy."](docs/images/notifications_pilot_moved_back.png)
+There are several notifications implemented to keep you informed about important events related to the `Academy` operations. They are will be shown in the standard notifications area (ticker):
+
+- When a pilot finished training as has reached the target rank:
+
+  ![Notification: "Pilot has reached a new rank."](docs/images/notifications_pilot_reached_rank.png)
+
+- When no free cadets are available at the academy to replace trained pilot
+
+  ![Notification: "No free cadets available at academy."](docs/images/notifications_no_free_cadets_at_academy.png)
+
+- When a new cadet is assigned to a Wing
+
+  ![Notification: "Cadet has been assigned to a Wing."](docs/images/notifications_cadet_assigned.png)
+
+- When a trained pilot is moved back to the academy
+
+  ![Notification: "Trained pilot has been moved back to the academy."](docs/images/notifications_pilot_moved_back.png)
+
 
 ## Video
 
@@ -224,7 +252,7 @@ For `Wingman` in addition is available `Remove Assignment` action.
 
 ## Changelog
 
-### [1.00] - 2024-02-04
+### [1.00] - 2024-02-10
 
 - **Added**
   - Initial public version
