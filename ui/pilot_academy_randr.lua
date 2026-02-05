@@ -2822,13 +2822,13 @@ function pilotAcademy.autoAssignPilots()
     trace("Auto-assign cool down not yet elapsed, returning")
     return
   end
-  pilotAcademy.commonData.lastAutoAssignTime = currentTime
-  pilotAcademy.saveCommonData()
   local cadets, pilots = pilotAcademy.fetchAcademyPersonnel(false, true)
   if pilots == nil or #pilots == 0 then
     trace("No available pilots found, returning")
     return
   end
+  pilotAcademy.commonData.lastAutoAssignTime = currentTime
+  pilotAcademy.saveCommonData()
   local candidateShips = pilotAcademy.fetchCandidatesForReplacement()
   if candidateShips == nil or #candidateShips == 0 then
     trace("No candidate ships found for replacement, returning")
