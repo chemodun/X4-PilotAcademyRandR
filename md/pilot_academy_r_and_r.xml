@@ -252,7 +252,7 @@
                   text="'Pilot Academy: Process_Move_New_Pilot: new pilot %s (%s) successfully transferred to %s. Initiating pilot swap.' .
                       [$newPilotName, $newPilotTemplate, $ship.debugname]"
                   chance="$debugchance" />
-                <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,1000005}.[$shipName, $newPilotName]]" timeout="15s" />
+                <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,1000005}.[$newPilotName, $shipName]]" timeout="15s" />
                 <signal_objects object="player.entity" param="'PilotAcademyRAndR.PilotSwapRequest'"
                   param2="table[
                     $ship = $ship,
