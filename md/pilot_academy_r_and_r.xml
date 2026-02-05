@@ -51,6 +51,7 @@
             <set_value name="$shipName" exact="{1016,6}.[$ship.knownname, $ship.idcode]" />
             <set_value name="$replacementPilotTemplate" exact="@event.param2.$replacementPilotTemplate" />
             <set_value name="$replacementPilotName" exact="$ship.availablepeople.{$replacementPilotTemplate}.name" />
+            <set_value name="$isCadet" exact="@event.param2.$isCadet" />
             <set_value name="$oldPilot" exact="$ship.aipilot" />
             <set_value name="$oldPilotName" exact="$oldPilot.name" />
             <set_value name="$oldPilotTemplate" exact="$oldPilot.npctemplate" />
@@ -82,7 +83,9 @@
                     $iteration = 0
                   ]"
                 delay="3s" />
-              <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,1000002}.[$replacementPilotName, $shipName]]" timeout="15s" />
+              <set_value name="$messageTemplate" exact="if $isCadet then {1972092412,1000002} else {1972092412,1000007} " />
+              <show_notification text="'%s\n%s'.[{1972092412,1}, $messageTemplate.[$replacementPilotName, $shipName]]" timeout="15s" />
+              <remove_value name="$messageTemplate" />
             </do_if>
             <do_else>
               <debug_text
@@ -95,6 +98,7 @@
                     $ship = $ship,
                     $replacementPilotTemplate = $replacementPilotTemplate,
                     $academyObject = $academyObject,
+                    $isCadet = $isCadet,
                     $iteration = $iteration + 1
                   ]"
                   delay="200ms" />
@@ -254,6 +258,7 @@
                     $ship = $ship,
                     $replacementPilotTemplate = $personTransferred.{1},
                     $academyObject = $academyObject,
+                    $isCadet = false,
                     $iteration = 0
                   ]"
                   delay="200ms" />
@@ -412,6 +417,7 @@
                 $ship = $ship,
                 $replacementPilotTemplate = $cadetTemplate,
                 $academyObject = $academyObject,
+                $isCadet = true,
                 $iteration = 0
               ]"
               delay="200ms" />

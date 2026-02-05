@@ -1142,6 +1142,7 @@
               $ship = this.assignedcontrolled,
               $replacementPilotTemplate = $personTransferred.{1},
               $academyObject = $academyObject,
+              $isCadet = true,
               $iteration =  0
             ]"
             delay="200ms" />

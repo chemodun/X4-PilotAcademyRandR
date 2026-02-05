@@ -70,8 +70,9 @@
       <t id="1000002">Cadet %s assigned as pilot on %s.</t>
       <t id="1000003">Pilot %s has been moved back to Academy. You can now assign them to any new task.</t>
       <t id="1000004">Cadet %s has been hired for %s {1001,101}.</t>
-      <t id="1000005">Pilot %s assigned as a new pilot on %s.</t>
+      <t id="1000005">Pilot %s has been transferred on %s.</t>
       <t id="1000006">Pilot %s appointed as new Academy cadet.</t>
+      <t id="1000007">Pilot %s assigned as pilot on %s.</t>
       <t id="2000001">No free cadets available for pilots swapping!</t>
       <t id="2000002">No free crew capacity on %s to do pilot swapping!</t>
       <t id="2000003">Can't perform pilot swapping on %s! Please do it manually!</t>
