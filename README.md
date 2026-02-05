@@ -38,6 +38,21 @@ This is a complex mod and may have undiscovered issues. Please report any proble
 - **Steam Workshop**: [Pilot Academy: Ranks and Relations](https://steamcommunity.com/sharedfiles/filedetails/?id=)
 - **Nexus Mods**: [Pilot Academy: Ranks and Relations](https://www.nexusmods.com/x4foundations/mods/)
 
+## Training procedure
+
+- After the location of `Academy` is set, player will have possibility to create a first `Wing`.
+- When `Wing` is created any count of `Wingmans` can be added to the `Wing`.
+- Immediately after `Wing` creation the special order will search for the best deal to grow in rank and relation.
+- Every turn after sell the current rank of each pilots will be checked against a target level.
+- If rank is reached the presence of `Cadets` on an `Academy` station will be checked, and first candidate will be transferred on a ship.
+- If no `Cadets` detected, the `Auto Hire` option will be checked, and if it is enable - the new `Cadet` will be hared to a ship with paying out appropriate fee.
+- If no `Cadets` available and no `Auto Hire` is enabled - script will repeat these checks in 3 minutes.
+- Otherwise the pilot on a ship will be swapped with cadet, and then moved to the `Academy` station.
+- In case of `Assign` option is not  set to `manual`, and if last assign turn was finished at least 2 minutes ago - the `Auto assign` procedure will be initiated.
+- Based on a setting for the `Assign` will be selected ship with a pilot who has a loves rank (and below target rank level)
+- If such ship will be found, the `Trained Pilot` will be assigned as a pilot, and existing pilot will be transferred to an `Academy` station as a new `Cadet`.
+- Every 3 minutes the `Auto Assign` procedure will be repeat to check for existing `Trained Pilots`.
+
 ## Usage
 
 After installation, a new icon will appear on the left menu panel. Clicking it opens the `Academy` management window.
@@ -75,6 +90,11 @@ If you own any stations, other factions' stations will not appear in the locatio
 You can select any of your own stations, though using the HQ is not recommended to avoid interference with terraforming projects.
 
 ![Selected player-owned station.](docs/images/selected_location_player_owned.png)
+
+##### Resetting the Academy location
+
+At any type player can reset the `Academy` location, by pressing the button with current station info and then new station can be selected from dropdown.
+After pressing the `Update` button location will be changed and `Cadets` and `Trained Pilots` will be moved to a new station with `Academy`.
 
 #### Auto Hire Cadets
 
@@ -218,22 +238,37 @@ In addition there is an options menu available via `Extension Options` menu, whe
 
 There are several notifications implemented to keep you informed about important events related to the `Academy` operations. They are will be shown in the standard notifications area (ticker):
 
-- When a pilot finished training as has reached the target rank:
+- When a pilot finished training as has reached the target rank the "Pilot %s has reached the target skill level %s." will be shown
 
   ![Notification: "Pilot has reached a new rank."](docs/images/notifications_pilot_reached_rank.png)
 
-- When no free cadets are available at the academy to replace trained pilot
+- When no free cadets are available at the academy to replace trained pilot appropriate warning "No free cadets available for pilots swapping!" will be shown.
 
   ![Notification: "No free cadets available at academy."](docs/images/notifications_no_free_cadets_at_academy.png)
 
-- When a new cadet is assigned to a Wing
+- If new cadet will be hired, appropriate information will be show "Cadet %s has been hired for %s {1001,101}."
+
+- In case of no free space on a ship to transfer `Cadet` identified then the "No free crew capacity on %s to do pilot swapping!" warning will be shown.
+
+- When a new cadet is assigned to a Wing the "Cadet %s assigned as pilot on %s." will be shown
 
   ![Notification: "Cadet has been assigned to a Wing."](docs/images/notifications_cadet_assigned.png)
 
-- When a trained pilot is moved back to the academy
+- When a trained pilot is moved back to the academy the "Pilot %s has been moved back to Academy. You can now assign them to any new task." notification will arrive to a ticker.
 
   ![Notification: "Trained pilot has been moved back to the academy."](docs/images/notifications_pilot_moved_back.png)
 
+- With `Auto Assign` when `Trained Pilot` will arrive on a new ship player will see a message "Pilot %s assigned as a new pilot on %s."
+- And after moving the "old" onw to an `Academy" player will be notified with "Pilot %s appointed as new Academy cadet."
+
+- In case of an errors in `Cadets` and `Trained Pilots` transfers and swaps several warning messages will be displayed:
+
+ - "Can't perform pilot swapping on %s! Please do it manually!"
+ - "Can't return pilot %s to the Academy! Please do it manually!"
+ - "No free capacity at Academy to return pilot %s! Please resolve it!"
+ - "Can't move new pilot %s to %s!"
+  
+- And hoping that warning will not be displayed - "Can't assign Academy training order on wing %s with leader ship %s! Please report the issue!"
 
 ## Video
 
