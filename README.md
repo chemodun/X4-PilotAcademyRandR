@@ -1,6 +1,6 @@
 # Pilot Academy: Ranks and Relations
 
-This mod introduces the Pilot Academy, alloWing you to train pilots and improve faction relations through trade operations.
+This mod introduces the Pilot Academy, allowing to the Player to train pilots and improve faction relations through trade operations.
 
 ## Features
 
@@ -40,7 +40,7 @@ This is a complex mod and may have undiscovered issues. Please report any proble
 
 ## Training procedure
 
-- After the location of `Academy` is set, player will have possibility to create a first `Wing`.
+- After the location of `Academy` is set, Player will have possibility to create a first `Wing`.
 - When `Wing` is created any count of `Wingmans` can be added to the `Wing`.
 - Immediately after `Wing` creation the special order will search for the best deal to grow in rank and relation.
 - Every turn after sell the current rank of each pilots will be checked against a target level.
@@ -71,7 +71,7 @@ The `Academy settings` tab includes controls for location, target skill level, a
 
 #### Academy Location
 
-The `Academy` uses an assigned player-owned or other faction's owned station as living quarters for cadets and pilots.
+The `Academy` uses an assigned Player-owned or other faction's owned station as living quarters for cadets and pilots.
 
 In the early game, when you may not own any station, you can use other factions' wharfs, shipyards, or trading stations, depending on your reputation with them.
 
@@ -85,15 +85,15 @@ If you use another faction's station, you will be charged a daily rental fee.
 
 If you own any stations, other factions' stations will not appear in the location list.
 
-![Locations menu filtered to show only player-owned stations.](docs/images/locations_player_owned.png)
+![Locations menu filtered to show only Player-owned stations.](docs/images/locations_Player_owned.png)
 
 You can select any of your own stations, though using the HQ is not recommended to avoid interference with terraforming projects.
 
-![Selected player-owned station.](docs/images/selected_location_player_owned.png)
+![Selected Player-owned station.](docs/images/selected_location_Player_owned.png)
 
 ##### Resetting the Academy location
 
-At any type player can reset the `Academy` location, by pressing the button with current station info and then new station can be selected from dropdown.
+At any type Player can reset the `Academy` location, by pressing the button with current station info and then new station can be selected from dropdown.
 After pressing the `Update` button location will be changed and `Cadets` and `Trained Pilots` will be moved to a new station with `Academy`.
 
 #### Auto Hire Cadets
@@ -108,7 +108,7 @@ This will automatically hire new cadets from the selected factions, and you will
 
 Once researched, you can enable auto assign in the `Academy` interface. This allows you to set priorities for assigning pilots who have reached the target rank, based on ship role and size.
 
-![Auto-assign settings panel with ship class filters and priority options to automatically deploy trained pilots to the player's fleet.](docs/images/auto_assign_options.png)
+![Auto-assign settings panel with ship class filters and priority options to automatically deploy trained pilots to the Player's fleet.](docs/images/auto_assign_options.png)
 
 When auto assign is active, trained pilots will replace existing pilots on your ships who have a lower rank than the target. The replaced pilots will be reassigned to the `Academy` as cadets.
 
@@ -128,7 +128,7 @@ You can manually hire cadets in two ways:
 
 - From the crew tab of your existing ships.
 
-  ![Hiring cadets from another player ship.](docs/images/appoint_as_cadet_from_crew.png)
+  ![Hiring cadets from another Player ship.](docs/images/appoint_as_cadet_from_crew.png)
 
 Use the `Appoint as cadet` option in the context menu.
 
@@ -258,8 +258,8 @@ There are several notifications implemented to keep you informed about important
 
   ![Notification: "Trained pilot has been moved back to the academy."](docs/images/notifications_pilot_moved_back.png)
 
-- With `Auto Assign` when `Trained Pilot` will arrive on a new ship player will see a message "Pilot %s assigned as a new pilot on %s."
-- And after moving the "old" onw to an `Academy" player will be notified with "Pilot %s appointed as new Academy cadet."
+- With `Auto Assign` when `Trained Pilot` will arrive on a new ship Player will see a message "Pilot %s assigned as a new pilot on %s."
+- And after moving the "old" onw to an `Academy" Player will be notified with "Pilot %s appointed as new Academy cadet."
 
 - In case of an errors in `Cadets` and `Trained Pilots` transfers and swaps several warning messages will be displayed:
 
