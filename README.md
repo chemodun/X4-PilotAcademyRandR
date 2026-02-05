@@ -6,15 +6,15 @@ This mod introduces the Pilot Academy, allowing to the Player to train pilots an
 
 - **Intuitive UI**: Easily manage all Academy operations.
 - **Pilot Training**: Train pilots effectively using trade operations.
-- **Faction Relations**: Improve your standing with other factions through trade.
-- **Wing Organization**: Organize your trainees into Wings for efficient management.
+- **Faction Relations**: Improve Player standing with other factions through trade.
+- **Wing Organization**: Organize Player trainees into Wings for efficient management.
 - **Goal Selection**: Prioritize either pilot training or improving relations.
 - **Faction Limiting**: Restrict training and relation-building activities to specific factions for each Wing.
 - **Researchable Upgrades**:
   - Expand to 9 Wings.
   - Train pilots up to the 5-star rank.
   - Automatically hire cadets from selected factions.
-  - Automatically assign trained pilots to your ships based on priority.
+  - Automatically assign trained pilots to Player ships based on priority.
 
 ## Limitations
 
@@ -73,21 +73,21 @@ The `Academy settings` tab includes controls for location, target skill level, a
 
 The `Academy` uses an assigned Player-owned or other faction's owned station as living quarters for cadets and pilots.
 
-In the early game, when you may not own any station, you can use other factions' wharfs, shipyards, or trading stations, depending on your reputation with them.
+In the early game, when Player may not own any station the other factions' wharfs, shipyards, or trading stations can be used depending on Player reputation with them.
 
 ![Locations dropdown displaying available stations from other factions.](docs/images/locations_other_factions.png)
 
-You can choose any available station.
+Any available station can be chosen.
 
 ![Other faction station selection with rental cost information.](docs/images/selected_location_other_faction.png)
 
-If you use another faction's station, you will be charged a daily rental fee.
+In case of selection of non Player owned station Player will be charged a daily by a rental fee.
 
-If you own any stations, other factions' stations will not appear in the location list.
+If Player has own any stations, other factions' stations will not appear in the location list.
 
 ![Locations menu filtered to show only Player-owned stations.](docs/images/locations_Player_owned.png)
 
-You can select any of your own stations, though using the HQ is not recommended to avoid interference with terraforming projects.
+Any Player owned station can be selected, though using the HQ is not recommended to avoid interference with terraforming projects.
 
 ![Selected Player-owned station.](docs/images/selected_location_Player_owned.png)
 
@@ -98,35 +98,35 @@ After pressing the `Update` button location will be changed and `Cadets` and `Tr
 
 #### Auto Hire Cadets
 
-After completing the appropriate research, you can enable the auto hire feature.
+After completing the appropriate research, Player can enable the auto hire feature.
 
 ![Auto-hire configuration screen with faction selection checkboxes to automatically recruit new cadets.](docs/images/auto_hire_options.png)
 
-This will automatically hire new cadets from the selected factions, and you will be charged the standard hiring fees.
+This will automatically hire new `Cadets` from the selected factions, and Player will be charged the standard hiring fees.
 
 #### Auto Assign Trained Pilots
 
-Once researched, you can enable auto assign in the `Academy` interface. This allows you to set priorities for assigning pilots who have reached the target rank, based on ship role and size.
+Once researched, Player can enable auto assign in the `Academy` interface. This allows Player to set priorities for assigning pilots who have reached the target rank, based on ship role and size.
 
 ![Auto-assign settings panel with ship class filters and priority options to automatically deploy trained pilots to the Player's fleet.](docs/images/auto_assign_options.png)
 
-When auto assign is active, trained pilots will replace existing pilots on your ships who have a lower rank than the target. The replaced pilots will be reassigned to the `Academy` as cadets.
+When auto assign is active, `Trained Pilots` will replace existing pilots on Players ships who have a lower rank than the target. The replaced pilots will be reassigned to the `Academy` as `Cadets`.
 
 ### Cadets and Pilots
 
-This tab displays a list of your cadets and trained pilots. Initially, both lists will be empty.
+This tab displays a list of Players cadets and trained pilots. Initially, both lists will be empty.
 
 ![Cadets and Pilots tab shoWing empty cadet and pilot rosters.](docs/images/personnel_initial_screen.png)
 
 #### Hiring Cadets
 
-You can manually hire cadets in two ways:
+Player can manually hire cadets in two ways:
 
 - From the global Personnel Management screen.
 
   ![Hiring cadets from the Personnel Management screen.](docs/images/appoint_as_cadet_from_personnel.png)
 
-- From the crew tab of your existing ships.
+- From the crew tab of Players existing ships.
 
   ![Hiring cadets from another Player ship.](docs/images/appoint_as_cadet_from_crew.png)
 
@@ -136,7 +136,7 @@ Cadets will take some time to transfer from their original location and will be 
 
 ![Example of a cadet list.](docs/images/personnel_with_cadets.png)
 
-You can also use the context menu to manage them like any other employee.
+Player can also use the context menu to manage them like any other employee.
 
 ![Personnel context menu.](docs/images/personnel_context_menu.png)
 
@@ -146,13 +146,13 @@ If auto-assign is not used, trained pilots will return to the `Academy`.
 
 ![List of trained pilots.](docs/images/personnel_with_pilots.png)
 
-You can then manage them in the same way as cadets.
+Player can then manage them in the same way as cadets.
 
 ### Wings
 
-All training functionality of the `Academy` itself is based on a `Wings`. Each `Wing` can contain any amount of `Wingmans`. I.e. you have to select one ship as `Wing Leader` and then add to it any number of direct subordinates with `Mimic` directive.
+All training functionality of the `Academy` itself is based on a `Wings`. Each `Wing` can contain any amount of `Wingmans`. I.e. Player have to select one ship as `Wing Leader` and then add to it any number of direct subordinates with `Mimic` directive.
 
-Initially you can manage 3 Wings. To increase count of available Wings you have to finish appropriate research.
+Initially Player can manage 3 Wings. To increase count of available Wings Player have to finish appropriate research.
 
 To start - lets open `Add new Wing` tab.
 
@@ -162,7 +162,7 @@ To start - lets open `Add new Wing` tab.
 
 ##### Primary Goal
 
-At first you have to select a `Primary Goal` for the exact `Wing`:
+At first Player have to select a `Primary Goal` for the exact `Wing`:
 
 - `Increase Rank` - i.e. work with any faction to make as many as possible trade turns  in time;
 - `Gain Reputation` - to make a deals with specific factions to focus on increasing reputations with them.
@@ -171,13 +171,13 @@ At first you have to select a `Primary Goal` for the exact `Wing`:
 
 ##### Trade data refresh interval
 
-As situation on a marlin is not stale, to be most effective in training, `Wing commander` have to re-check the market data. You can set most appropriate for you value, from 5 minutes to one hour.
+As situation on a marlin is not stale, to be most effective in training, `Wing commander` have to re-check the market data. Player can set a value from 5 minutes to one hour.
 
 ![Trade data refresh interval selection dropdown.](docs/images/create_wing_trade_refresh_interval.png)
 
 ##### Wing Leader selection
 
-And there is a main part of `Wing` creation - selection of the `Wing Leader` - simple use the appropriate dropdown, which will display to you all your unassigned S-class ships, sorted by they `pilots` ranks.
+And there is a main part of `Wing` creation - selection of the `Wing Leader` - simple use the appropriate dropdown, which will display to Player all unassigned S-class ships, sorted by they `pilots` ranks.
 
 ![Wing Leader selection dropdown.](docs/images/create_wing_select_wing_leader.png)
 
@@ -193,7 +193,7 @@ Immediately after `Wing` creation the current tab focus will be swithed on that 
 
 ##### Add Wingman's
 
-You can add any number of `Wingmans` to the existing `Wing` at any time on appropriate `Wing ...` tab using the `Add Wingman` dropdown.
+Player can add any number of `Wingmans` to the existing `Wing` at any time on appropriate `Wing ...` tab using the `Add Wingman` dropdown.
 
 ![Add Wingman dropdown.](docs/images/wing_alpha_add_wingman.png)
 
@@ -203,7 +203,7 @@ Note: It is require several seconds to reflect added `Wingman` in a `Wingmans` l
 
 ##### Wing Leader and Wingman's Context Menus and Hotkey.
 
-You can use standard `I` key (or other, depending on your settings) to open `Information` window in case if `Wing Leader` or `Wingman` is selected on `Wing` tab.
+Player can use standard `I` key (or other, depending on keys binding settings) to open `Information` window in case if `Wing Leader` or `Wingman` is selected on `Wing` tab.
 
 The same action is available via `Context menu`
 
@@ -229,14 +229,14 @@ Previously mentioned researchable upgrades are available in the standard `Resear
 
 ### Options
 
-In addition there is an options menu available via `Extension Options` menu, where you can configure the current debug level for the mod. By default it is set to `No debug`.
+In addition there is an options menu available via `Extension Options` menu, where Player can configure the current debug level for the mod. By default it is set to `No debug`.
 
 ![Extension options menu with Academy item.](docs/images/extension_options.png)
 ![Academy Options with Debug level dropdown.](docs/images/debug_level.png)
 
 ### Notifications
 
-There are several notifications implemented to keep you informed about important events related to the `Academy` operations. They are will be shown in the standard notifications area (ticker):
+There are several notifications implemented to keep Player informed about important events related to the `Academy` operations. They are will be shown in the standard notifications area (ticker):
 
 - When a pilot finished training as has reached the target rank the "Pilot %s has reached the target skill level %s." will be shown
 
