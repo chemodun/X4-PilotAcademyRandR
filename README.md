@@ -13,7 +13,7 @@ This mod introduces the Pilot Academy, allowing to the Player to train pilots an
 - **Researchable Upgrades**:
   - Expand to 9 Wings.
   - Train pilots up to the 5-star rank.
-  - Automatically hire cadets from selected factions.
+  - Automatically hire `Cadets` from selected factions.
   - Automatically assign trained pilots to Player ships based on priority.
 
 ## Limitations
@@ -47,7 +47,7 @@ This is a complex mod and may have undiscovered issues. Please report any proble
 - If rank is reached the presence of `Cadets` on an `Academy` station will be checked, and first candidate will be transferred on a ship.
 - If no `Cadets` detected, the `Auto Hire` option will be checked, and if it is enable - the new `Cadet` will be hared to a ship with paying out appropriate fee.
 - If no `Cadets` available and no `Auto Hire` is enabled - script will repeat these checks in 3 minutes.
-- Otherwise the pilot on a ship will be swapped with cadet, and then moved to the `Academy` station.
+- Otherwise the pilot on a ship will be swapped with `Cadet`, and then moved to the `Academy` station.
 - In case of `Assign` option is not  set to `manual`, and if last assign turn was finished at least 2 minutes ago - the `Auto assign` procedure will be initiated.
 - Based on a setting for the `Assign` will be selected ship with a pilot who has a loves rank (and below target rank level)
 - If such ship will be found, the `Trained Pilot` will be assigned as a pilot, and existing pilot will be transferred to an `Academy` station as a new `Cadet`.
@@ -71,7 +71,7 @@ The `Academy settings` tab includes controls for location, target skill level, a
 
 #### Academy Location
 
-The `Academy` uses an assigned Player-owned or other faction's owned station as living quarters for cadets and pilots.
+The `Academy` uses an assigned Player-owned or other faction's owned station as living quarters for `Cadets` and `Trained Pilots`.
 
 In the early game, when Player may not own any station the other factions' wharfs, shipyards, or trading stations can be used depending on Player reputation with them.
 
@@ -114,13 +114,13 @@ When auto assign is active, `Trained Pilots` will replace existing pilots on Pla
 
 ### Cadets and Pilots
 
-This tab displays a list of Players cadets and trained pilots. Initially, both lists will be empty.
+This tab displays a list of Players Cadets and `Trained Pilots`. Initially, both lists will be empty.
 
 ![Cadets and Pilots tab shoWing empty cadet and pilot rosters.](docs/images/personnel_initial_screen.png)
 
 #### Hiring Cadets
 
-Player can manually hire cadets in two ways:
+Player can manually hire `Cadets` in two ways:
 
 - From the global Personnel Management screen.
 
@@ -132,9 +132,9 @@ Player can manually hire cadets in two ways:
 
 Use the `Appoint as cadet` option in the context menu.
 
-Cadets will take some time to transfer from their original location and will be grayed out while in transit.
+It will take some time to transfer `Cadets` from their original location and they will be grayed out while in transit.
 
-![Example of a cadet list.](docs/images/personnel_with_cadets.png)
+![Example of a Cadets list.](docs/images/personnel_with_cadets.png)
 
 Player can also use the context menu to manage them like any other employee.
 
@@ -146,7 +146,7 @@ If auto-assign is not used, trained pilots will return to the `Academy`.
 
 ![List of trained pilots.](docs/images/personnel_with_pilots.png)
 
-Player can then manage them in the same way as cadets.
+Player can then manage them in the same way as `Cadets`.
 
 ### Wings
 
@@ -222,7 +222,7 @@ Previously mentioned researchable upgrades are available in the standard `Resear
 - `Pilot Academy: R&R. 3-star pilots`: Allows training of 3-star pilots in the Academy;
 - `Pilot Academy: R&R. 4-star pilots`: Allows training of 4-star pilots in the Academy;
 - `Pilot Academy: R&R. 5-star pilots`: Allows training of 5-star pilots in the Academy;
-- `Pilot Academy: R&R. Auto hire`: Adds possibility to automate cadet hiring from desired factions;
+- `Pilot Academy: R&R. Auto hire`: Adds possibility to automate `Cadet` hiring from desired factions;
 - `Pilot Academy: R&R. Auto assign`: Adds possibility to automate pilot assignment to ships outside the Academy.
 
 ![Group of Academy features upgrade researches.](docs/images/researches.png)
@@ -242,15 +242,15 @@ There are several notifications implemented to keep Player informed about import
 
   ![Notification: "Pilot has reached a new rank."](docs/images/notifications_pilot_reached_rank.png)
 
-- When no free cadets are available at the academy to replace trained pilot appropriate warning "No free cadets available for pilots swapping!" will be shown.
+- When no free `Cadets` are available at the academy to replace trained pilot appropriate warning "No free cadets available for pilots swapping!" will be shown.
 
   ![Notification: "No free cadets available at academy."](docs/images/notifications_no_free_cadets_at_academy.png)
 
-- If new cadet will be hired, appropriate information will be show "Cadet %s has been hired for %s {1001,101}."
+- If new `Cadet` will be hired, appropriate information will be show "Cadet %s has been hired for %s {1001,101}."
 
 - In case of no free space on a ship to transfer `Cadet` identified then the "No free crew capacity on %s to do pilot swapping!" warning will be shown.
 
-- When a new cadet is assigned to a Wing the "Cadet %s assigned as pilot on %s." will be shown
+- When a new `Cadet` is assigned to a Wing the "Cadet %s assigned as pilot on %s." will be shown
 
   ![Notification: "Cadet has been assigned to a Wing."](docs/images/notifications_cadet_assigned.png)
 
