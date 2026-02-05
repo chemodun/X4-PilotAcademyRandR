@@ -258,21 +258,22 @@ Several notifications are implemented to keep the Player informed about importan
 
   ![Notification: "Trained pilot has been moved back to the academy."](docs/images/notifications_pilot_moved_back.png)
 
-- With `Auto Assign`, when a `Trained Pilot` arrives on a new ship: "Pilot %s assigned as a new pilot on %s."
+- With `Auto Assign`, when a `Trained Pilot` arrives on a new ship: "Pilot %s has been transferred on %s."
+- An then on pilots swapping: "Pilot %s assigned as pilot on %s."
 - After moving the "old" one to the `Academy`, the Player will be notified with: "Pilot %s appointed as new Academy cadet."
 
 - In case of errors in `Cadet` and `Trained Pilot` transfers and swaps, several warning messages will be displayed:
 
- - "Can't perform pilot swapping on %s! Please do it manually!"
- - "Can't return pilot %s to the Academy! Please do it manually!"
- - "No free capacity at Academy to return pilot %s! Please resolve it!"
- - "Can't move new pilot %s to %s!"
-  
+  - "Can't perform pilot swapping on %s! Please do it manually!"
+  - "Can't return pilot %s to the Academy! Please do it manually!"
+  - "No free capacity at Academy to return pilot %s! Please resolve it!"
+  - "Can't move new pilot %s to %s!"
+
 - And hopefully, this warning will not be displayed: "Can't assign Academy training order on wing %s with leader ship %s! Please report the issue!"
 
 ## Video
 
-[Video demonstration of the mod (Version 1.00)](https://www.youtube.com/watch?v=)
+[Video demonstration of the mod (Version 1.00)](https://www.youtube.com/watch?v=NUMBER)
 
 ## Credits
 
