@@ -84,7 +84,11 @@
                   ]"
                 delay="3s" />
               <set_value name="$messageTemplate" exact="if $isCadet then {1972092412,1000002} else {1972092412,1000007} " />
-              <show_notification text="'%s\n%s'.[{1972092412,1}, $messageTemplate.[$replacementPilotName, $shipName]]" timeout="15s" />
+              <run_actions ref="Notify_Player">
+                <param name="title" value="{1972092412,1000003}" />
+                <param name="text" value="$messageTemplate.[$replacementPilotName, $shipName]" />
+                <param name="object" value="$ship" />
+              </run_actions>
               <remove_value name="$messageTemplate" />
             </do_if>
             <do_else>
@@ -108,8 +112,12 @@
                   text="'Pilot Academy: Process_Pilot_Swapping: exceeded max attempts to swap pilot %s on %s. Please do it manually!' .
                     [$oldPilotName, $ship.debugname]"
                   chance="$debugchance" />
-
-                <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,2000003}.[$shipName]]" priority="2" sound="notification_warning" timeout="15s" />
+                <run_actions ref="Notify_Player">
+                  <param name="title" value="{1972092412,1}" />
+                  <param name="text" value="{1972092412,2000003}.[ $shipName ]" />
+                  <param name="isWarning" value="true" />
+                  <param name="object" value="$ship" />
+                </run_actions>
               </do_else>
             </do_else>
             <remove_value name="$iteration" />
@@ -163,10 +171,18 @@
                       [$oldPilotName, $oldPilotTemplate, $oldPilotSkill, $academyObject.debugname]"
                   chance="$debugchance" />
                 <do_if value="$oldPilotSkill ge $targetCombinedSkill">
-                  <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,1000003}.[$oldPilotName]]" timeout="15s" />
+                  <run_actions ref="Notify_Player">
+                    <param name="title" value="{1972092412,1}" />
+                    <param name="text" value="{1972092412,1000003}.[$oldPilotName]" />
+                    <param name="object" value="$academyObject" />
+                  </run_actions>
                 </do_if>
                 <do_else>
-                  <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,1000006}.[$oldPilotName]]" timeout="15s" />
+                  <run_actions ref="Notify_Player">
+                    <param name="title" value="{1972092412,1}" />
+                    <param name="text" value="{1972092412,1000006}.[$oldPilotName]" />
+                    <param name="object" value="$academyObject" />
+                  </run_actions>
                 </do_else>
                 <raise_lua_event name="'PilotAcademyRAndR.PilotReturned'" param="'%s'.[$personTransferred.{1}]" />
                 <remove_value name="$oldPilotSkill" />
@@ -191,8 +207,12 @@
                     text="'Pilot Academy: Process_Old_Pilot_Return: exceeded max attempts to return old pilot %s (%s) to %s. Please do it manually!' .
                           [$oldPilotName, $oldPilotTemplate, $academyObject.debugname]"
                     chance="$debugchance" />
-                  <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,2000004}.[$oldPilotName]]" priority="2" sound="notification_warning"
-                    timeout="15s" />
+                  <run_actions ref="Notify_Player">
+                    <param name="title" value="{1972092412,1}" />
+                    <param name="text" value="{1972092412,2000004}.[$oldPilotName]" />
+                    <param name="isWarning" value="true" />
+                    <param name="object" value="$ship" />
+                  </run_actions>
                 </do_else>
               </do_else>
             </do_if>
@@ -201,8 +221,12 @@
                 text="'Pilot Academy: Process_Old_Pilot_Return: no free capacity in Academy %s to return old pilot %s (%s).' .
                   [$academyObject.debugname, $oldPilotName, $oldPilotTemplate]"
                 chance="$debugchance" />
-              <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,2000005}.[$oldPilotName]]" priority="2" sound="notification_warning"
-                timeout="15s" />
+              <run_actions ref="Notify_Player">
+                <param name="title" value="{1972092412,1}" />
+                <param name="text" value="{1972092412,2000005}.[$oldPilotName]" />
+                <param name="isWarning" value="true" />
+                <param name="object" value="$ship" />
+              </run_actions>
             </do_else>
             <remove_value name="$iteration" />
             <remove_value name="$oldPilotName" />
@@ -252,7 +276,11 @@
                   text="'Pilot Academy: Process_Move_New_Pilot: new pilot %s (%s) successfully transferred to %s. Initiating pilot swap.' .
                       [$newPilotName, $newPilotTemplate, $ship.debugname]"
                   chance="$debugchance" />
-                <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,1000005}.[$newPilotName, $shipName]]" timeout="15s" />
+                <run_actions ref="Notify_Player">
+                  <param name="title" value="{1972092412,1}" />
+                  <param name="text" value="{1972092412,1000005}.[$newPilotName, $shipName]" />
+                  <param name="object" value="$ship" />
+                </run_actions>
                 <signal_objects object="player.entity" param="'PilotAcademyRAndR.PilotSwapRequest'"
                   param2="table[
                     $ship = $ship,
@@ -283,8 +311,12 @@
                     text="'Pilot Academy: Process_Move_New_Pilot: exceeded max attempts to transfer new pilot %s (%s) to %s. Please do it manually!' .
                           [$newPilotName, $newPilotTemplate, $ship.debugname]"
                     chance="$debugchance" />
-                  <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,2000006}.[$shipName, $newPilotName]]" priority="2" sound="notification_warning"
-                    timeout="15s" />
+                  <run_actions ref="Notify_Player">
+                    <param name="title" value="{1972092412,1}" />
+                    <param name="text" value="{1972092412,2000006}.[$shipName, $newPilotName]" />
+                    <param name="isWarning" value="true" />
+                    <param name="object" value="$ship" />
+                  </run_actions>
                 </do_else>
               </do_else>
             </do_if>
@@ -293,8 +325,12 @@
                 text="'Pilot Academy: Process_Move_New_Pilot: no free capacity on ship %s to move new pilot %s (%s).' .
                   [$ship.debugname, $newPilotName, $newPilotTemplate]"
                 chance="$debugchance" />
-              <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,2000002}.[$shipName]]" priority="2" sound="notification_warning"
-                timeout="15s" />
+              <run_actions ref="Notify_Player">
+                <param name="title" value="{1972092412,1}" />
+                <param name="text" value="{1972092412,2000002}.[$shipName]" />
+                <param name="isWarning" value="true" />
+                <param name="object" value="$ship" />
+              </run_actions>
             </do_else>
             <remove_value name="$iteration" />
             <remove_value name="$newPilotName" />
@@ -315,8 +351,12 @@
             <debug_text
               text="'Pilot Academy: Process_No_Cadets_Available: No cadets available in Academy.'"
               chance="$debugchance" filter="scripts" />
-            <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,2000001}]" priority="2" sound="notification_warning"
-              timeout="15s" />
+            <run_actions ref="Notify_Player">
+              <param name="title" value="{1972092412,1}" />
+              <param name="text" value="{1972092412,2000001}" />
+              <param name="isWarning" value="true" />
+              <param name="object" value="@player.entity.$pilotAcademyRAndRData.$academyObject" />
+            </run_actions>
           </actions>
         </cue>
 
@@ -332,8 +372,12 @@
               chance="$debugchance" filter="scripts" />
             <set_value name="$ship" exact="@event.param3" />
             <set_value name="$shipName" exact="{1016,6}.[$ship.knownname, $ship.idcode]" />
-            <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,2000007}.[@event.param2, $shipName]]" priority="2" sound="notification_warning"
-              timeout="15s" />
+            <run_actions ref="Notify_Player">
+              <param name="title" value="{1972092412,1}" />
+              <param name="text" value="{1972092412,2000007}.[@event.param2, $shipName]" />
+              <param name="isWarning" value="true" />
+              <param name="object" value="$ship" />
+            </run_actions>
           </actions>
         </cue>
 
@@ -403,9 +447,12 @@
                 [@$ship.availablepeople.{$cadetTemplate}.name, @$cadetTemplate, $ship.debugname, @$cadetHiringFee]"
               chance="$debugchance" />
             <reward_player money="-$cadetHiringFee" />
-            <show_notification
-              text="'%s\n%s'.[{1972092412,1}, {1972092412,1000004}.[@$ship.availablepeople.{$cadetTemplate}.name, @$cadetHiringFee.formatted.default]]"
-              timeout="15s" />
+            <run_actions ref="Notify_Player">
+              <param name="title" value="{1972092412,1}" />
+              <param name="text" value="{1972092412,1000004}.[@$ship.availablepeople.{$cadetTemplate}.name, @$cadetHiringFee.formatted.default]" />
+              <param name="object" value="$ship" />
+              <param name="money" value="-$cadetHiringFee" />
+            </run_actions>
             <set_value name="$commonData" exact="@player.entity.$pilotAcademyRAndRData" />
             <set_value name="$academyObject" exact="$commonData.$locationObject" />
             <debug_text
@@ -486,6 +533,38 @@
             <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_4_star'" />
             <add_encyclopedia_entry type="researchables" item="'research_pilot_academy_r_and_r_5_star'" />
           </actions>
+        </library>
+
+        <library name="Notify_Player" purpose="run_actions" version="1">
+          <params>
+            <param name="title" />
+            <param name="text" />
+            <param name="isWarning" default="false" />
+            <param name="object" />
+            <param name="money" default="null" />
+          </params>
+          <actions>
+            <do_if value="@player.entity.$pilotAcademyRAndRData.notificationsEnabled == true">
+              <do_if value="@$isWarning == true">
+                <show_notification text="'%s\n%s'.[$title, $text]" priority="2" sound="notification_warning"
+                  timeout="15s" />
+              </do_if>
+              <do_else>
+                <show_notification text="'%s\n%s'.[$title, $text]" timeout="15s" />
+              </do_else>
+            </do_if>
+            <do_if value="@player.entity.$pilotAcademyRAndRData.logbookEnabled == true">
+              <do_if value="@$money != null">
+                <write_to_logbook category="general" title="$title" text="$text"
+                  interaction="showonmap" object="$object" highlighted="@$isWarning == true" money="$money" />
+              </do_if>
+              <do_else>
+                <write_to_logbook category="general" title="$title" text="$text"
+                  interaction="showonmap" object="$object" highlighted="@$isWarning == true" />
+              </do_else>
+            </do_if>
+          </actions>
+
         </library>
 
       </cues>

@@ -140,8 +140,10 @@
             text="'Pilot Academy [%s]: Pilot %s reached target rank level %s with combined skill %s, reporting to Academy to request replacement.' .
               [this.assignedcontrolled.debugname, this.debugname, $targetRankLevel, this.combinedskill]"
             chance="$debugchance" />
-
-          <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,1000001}.[this.name, $targetRankLevel]]" timeout="15s" />
+          <set_value name="$messageTitle" exact="{1972092412,1}" />
+          <set_value name="$messageText" exact="{1972092412,1000001}.[this.name, $targetRankLevel]" />
+          <set_value name="$messageObject" exact="this.assignedcontrolled" />
+          <include_interrupt_actions ref="PilotAcademyNotify" />
           <do_if value="this.assignedcontrolled.people.free ge 1">
             <raise_lua_event name="'PilotAcademyRAndR.RankLevelReached'" param="this.assignedcontrolled" />
             <set_value name="$rankUpReported" exact="true" />
@@ -151,8 +153,11 @@
               text="'Pilot Academy [%s]: Ship has no free crew capacity to perform rank up replacement!' .
                 [this.assignedcontrolled.debugname]"
               chance="$debugchance" />
-            <show_notification text="'%s\n%s'.[{1972092412,1}, {1972092412,2000002}.[this.assignedcontrolled.name]]" priority="2" sound="notification_warning"
-              timeout="15s" />
+            <set_value name="$messageTitle" exact="{1972092412,1}" />
+            <set_value name="$messageText" exact="{1972092412,2000002}.[this.assignedcontrolled.name]" />
+            <set_value name="$messageObject" exact="this.assignedcontrolled" />
+            <set_value name="$isMessageWarning" exact="true" />
+            <include_interrupt_actions ref="PilotAcademyNotify" />
             <set_value name="$rankUpReported" exact="false" />
           </do_else>
           <include_interrupt_actions ref="PilotAcademyInitShipVariables" />
@@ -234,6 +239,32 @@
             chance="$debugchance"
           />
         </do_if>
+      </actions>
+      <actions name="PilotAcademyNotify">
+        <do_if value="@$commonData.notificationsEnabled == true">
+          <do_if value="@$isMessageWarning == true">
+            <show_notification text="'%s\n%s'.[$messageTitle, $messageText]" priority="2" sound="notification_warning"
+              timeout="15s" />
+          </do_if>
+          <do_else>
+            <show_notification text="'%s\n%s'.[$messageTitle, $messageText]" timeout="15s" />
+          </do_else>
+        </do_if>
+        <do_if value="@$commonData.logbookEnabled == true">
+          <do_if value="@$messageMoney != null">
+            <write_to_logbook category="general" title="$messageTitle" text="$messageText"
+              interaction="showonmap" object="$messageObject" highlighted="@$isMessageWarning == true" money="$messageMoney" />
+          </do_if>
+          <do_else>
+            <write_to_logbook category="general" title="$messageTitle" text="$messageText"
+              interaction="showonmap" object="$messageObject" highlighted="@$isMessageWarning == true" />
+          </do_else>
+        </do_if>
+        <remove_value name="$messageTitle" />
+        <remove_value name="$messageText" />
+        <remove_value name="$messageObject" />
+        <remove_value name="$messageMoney" />
+        <remove_value name="$isMessageWarning" />
       </actions>
     </library>
     <handler ref="AttackHandler" />
