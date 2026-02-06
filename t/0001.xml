@@ -53,10 +53,11 @@
       <t id="10903">Update</t>
       <t id="10904">Create</t>
       <t id="20001">Appoint as a cadet</t>
-      <t id="90001">Debug level:</t>
-      <t id="90011">No debug</t>
-      <t id="90012">Debug</t>
-      <t id="90013">Trace</t>
+      <t id="90001">Display messages in:</t>
+      <t id="90009">Debug level:</t>
+      <t id="90091">No debug</t>
+      <t id="90092">Debug</t>
+      <t id="90093">Trace</t>
       <t id="100001">Alpha</t>
       <t id="100002">Bravo</t>
       <t id="100003">Charlie</t>
