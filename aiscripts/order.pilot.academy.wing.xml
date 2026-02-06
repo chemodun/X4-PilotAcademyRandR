@@ -234,9 +234,6 @@
             chance="$debugchance"
           />
         </do_if>
-        <do_if value="this.assignedcontrolled.order.id == 'PilotAcademyWing'">
-          <edit_order_param order="this.assignedcontrolled.order" param="debugchance" value="$debugchance" />
-        </do_if>
       </actions>
     </library>
     <handler ref="AttackHandler" />
