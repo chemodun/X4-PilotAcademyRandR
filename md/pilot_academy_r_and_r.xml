@@ -544,7 +544,7 @@
             <param name="money" default="null" />
           </params>
           <actions>
-            <do_if value="@player.entity.$pilotAcademyRAndRData.notificationsEnabled == true">
+            <do_if value="@player.entity.$pilotAcademyRAndRData.$notificationsEnabled == true">
               <do_if value="@$isWarning == true">
                 <show_notification text="'%s\n%s'.[$title, $text]" priority="2" sound="notification_warning"
                   timeout="15s" />
@@ -553,7 +553,7 @@
                 <show_notification text="'%s\n%s'.[$title, $text]" timeout="15s" />
               </do_else>
             </do_if>
-            <do_if value="@player.entity.$pilotAcademyRAndRData.logbookEnabled == true">
+            <do_if value="@player.entity.$pilotAcademyRAndRData.$logbookEnabled == true">
               <do_if value="@$money != null">
                 <write_to_logbook category="general" title="$title" text="$text"
                   interaction="showonmap" object="$object" highlighted="@$isWarning == true" money="$money" />
