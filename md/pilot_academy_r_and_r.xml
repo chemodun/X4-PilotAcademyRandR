@@ -544,6 +544,10 @@
             <param name="money" default="null" />
           </params>
           <actions>
+            <debug_text
+              text="'Pilot Academy: Notify_Player: Title: %s, Text: %s, IsWarning: %s, Object: %s, Money: %s. Notify: %s. LogBook: %s.'.
+                [$title, $text, $isWarning, @$object.debugname, $money, @player.entity.$pilotAcademyRAndRData.$notificationsEnabled, @player.entity.$pilotAcademyRAndRData.$logbookEnabled]"
+              chance="$debugchance" filter="scripts" />
             <do_if value="@player.entity.$pilotAcademyRAndRData.$notificationsEnabled == true">
               <do_if value="@$isWarning == true">
                 <show_notification text="'%s\n%s'.[$title, $text]" priority="2" sound="notification_warning"

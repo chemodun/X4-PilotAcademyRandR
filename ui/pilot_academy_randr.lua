@@ -254,10 +254,10 @@ function pilotAcademy.Init(menuMap, menuPlayerInfo)
   RegisterEvent("PilotAcademyRAndR.DebugLevelChanged", pilotAcademy.onDebugLevelChanged)
   pilotAcademy.resetData()
   pilotAcademy.loadWings()
-  pilotAcademy.loadCommonData()
+  local changed = pilotAcademy.loadCommonData()
   debugLevel = "none"
   pilotAcademy.onDebugLevelChanged()
-  if pilotAcademy.setRentCost() then
+  if pilotAcademy.setRentCost() or changed then
     pilotAcademy.saveCommonData()
   end
 end
@@ -1407,9 +1407,10 @@ end
 
 function pilotAcademy.loadCommonData()
   pilotAcademy.commonData = {}
+  local changed = false
   if pilotAcademy.playerId == nil or pilotAcademy.playerId == 0 then
     debug("loadCommonData: unable to resolve player id")
-    return
+    return false
   end
   local variableId = string.format("$%s", pilotAcademy.variableId)
   local savedData = GetNPCBlackboard(pilotAcademy.playerId, variableId)
@@ -1423,6 +1424,7 @@ function pilotAcademy.loadCommonData()
     pilotAcademy.commonData.locationId = ConvertStringTo64Bit(tostring(pilotAcademy.commonData.locationObject))
   end
 
+  debug("loadCommonData: locationId is " .. tostring(pilotAcademy.commonData.locationId))
   if pilotAcademy.commonData.autoHire == 0 then
     pilotAcademy.commonData.autoHire = false
   elseif pilotAcademy.commonData.autoHire == 1 then
@@ -1433,7 +1435,17 @@ function pilotAcademy.loadCommonData()
     pilotAcademy.commonData.lastAutoAssignTime = C.GetCurrentGameTime()
   end
 
-  debug("loadCommonData: locationId is " .. tostring(pilotAcademy.commonData.locationId))
+  if pilotAcademy.commonData.notificationsEnabled == nil then
+    pilotAcademy.commonData.notificationsEnabled = 1
+    changed = true
+  end
+
+  if pilotAcademy.commonData.logbookEnabled == nil then
+    pilotAcademy.commonData.logbookEnabled = 1
+    changed = true
+  end
+
+  return changed
 end
 
 function pilotAcademy.saveCommonData()

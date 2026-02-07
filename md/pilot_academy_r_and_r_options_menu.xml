@@ -39,8 +39,10 @@
               <do_if value="@$commonData.$debugLevel == null">
                 <set_value name="$commonData.$debugLevel" exact="'none'" />
               </do_if>
-              <debug_text text="'Pilot Academy Options: Current options: notifications: %s, logbook: %s, debug level: %s' .
-                [@$commonData.$notificationsEnabled, @$commonData.$logbookEnabled, @$commonData.$debugLevel]" context="false" filter="scripts" />
+              <debug_text
+                text="'Pilot Academy Options: Current options: notifications: %s, logbook: %s, debug level: %s' .
+                [@$commonData.$notificationsEnabled, @$commonData.$logbookEnabled, @$commonData.$debugLevel]"
+                context="false" filter="scripts" />
               <create_list name="$debugLevelOptions" />
               <do_for_each name="$indexValue" in="$debugLevelIndexes" counter="$index">
                 <do_if value="$index == 1">
@@ -150,10 +152,10 @@
             <set_value name="$commonData" exact="@player.entity.$pilotAcademyRAndRData" />
             <do_if value="@$commonData != null">
               <do_if value="event.param.$id == 'pilot_academy_notifications'">
-                <set_value name="@$commonData.$notificationsEnabled" exact="if event.param.$checked then true else false" />
+                <set_value name="$commonData.$notificationsEnabled" exact="if event.param.$checked then true else false" />
               </do_if>
               <do_if value="event.param.$id == 'pilot_academy_logbook'">
-                <set_value name="@$commonData.$logbookEnabled" exact="if event.param.$checked then true else false" />
+                <set_value name="$commonData.$logbookEnabled" exact="if event.param.$checked then true else false" />
               </do_if>
             </do_if>
             <remove_value name="$commonData" />
