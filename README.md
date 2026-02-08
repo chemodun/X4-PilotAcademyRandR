@@ -232,11 +232,13 @@ The previously mentioned researchable upgrades are available in the standard `Re
 An options menu is available via the `Extension Options` menu, where the Player can configure the debug level for the mod. By default, it is set to `No debug`.
 
 ![Extension options menu with Academy item.](docs/images/extension_options.png)
-![Academy Options with Debug level dropdown.](docs/images/debug_level.png)
+![Academy Options](docs/images/academy_options.png)
 
-### Notifications
+### Notifications and LogBook messages
 
-Several notifications are implemented to keep the Player informed about important events related to `Academy` operations. They will be shown in the standard notifications area (ticker):
+Several notifications are implemented to keep the Player informed about important events related to `Academy` operations. They will be shown in the standard notifications area (ticker) and in the `LogBook`, if appropriate settings are enabled.
+
+There are examples of texts and notifications screenshots:
 
 - When a pilot has finished training and reached the target rank: "Pilot %s has reached the target skill level %s."
 
