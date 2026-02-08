@@ -235,8 +235,11 @@ The previously mentioned researchable upgrades are available in the standard [b]
 
 [size=3][u][i]Options[/i][/u][/size]
 
-An options menu is available via the [b]Extension Options[/b] menu, where the Player can configure the debug level for the mod. By default, it is set to [b]No debug[/b].
-
+An options menu is available via the [b]Extension Options[/b] menu, where the Player can:
+[list]
+[*] Enable / disable the notifications in the [b]Notification Ticker[/b] and [b]LogBook[/b].
+[*] Set the  debug level for the mod. By default, it is set to [b]No debug[/b].
+[/list]
 [img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/extension_options.png[/img]
 [img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/academy_options.png[/img]
 
