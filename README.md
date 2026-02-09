@@ -1,6 +1,6 @@
 # Pilot Academy: Ranks and Relations
 
-This mod introduces the Pilot Academy, allowing the Player to train pilots and improve faction relations through trade operations.
+This mod introduces the Pilot Academy, allowing the Player to train pilots through simple trading while simultaneously improving relations with factions.
 
 ## Features
 
@@ -19,13 +19,14 @@ This mod introduces the Pilot Academy, allowing the Player to train pilots and i
 ## Limitations
 
 - The Academy currently only supports small (S-class) ships.
+- Trades used for the training process are non-profitable and uses only one item of selected ware per transaction.
 
 ## Requirements
 
 - **X4: Foundations**: Version 8.00HF3 or newer.
-- **UI Extensions and HUD**: Version 8.036 or higher by [kuertee](https://next.nexusmods.com/profile/kuertee?gameId=2659).
+- **UI Extensions and HUD**: Version v8.0.4.0 or higher by [kuertee](https://next.nexusmods.com/profile/kuertee?gameId=2659).
   - Available on Nexus Mods: [UI Extensions and HUD](https://www.nexusmods.com/x4foundations/mods/552)
-- **Mod Support APIs**: Version 1.93 or higher by [SirNukes](https://next.nexusmods.com/profile/sirnukes?gameId=2659).
+- **Mod Support APIs**: Version 1.95 or higher by [SirNukes](https://next.nexusmods.com/profile/sirnukes?gameId=2659).
   - Available on Steam: [SirNukes Mod Support APIs](https://steamcommunity.com/sharedfiles/filedetails/?id=2042901274)
   - Available on Nexus Mods: [Mod Support APIs](https://www.nexusmods.com/x4foundations/mods/503)
 

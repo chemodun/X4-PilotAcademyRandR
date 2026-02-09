@@ -4,54 +4,55 @@
   name="Pilot Academy: Ranks and Relations"
   author="Chem O`Dun"
   version="100"
-  date="2025-12-12"
+  date="2026-02-12"
   save="false"
   lastupdate="1764247119"
-  description="The main idea - to train pilots and in parallel to increase relations with factions by simple trading.">
+  description="Train pilots through simple trading while simultaneously improving relations with factions.">
   <text language="7"
-    description=""></text>
+    description="Train pilots through simple trading while simultaneously improving relations with factions."></text>
   <!-- French -->
   <text language="33"
-    description=""></text>
+    description="Formez des pilotes grâce au commerce simple tout en améliorant simultanément les relations avec les factions."></text>
   <!-- Spanish -->
   <text language="34"
-    description=""></text>
+    description="Entrena pilotos a través del comercio simple mientras mejoras simultáneamente las relaciones con las facciones."></text>
   <!-- Italian -->
   <text language="39"
-    description=""></text>
+    description="Addestra i piloti attraverso un semplice commercio migliorando contemporaneamente le relazioni con le fazioni."></text>
   <!-- Czech -->
   <text language="42"
-    description=""></text>
+    description="Cvičte piloty prostřednictvím jednoduchého obchodování a zároveň zlepšujte vztahy s frakcemi."></text>
   <!-- English -->
   <text language="44"
-    description=""></text>
+    description="Train pilots through simple trading while simultaneously improving relations with factions."></text>
   <!-- Polish -->
   <text language="48"
-    description=""></text>
+    description="Szkolenie pilotów poprzez prosty handel przy jednoczesnej poprawie stosunków z frakcjami."></text>
   <!-- German -->
   <text language="49"
-    description=""></text>
+    description="Trainieren Sie Piloten durch einfachen Handel und verbessern Sie gleichzeitig die Beziehungen zu Fraktionen."></text>
   <!-- Portuguese -->
   <text language="55"
-    description=""></text>
+    description="Treine pilotos através do comércio simples enquanto melhora simultaneamente as relações com as facções."></text>
   <!-- Japanese -->
-  <text language="81" 
-    description=""></text>
+  <text language="81"
+    description="シンプルな取引を通じてパイロットを訓練しながら、同時に派閥との関係を改善します。"></text>
   <!-- Korean -->
-  <text language="82" 
-    description=""></text>
-  <!-- Chinese -->
-  <text language="86" 
-    description=""></text>
-  <!-- Bengali -->
+  <text language="82"
+    description="간단한 거래를 통해 조종사를 훈련시키는 동시에 파벌과의 관계를 개선하십시오."></text>
+  <!-- Chinese Simplified -->
+  <text language="86"
+    description="通过简单的交易训练飞行员，同时改善与派系的关系。"></text>
+  <!-- Chinese Traditional -->
   <text language="88"
-    description=""></text>
+    description="通過簡單的交易訓練飛行員，同時改善與派系的關係。"></text>
   <!-- Turkish -->
   <text language="90"
-    description=""></text>
+    description="Basit ticaret yoluyla pilotları eğitin ve aynı anda gruplarla ilişkileri geliştirin."></text>
   <!-- Ukrainian -->
   <text language="380"
-    description=""></text>
-  <dependency version="760"></dependency>
-  <dependency id="ws_2042901274" optional="false" name="SirNukes Mod Support APIs" version="193"></dependency>
+    description="Навчайте пілотів простій торгівлі, одночасно покращуючи відносини з фракціями."></text>
+  <dependency version="800"></dependency>
+  <dependency id="ws_2042901274" optional="false" name="SirNukes Mod Support APIs" version="195"></dependency>
+  <dependency id="kuerteeUIExtensionsAndHUD" optional="false" name="kuertee UI Extensions and HUD" version="804"></dependency>
 </content>
