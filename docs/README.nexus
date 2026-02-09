@@ -70,7 +70,7 @@ The [b]Academy[/b] window has three types of tabs:
 [*] [b]Cadets and Pilots[/b]
 [*] Wings management tabs, including [b]Add New Wing[/b]
 [/list]
-[size=3][u][i]Academy Settings Tab[/i][/u][/size]
+[size=3][u][i]Academy Settings[/i][/u][/size]
 
 The [b]Academy Settings[/b] tab includes controls for location, target skill level, auto-hiring, and auto-assigning [b]Trained Pilots[/b].
 
@@ -238,15 +238,15 @@ The previously mentioned researchable upgrades are available in the standard [b]
 
 An options menu is available via the [b]Extension Options[/b] menu, where the Player can:
 [list]
-[*] Enable / disable the notifications in the [b]Notification Ticker[/b] and [b]LogBook[/b].
+[*] Enable / disable the notifications in the [b]Notification Ticker[/b] and [b]Logbook[/b].
 [*] Set the  debug level for the mod. By default, it is set to [b]No debug[/b].
 [/list]
 [img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/extension_options.png[/img]
 [img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/academy_options.png[/img]
 
-[size=3][u][i]Notifications and LogBook messages[/i][/u][/size]
+[size=3][u][i]Notifications and Logbook messages[/i][/u][/size]
 
-Several notifications are implemented to keep the Player informed about important events related to [b]Academy[/b] operations. They will be shown in the standard notifications area (ticker) and in the [b]LogBook[/b], if appropriate settings are enabled.
+Several notifications are implemented to keep the Player informed about important events related to [b]Academy[/b] operations. They will be shown in the standard notifications area (ticker) and in the [b]Logbook[/b], if appropriate settings are enabled.
 
 There are examples of texts and notifications screenshots:
 [list]
