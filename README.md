@@ -230,12 +230,15 @@ The previously mentioned researchable upgrades are available in the standard `Re
 
 ### Options
 
-An options menu is available via the `Extension Options` menu, where the Player can:
+An options menu is available via the `Extension Options` menu.
+
+![Extension options menu with Academy item.](docs/images/extension_options.png)
+
+Player can:
 
 - Enable / disable the notifications in the `Notification Ticker` and `Logbook`.
 - Set the  debug level for the mod. By default, it is set to `No debug`.
 
-![Extension options menu with Academy item.](docs/images/extension_options.png)
 ![Academy Options](docs/images/academy_options.png)
 
 ### Notifications and Logbook messages
