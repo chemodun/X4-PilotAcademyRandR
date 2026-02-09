@@ -64,7 +64,7 @@ The `Academy` window has three types of tabs:
 - `Cadets and Pilots`
 - Wings management tabs, including `Add New Wing`
 
-### Academy Settings Tab
+### Academy Settings
 
 The `Academy Settings` tab includes controls for location, target skill level, auto-hiring, and auto-assigning `Trained Pilots`.
 
@@ -232,15 +232,15 @@ The previously mentioned researchable upgrades are available in the standard `Re
 
 An options menu is available via the `Extension Options` menu, where the Player can:
 
-- Enable / disable the notifications in the `Notification Ticker` and `LogBook`.
+- Enable / disable the notifications in the `Notification Ticker` and `Logbook`.
 - Set the  debug level for the mod. By default, it is set to `No debug`.
 
 ![Extension options menu with Academy item.](docs/images/extension_options.png)
 ![Academy Options](docs/images/academy_options.png)
 
-### Notifications and LogBook messages
+### Notifications and Logbook messages
 
-Several notifications are implemented to keep the Player informed about important events related to `Academy` operations. They will be shown in the standard notifications area (ticker) and in the `LogBook`, if appropriate settings are enabled.
+Several notifications are implemented to keep the Player informed about important events related to `Academy` operations. They will be shown in the standard notifications area (ticker) and in the `Logbook`, if appropriate settings are enabled.
 
 There are examples of texts and notifications screenshots:
 
