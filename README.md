@@ -218,13 +218,13 @@ For a `Wingman`, the `Remove Assignment` action is also available.
 
 The previously mentioned researchable upgrades are available in the standard `Research` interface under the `Pilot Academy RnR` group:
 
-- `Pilot Academy: R&R. Five wings`: Extends the `Academy` capacity to support five wings.
-- `Pilot Academy: R&R. Nine wings`: Extends the `Academy` capacity to support nine wings.
-- `Pilot Academy: R&R. 3-star pilots`: Allows training of 3-star pilots in the Academy.
-- `Pilot Academy: R&R. 4-star pilots`: Allows training of 4-star pilots in the Academy.
-- `Pilot Academy: R&R. 5-star pilots`: Allows training of 5-star pilots in the Academy.
-- `Pilot Academy: R&R. Auto hire`: Adds the ability to automate `Cadet` hiring from desired factions.
-- `Pilot Academy: R&R. Auto assign`: Adds the ability to automate pilot assignment to ships outside the Academy.
+- `Pilot Academy. Five wings`: Extends the `Academy` capacity to support five wings.
+- `Pilot Academy. Nine wings`: Extends the `Academy` capacity to support nine wings.
+- `Pilot Academy. 3-star pilots`: Allows training of 3-star pilots in the Academy.
+- `Pilot Academy. 4-star pilots`: Allows training of 4-star pilots in the Academy.
+- `Pilot Academy. 5-star pilots`: Allows training of 5-star pilots in the Academy.
+- `Pilot Academy. Auto hire`: Adds the ability to automate `Cadet` hiring from desired factions.
+- `Pilot Academy. Auto assign`: Adds the ability to automate pilot assignment to ships outside the Academy.
 
 ![Group of Academy features upgrade researches.](docs/images/researches.png)
 
