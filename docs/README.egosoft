@@ -224,13 +224,13 @@ For a [b]Wingman[/b], the [b]Remove Assignment[/b] action is also available.
 
 The previously mentioned researchable upgrades are available in the standard [b]Research[/b] interface under the [b]Pilot Academy RnR[/b] group:
 [list]
-[*] [b]Pilot Academy: R&R. Five wings[/b]: Extends the [b]Academy[/b] capacity to support five wings.
-[*] [b]Pilot Academy: R&R. Nine wings[/b]: Extends the [b]Academy[/b] capacity to support nine wings.
-[*] [b]Pilot Academy: R&R. 3-star pilots[/b]: Allows training of 3-star pilots in the Academy.
-[*] [b]Pilot Academy: R&R. 4-star pilots[/b]: Allows training of 4-star pilots in the Academy.
-[*] [b]Pilot Academy: R&R. 5-star pilots[/b]: Allows training of 5-star pilots in the Academy.
-[*] [b]Pilot Academy: R&R. Auto hire[/b]: Adds the ability to automate [b]Cadet[/b] hiring from desired factions.
-[*] [b]Pilot Academy: R&R. Auto assign[/b]: Adds the ability to automate pilot assignment to ships outside the Academy.
+[*] [b]Pilot Academy. Five wings[/b]: Extends the [b]Academy[/b] capacity to support five wings.
+[*] [b]Pilot Academy. Nine wings[/b]: Extends the [b]Academy[/b] capacity to support nine wings.
+[*] [b]Pilot Academy. 3-star pilots[/b]: Allows training of 3-star pilots in the Academy.
+[*] [b]Pilot Academy. 4-star pilots[/b]: Allows training of 4-star pilots in the Academy.
+[*] [b]Pilot Academy. 5-star pilots[/b]: Allows training of 5-star pilots in the Academy.
+[*] [b]Pilot Academy. Auto hire[/b]: Adds the ability to automate [b]Cadet[/b] hiring from desired factions.
+[*] [b]Pilot Academy. Auto assign[/b]: Adds the ability to automate pilot assignment to ships outside the Academy.
 [/list]
 [spoiler][img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/researches.png[/img][/spoiler]
 
