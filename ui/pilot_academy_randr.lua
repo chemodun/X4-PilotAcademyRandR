@@ -1288,6 +1288,97 @@ function pilotAcademy.skillBase(skill)
   return skill * 15.0 / 300
 end
 
+-- Helper: Create personnel header table
+function pilotAcademy.createPersonnelHeaderTable(frame, menu, config)
+  local tableTop = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
+  tableTop.name = "table_personnel_top"
+  tableTop:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
+  tableTop:setDefaultCellProperties("button", { height = config.mapRowHeight })
+  tableTop:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
+  pilotAcademy.setAcademyContentColumnWidths(tableTop, menu, config)
+
+  local row = tableTop:addRow(nil, { fixed = true })
+  row[1]:setColSpan(4):createText(texts.cadetsAndPilotsTitle, Helper.headerRowCenteredProperties)
+
+  return { table = tableTop, height = tableTop:getFullHeight() }
+end
+
+-- Helper: Create personnel list table (cadets or pilots)
+function pilotAcademy.createPersonnelListTable(frame, menu, config, personnel, title, tableName)
+  local tablePersonnel = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
+  tablePersonnel.name = tableName
+  tablePersonnel:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
+  tablePersonnel:setDefaultCellProperties("button", { height = config.mapRowHeight })
+  tablePersonnel:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
+  pilotAcademy.setAcademyContentColumnWidths(tablePersonnel, menu, config)
+
+  tablePersonnel:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  local row = tablePersonnel:addRow(nil, { fixed = true })
+  row[2]:setColSpan(2):createText(title, Helper.headerRowCenteredProperties)
+
+  -- Add personnel rows
+  local tablePersonnelMaxHeight = 0
+  for i = 1, #personnel do
+    local person = personnel[i]
+    if person ~= nil then
+      row = tablePersonnel:addRow({ tableName = tablePersonnel.name, rowData = person }, { fixed = false })
+      local icon = row[2]:setColSpan(2):createIcon(person.icon, {
+        height = config.mapRowHeight,
+        width = config.mapRowHeight,
+        color = person.hasArrived and Color["text_normal"] or Color["text_inactive"]
+      })
+      icon:setText(person.name, {
+        x = config.mapRowHeight,
+        halign = "left",
+        color = person.hasArrived and Color["text_normal"] or Color["text_inactive"]
+      })
+      icon:setText2(person.skillInStars, {
+        halign = "right",
+        color = person.hasArrived and Color["text_skills"] or Color["text_inactive"]
+      })
+
+      if i == 15 then
+        tablePersonnelMaxHeight = tablePersonnel:getFullHeight()
+      end
+    end
+  end
+
+  -- Handle empty state
+  if #personnel == 0 then
+    row = tablePersonnel:addRow(nil, { fixed = false })
+    local emptyText = title == texts.pilots and texts.noPilotsAvailable or texts.noCadetsAssigned
+    row[2]:setColSpan(2):createText(emptyText, { halign = "center", color = Color["text_warning"] })
+  else
+    -- Restore scroll position if available
+    if pilotAcademy.topRows.tablePersonnelPilots ~= nil then
+      tablePersonnel:setTopRow(pilotAcademy.topRows.tablePersonnelPilots)
+    end
+  end
+  pilotAcademy.topRows.tablePersonnelPilots = nil
+
+  -- Set max visible height
+  if tablePersonnelMaxHeight == 0 then
+    tablePersonnelMaxHeight = tablePersonnel:getFullHeight()
+  end
+  tablePersonnel.properties.maxVisibleHeight = math.min(tablePersonnel:getFullHeight(), tablePersonnelMaxHeight)
+
+  return { table = tablePersonnel, height = tablePersonnel.properties.maxVisibleHeight }
+end
+
+-- Helper: Create personnel bottom spacing table
+function pilotAcademy.createPersonnelBottomTable(frame, menu, config)
+  local tableBottom = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
+  tableBottom.name = "table_personnel_bottom"
+  tableBottom:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
+  tableBottom:setDefaultCellProperties("button", { height = config.mapRowHeight })
+  tableBottom:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
+  pilotAcademy.setAcademyContentColumnWidths(tableBottom, menu, config)
+  tableBottom:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+
+  return { table = tableBottom, height = tableBottom:getFullHeight() }
+end
+
+-- Main function: Orchestrate personnel info display
 function pilotAcademy.displayPersonnelInfo(frame, menu, config)
   if frame == nil then
     trace("Frame is nil; cannot display wing info")
@@ -1299,78 +1390,17 @@ function pilotAcademy.displayPersonnelInfo(frame, menu, config)
   end
 
   local tables = {}
-  local tableTop = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
-  tableTop.name = "table_personnel_top"
-  tableTop:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
-  tableTop:setDefaultCellProperties("button", { height = config.mapRowHeight })
-  tableTop:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-  pilotAcademy.setAcademyContentColumnWidths(tableTop, menu, config)
-  local row = tableTop:addRow(nil, { fixed = true })
-  row[1]:setColSpan(4):createText(texts.cadetsAndPilotsTitle, Helper.headerRowCenteredProperties)
 
-  tables[#tables + 1] = { table = tableTop, height = tableTop:getFullHeight() }
-
+  -- Fetch personnel data
   local cadets, pilots = pilotAcademy.fetchAcademyPersonnel()
 
-  local tableCadets = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
-  tableCadets.name = "table_personnel_cadets"
-  pilotAcademy.fillPersonnelTable(tableCadets, cadets, texts.cadets, menu, config, tables)
-
-  local tablePilots = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
-  tablePilots.name = "table_personnel_pilots"
-  pilotAcademy.fillPersonnelTable(tablePilots, pilots, texts.pilots, menu, config, tables)
-
-  local tableBottom = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
-  tableBottom.name = "table_personnel_bottom"
-  tableBottom:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
-  tableBottom:setDefaultCellProperties("button", { height = config.mapRowHeight })
-  tableBottom:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-  pilotAcademy.setAcademyContentColumnWidths(tableBottom, menu, config)
-  tableBottom:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-  tables[#tables + 1] = { table = tableBottom, height = tableBottom:getFullHeight() }
+  -- Create all UI sections
+  tables[#tables + 1] = pilotAcademy.createPersonnelHeaderTable(frame, menu, config)
+  tables[#tables + 1] = pilotAcademy.createPersonnelListTable(frame, menu, config, cadets, texts.cadets, "table_personnel_cadets")
+  tables[#tables + 1] = pilotAcademy.createPersonnelListTable(frame, menu, config, pilots, texts.pilots, "table_personnel_pilots")
+  tables[#tables + 1] = pilotAcademy.createPersonnelBottomTable(frame, menu, config)
 
   return tables
-end
-
-function pilotAcademy.fillPersonnelTable(tablePersonnel, personnel, title, menu, config, tables)
-  tablePersonnel:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
-  tablePersonnel:setDefaultCellProperties("button", { height = config.mapRowHeight })
-  tablePersonnel:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-  pilotAcademy.setAcademyContentColumnWidths(tablePersonnel, menu, config)
-  tablePersonnel:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-  local row = tablePersonnel:addRow(nil, { fixed = true })
-  row[2]:setColSpan(2):createText(title, Helper.headerRowCenteredProperties)
-  local tablePersonnelMaxHeight = 0
-  for i = 1, #personnel do
-    local person = personnel[i]
-    if person ~= nil then
-      local row = tablePersonnel:addRow({ tableName = tablePersonnel.name, rowData = person }, { fixed = false })
-      local icon = row[2]:setColSpan(2):createIcon(person.icon,
-        { height = config.mapRowHeight, width = config.mapRowHeight, color = person.hasArrived and Color["text_normal"] or Color["text_inactive"] })
-      icon:setText(person.name, { x = config.mapRowHeight, halign = "left", color = person.hasArrived and Color["text_normal"] or Color["text_inactive"] })
-      icon:setText2(person.skillInStars, { halign = "right", color = person.hasArrived and Color["text_skills"] or Color["text_inactive"] })
-
-      if i == 15 then
-        tablePersonnelMaxHeight = tablePersonnel:getFullHeight()
-      end
-    end
-  end
-
-  if #personnel == 0 then
-    local row = tablePersonnel:addRow(nil, { fixed = false })
-    row[2]:setColSpan(2):createText(title == texts.pilots and texts.noPilotsAvailable or texts.noCadetsAssigned,
-      { halign = "center", color = Color["text_warning"] })
-  else
-    if pilotAcademy.topRows.tablePersonnelPilots ~= nil then
-      tablePersonnel:setTopRow(pilotAcademy.topRows.tablePersonnelPilots)
-    end
-  end
-  pilotAcademy.topRows.tablePersonnelPilots = nil
-  if tablePersonnelMaxHeight == 0 then
-    tablePersonnelMaxHeight = tablePersonnel:getFullHeight()
-  end
-  tablePersonnel.properties.maxVisibleHeight = math.min(tablePersonnel:getFullHeight(), tablePersonnelMaxHeight)
-  tables[#tables + 1] = { table = tablePersonnel, height = tablePersonnel.properties.maxVisibleHeight }
 end
 
 function pilotAcademy.fetchAcademyPersonnel(toOneTable, onlyArrived)
