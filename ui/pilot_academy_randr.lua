@@ -564,6 +564,32 @@ function pilotAcademy.createTable(frame, numCols, id, reserveScrollBar, menu, co
   return tableHandle
 end
 
+function pilotAcademy.displayFactions(tableFactions, factions, editData, storedData,config)
+    local tableFactionsMaxHeight = 0
+    local selectedFactions = pilotAcademy.combineFactionsSelections(editData, storedData)
+    for i = 1, #factions do
+      local faction = factions[i]
+      if faction ~= nil then
+        local row = tableFactions:addRow(faction.id, { fixed = false })
+        row[2]:createCheckBox(selectedFactions[faction.id] == true, { scaling = false })
+        row[2].handlers.onClick = function(_, checked) return pilotAcademy.onSelectFaction(faction.id, checked, storedData) end
+        row[3]:createIcon(faction.icon, { height = config.mapRowHeight, width = config.mapRowHeight, color = Color[faction.colorId] or Color["text_normal"] })
+        row[4]:createText(string.format("[%s]", faction.shortName), { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
+        row[5]:createText("-", { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
+        row[6]:setColSpan(4):createText(faction.name, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
+        row[10]:createText(faction.relationName, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
+        row[11]:createText(string.format("(%+2d)", faction.uiRelation), { halign = "right", color = Color[faction.colorId] or Color["text_normal"] })
+        if i == 10 then
+          tableFactionsMaxHeight = tableFactions:getFullHeight()
+        end
+      end
+    end
+    if tableFactionsMaxHeight == 0 then
+      tableFactionsMaxHeight = tableFactions:getFullHeight()
+    end
+    tableFactions.properties.maxVisibleHeight = math.min(tableFactions:getFullHeight(), tableFactionsMaxHeight)
+end
+
 function pilotAcademy.displayAcademyInfo(frame, menu, config)
   trace("displayAcademyInfo called at " .. tostring(C.GetCurrentGameTime()))
   if frame == nil then
@@ -672,32 +698,11 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
   tables[#tables + 1] = { table = tableTop, height = tableTop:getFullHeight() }
 
   if #factions > 0 and autoHire == true then
-    local tableFactionsMaxHeight = 0
 
     local tableFactions = pilotAcademy.createTable(frame, 12, "table_academy_factions", false, menu, config, maxRelationNameWidth)
 
-    local selectedFactions = pilotAcademy.combineFactionsSelections(editData, academyData)
-    for i = 1, #factions do
-      local faction = factions[i]
-      if faction ~= nil then
-        local row = tableFactions:addRow(faction.id, { fixed = false })
-        row[2]:createCheckBox(selectedFactions[faction.id] == true, { scaling = false })
-        row[2].handlers.onClick = function(_, checked) return pilotAcademy.onSelectFaction(faction.id, checked, academyData) end
-        row[3]:createIcon(faction.icon, { height = config.mapRowHeight, width = config.mapRowHeight, color = Color[faction.colorId] or Color["text_normal"] })
-        row[4]:createText(string.format("[%s]", faction.shortName), { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
-        row[5]:createText("-", { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
-        row[6]:setColSpan(4):createText(faction.name, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
-        row[10]:createText(faction.relationName, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
-        row[11]:createText(string.format("(%+2d)", faction.uiRelation), { halign = "right", color = Color[faction.colorId] or Color["text_normal"] })
-        if i == 10 then
-          tableFactionsMaxHeight = tableFactions:getFullHeight()
-        end
-      end
-    end
-    if tableFactionsMaxHeight == 0 then
-      tableFactionsMaxHeight = tableFactions:getFullHeight()
-    end
-    tableFactions.properties.maxVisibleHeight = math.min(tableFactions:getFullHeight(), tableFactionsMaxHeight)
+    pilotAcademy.displayFactions(tableFactions, factions, editData, academyData, config)
+    
     tables[#tables + 1] = { table = tableFactions, height = tableFactions.properties.maxVisibleHeight }
 
     if pilotAcademy.topRows.tableAcademyFactions ~= nil then
@@ -760,7 +765,7 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
   tables[#tables + 1] = { table = tableAssign, height = tableAssign:getFullHeight() }
 
   local tableBottom = pilotAcademy.createTable(frame, 7, "table_academy_bottom", false, menu, config, maxRelationNameWidth)
-  
+
   tableBottom:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   row = tableBottom:addRow("buttons", { fixed = true })
 
@@ -1531,7 +1536,6 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   local wingData = existingWing and wings[wingId] or {}
   local editData = pilotAcademy.editData or {}
   local primaryGoal = editData.primaryGoal or wingData.primaryGoal or "rank"
-  local selectedFactions = pilotAcademy.combineFactionsSelections(editData, wingData)
   local refreshInterval = editData.refreshInterval or wingData.refreshInterval or 30
 
   local wingLeaderId = editData.wingLeaderId or wingData.wingLeaderId or nil
@@ -1568,28 +1572,9 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
 
   local row = tableFactions:addRow(nil, { fixed = true })
   row[2]:setColSpan(10):createText(texts.factions, { halign = "left", titleColor = Color["row_title"] })
-  local tableFactionMaxHeight = 0
-  for i = 1, #factions do
-    local faction = factions[i]
-    if faction ~= nil then
-      local row = tableFactions:addRow(faction.id, { fixed = false })
-      row[2]:createCheckBox(selectedFactions[faction.id] == true, { scaling = false })
-      row[2].handlers.onClick = function(_, checked) return pilotAcademy.onSelectFaction(faction.id, checked, wingData) end
-      row[3]:createIcon(faction.icon, { height = config.mapRowHeight, width = config.mapRowHeight, color = Color[faction.colorId] or Color["text_normal"] })
-      row[4]:createText(string.format("[%s]", faction.shortName), { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
-      row[5]:createText("-", { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
-      row[6]:setColSpan(4):createText(faction.name, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
-      row[10]:createText(faction.relationName, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
-      row[11]:createText(string.format("(%+2d)", faction.uiRelation), { halign = "right", color = Color[faction.colorId] or Color["text_normal"] })
-      if i == 15 then
-        tableFactionMaxHeight = tableFactions:getFullHeight()
-      end
-    end
-  end
-  if tableFactionMaxHeight == 0 then
-    tableFactionMaxHeight = tableFactions:getFullHeight()
-  end
-  tableFactions.properties.maxVisibleHeight = math.min(tableFactions:getFullHeight(), tableFactionMaxHeight)
+  
+  pilotAcademy.displayFactions(tableFactions, factions,   editData, wingData, config)
+
   tables[#tables + 1] = { table = tableFactions, height = tableFactions.properties.maxVisibleHeight }
 
   local wingKey = tostring(pilotAcademy.selectedTab)
