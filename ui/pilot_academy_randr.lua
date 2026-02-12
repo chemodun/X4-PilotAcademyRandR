@@ -129,7 +129,7 @@ local texts = {
   cancel = ReadText(1972092412, 10902),                       -- "Cancel"
   update = ReadText(1972092412, 10903),                       -- "Update"
   create = ReadText(1972092412, 10904),                       -- "Create"
-  appointAsCadet = ReadText(1972092412, 20001),                         -- "Appoint as a cadet"
+  appointAsCadet = ReadText(1972092412, 20001),               -- "Appoint as a cadet"
   wingNames = { a = ReadText(1972092412, 100001), b = ReadText(1972092412, 100002), c = ReadText(1972092412, 100003), d = ReadText(1972092412, 100004), e = ReadText(1972092412, 100005), f = ReadText(1972092412, 100006), g = ReadText(1972092412, 100007), h = ReadText(1972092412, 100008), i = ReadText(1972092412, 100009) },
 }
 
@@ -167,13 +167,21 @@ local pilotAcademy = {
     "traders_military_miners",
     "traders_miners_military",
   },
+  purposePriorities = {
+    military_miners_traders = { military = 1, mine = 2, trade = 3 },
+    military_traders_miners = { military = 1, trade = 2, mine = 3 },
+    miners_military_traders = { mine = 1, military = 2, trade = 3 },
+    miners_traders_military = { mine = 1, trade = 2, military = 3 },
+    traders_military_miners = { trade = 1, military = 2, mine = 3 },
+    traders_miners_military = { trade = 1, mine = 2, military = 3 }
+  },
   assignPriority = {
     "priority_small_to_large",
     "priority_large_to_small",
   },
   classOrderSmallToLarge = { ship_xl = 4, ship_l = 3, ship_m = 2, ship_s = 1 },
   classOrderLargeToSmall = { ship_xl = 1, ship_l = 2, ship_m = 3, ship_s = 4 },
-  autoAssignCoolDown = 120, -- seconds
+  autoAssignCoolDown = 120,    -- seconds
   rentInterval = 24 * 60 * 60, -- seconds,
   tradeDataRefreshIntervals = {
     5,
@@ -215,6 +223,26 @@ local function hasItemsExcept(table, excludedKey)
     end
   end
   return false
+end
+
+-- Helper: Normalize ship purpose to standard categories
+function pilotAcademy.normalizePurpose(purpose)
+  if purpose == "mine" or purpose == "salvage" then
+    return "mine"
+  elseif purpose == "fight" or purpose == "auxiliary" then
+    return "military"
+  else
+    return "trade"
+  end
+end
+
+-- Helper: Compare purpose priority based on assignment strategy
+function pilotAcademy.comparePurposePriority(a, b, assign)
+  local priorities = pilotAcademy.purposePriorities[assign]
+  if not priorities then return false end
+  local aPriority = priorities[a.purpose] or 999
+  local bPriority = priorities[b.purpose] or 999
+  return aPriority < bPriority
 end
 
 function pilotAcademy.Init(menuMap, menuPlayerInfo)
@@ -548,7 +576,7 @@ function pilotAcademy.setAcademyContentColumnWidths(tableHandle, menu, config)
   tableHandle:setColWidth(4, Helper.scrollbarWidth + 1, false)
 end
 
-function pilotAcademy.createTable(frame, numCols, id, reserveScrollBar, menu, config, maxRelationNameWidth) 
+function pilotAcademy.createTable(frame, numCols, id, reserveScrollBar, menu, config, maxRelationNameWidth)
   local tableHandle = frame:addTable(numCols, { tabOrder = 2, reserveScrollBar = reserveScrollBar })
   tableHandle.name = id
   tableHandle:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
@@ -564,30 +592,30 @@ function pilotAcademy.createTable(frame, numCols, id, reserveScrollBar, menu, co
   return tableHandle
 end
 
-function pilotAcademy.displayFactions(tableFactions, factions, editData, storedData,config)
-    local tableFactionsMaxHeight = 0
-    local selectedFactions = pilotAcademy.combineFactionsSelections(editData, storedData)
-    for i = 1, #factions do
-      local faction = factions[i]
-      if faction ~= nil then
-        local row = tableFactions:addRow(faction.id, { fixed = false })
-        row[2]:createCheckBox(selectedFactions[faction.id] == true, { scaling = false })
-        row[2].handlers.onClick = function(_, checked) return pilotAcademy.onSelectFaction(faction.id, checked, storedData) end
-        row[3]:createIcon(faction.icon, { height = config.mapRowHeight, width = config.mapRowHeight, color = Color[faction.colorId] or Color["text_normal"] })
-        row[4]:createText(string.format("[%s]", faction.shortName), { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
-        row[5]:createText("-", { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
-        row[6]:setColSpan(4):createText(faction.name, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
-        row[10]:createText(faction.relationName, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
-        row[11]:createText(string.format("(%+2d)", faction.uiRelation), { halign = "right", color = Color[faction.colorId] or Color["text_normal"] })
-        if i == 10 then
-          tableFactionsMaxHeight = tableFactions:getFullHeight()
-        end
+function pilotAcademy.displayFactions(tableFactions, factions, editData, storedData, config)
+  local tableFactionsMaxHeight = 0
+  local selectedFactions = pilotAcademy.combineFactionsSelections(editData, storedData)
+  for i = 1, #factions do
+    local faction = factions[i]
+    if faction ~= nil then
+      local row = tableFactions:addRow(faction.id, { fixed = false })
+      row[2]:createCheckBox(selectedFactions[faction.id] == true, { scaling = false })
+      row[2].handlers.onClick = function(_, checked) return pilotAcademy.onSelectFaction(faction.id, checked, storedData) end
+      row[3]:createIcon(faction.icon, { height = config.mapRowHeight, width = config.mapRowHeight, color = Color[faction.colorId] or Color["text_normal"] })
+      row[4]:createText(string.format("[%s]", faction.shortName), { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
+      row[5]:createText("-", { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
+      row[6]:setColSpan(4):createText(faction.name, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
+      row[10]:createText(faction.relationName, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
+      row[11]:createText(string.format("(%+2d)", faction.uiRelation), { halign = "right", color = Color[faction.colorId] or Color["text_normal"] })
+      if i == 10 then
+        tableFactionsMaxHeight = tableFactions:getFullHeight()
       end
     end
-    if tableFactionsMaxHeight == 0 then
-      tableFactionsMaxHeight = tableFactions:getFullHeight()
-    end
-    tableFactions.properties.maxVisibleHeight = math.min(tableFactions:getFullHeight(), tableFactionsMaxHeight)
+  end
+  if tableFactionsMaxHeight == 0 then
+    tableFactionsMaxHeight = tableFactions:getFullHeight()
+  end
+  tableFactions.properties.maxVisibleHeight = math.min(tableFactions:getFullHeight(), tableFactionsMaxHeight)
 end
 
 function pilotAcademy.displayAcademyInfo(frame, menu, config)
@@ -631,14 +659,15 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
     )
     row[2]:setTextProperties({ halign = "left" })
     row[2]:setText2Properties({ halign = "right" })
-    row[2].handlers.onDropDownActivated = function () menu.noupdate = true end
+    row[2].handlers.onDropDownActivated = function() menu.noupdate = true end
     row[2].handlers.onDropDownConfirmed = function(_, id)
       menu.noupdate = false
       return pilotAcademy.onSelectLocation(id)
     end
   else
     local isAnyPersonNotArrived = pilotAcademy.isAnyPersonNotArrived()
-    row[2]:setColSpan(2):createButton({ active = not isAnyPersonNotArrived, mouseOverText = string.format("%s\027X %s", locationOptions[1].text, locationOptions[1].text2) }):setText(locationOptions[1].text, { halign = "left" }):setText2(locationOptions[1].text2,
+    row[2]:setColSpan(2):createButton({ active = not isAnyPersonNotArrived, mouseOverText = string.format("%s\027X %s", locationOptions[1].text,
+      locationOptions[1].text2) }):setText(locationOptions[1].text, { halign = "left" }):setText2(locationOptions[1].text2,
       { halign = "right" })
     row[2].handlers.onClick = function() return pilotAcademy.onToChangeLocation() end
   end
@@ -647,7 +676,8 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
   if owner ~= nil and owner ~= "player" then
     local rentCost = academyData.rentCost or 0
     row = tableTop:addRow(nil, { fixed = true })
-    row[2]:setColSpan(2):createText(string.format(texts.locationRentCost, ConvertMoneyString(rentCost, false, true, nil, true) .. " " .. ReadText(1001, 101)), { halign = "left", titleColor = Color["row_title"] })
+    row[2]:setColSpan(2):createText(string.format(texts.locationRentCost, ConvertMoneyString(rentCost, false, true, nil, true) .. " " .. ReadText(1001, 101)),
+      { halign = "left", titleColor = Color["row_title"] })
     tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   end
   local targetRankLevel = editData.targetRankLevel or academyData.targetRankLevel or 2
@@ -698,11 +728,10 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
   tables[#tables + 1] = { table = tableTop, height = tableTop:getFullHeight() }
 
   if #factions > 0 and autoHire == true then
-
     local tableFactions = pilotAcademy.createTable(frame, 12, "table_academy_factions", false, menu, config, maxRelationNameWidth)
 
     pilotAcademy.displayFactions(tableFactions, factions, editData, academyData, config)
-    
+
     tables[#tables + 1] = { table = tableFactions, height = tableFactions.properties.maxVisibleHeight }
 
     if pilotAcademy.topRows.tableAcademyFactions ~= nil then
@@ -732,7 +761,7 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
     }
   )
   row[2]:setTextProperties({ halign = "left" })
-  row[2].handlers.onDropDownActivated = function () menu.noupdate = true end
+  row[2].handlers.onDropDownActivated = function() menu.noupdate = true end
   row[2].handlers.onDropDownConfirmed = function(_, id)
     menu.noupdate = false
     return pilotAcademy.onSelectAssign(id)
@@ -755,7 +784,7 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
       }
     )
     row[2]:setTextProperties({ halign = "left" })
-    row[2].handlers.onDropDownActivated = function () menu.noupdate = true end
+    row[2].handlers.onDropDownActivated = function() menu.noupdate = true end
     row[2].handlers.onDropDownConfirmed = function(_, id)
       menu.noupdate = false
       return pilotAcademy.onSelectAssignPriority(id)
@@ -1236,7 +1265,8 @@ function pilotAcademy.fillPersonnelTable(tablePersonnel, personnel, title, menu,
     local person = personnel[i]
     if person ~= nil then
       local row = tablePersonnel:addRow({ tableName = tablePersonnel.name, rowData = person }, { fixed = false })
-      local icon = row[2]:setColSpan(2):createIcon(person.icon, { height = config.mapRowHeight, width = config.mapRowHeight, color = person.hasArrived and Color["text_normal"] or Color["text_inactive"] })
+      local icon = row[2]:setColSpan(2):createIcon(person.icon,
+        { height = config.mapRowHeight, width = config.mapRowHeight, color = person.hasArrived and Color["text_normal"] or Color["text_inactive"] })
       icon:setText(person.name, { x = config.mapRowHeight, halign = "left", color = person.hasArrived and Color["text_normal"] or Color["text_inactive"] })
       icon:setText2(person.skillInStars, { halign = "right", color = person.hasArrived and Color["text_skills"] or Color["text_inactive"] })
 
@@ -1248,7 +1278,8 @@ function pilotAcademy.fillPersonnelTable(tablePersonnel, personnel, title, menu,
 
   if #personnel == 0 then
     local row = tablePersonnel:addRow(nil, { fixed = false })
-    row[2]:setColSpan(2):createText(title == texts.pilots and texts.noPilotsAvailable or texts.noCadetsAssigned, { halign = "center", color = Color["text_warning"] })
+    row[2]:setColSpan(2):createText(title == texts.pilots and texts.noPilotsAvailable or texts.noCadetsAssigned,
+      { halign = "center", color = Color["text_warning"] })
   else
     if pilotAcademy.topRows.tablePersonnelPilots ~= nil then
       tablePersonnel:setTopRow(pilotAcademy.topRows.tablePersonnelPilots)
@@ -1361,7 +1392,6 @@ function pilotAcademy.sortPilots(a, b)
   return a.skill > b.skill
 end
 
-
 function pilotAcademy.isAnyPersonNotArrived()
   if pilotAcademy.commonData == nil then
     trace("commonData is nil; returning false")
@@ -1464,7 +1494,6 @@ function pilotAcademy.saveCommonData()
   -- Save common data to persistent storage
 end
 
-
 function pilotAcademy.onDebugLevelChanged(event)
   if event == "PilotAcademyRAndR.DebugLevelChanged" then
     pilotAcademy.loadCommonData()
@@ -1474,7 +1503,7 @@ function pilotAcademy.onDebugLevelChanged(event)
   end
 end
 
-function pilotAcademy.setInfoContentColumnWidths(tableHandle, menu, config,maxRelationNameWidth)
+function pilotAcademy.setInfoContentColumnWidths(tableHandle, menu, config, maxRelationNameWidth)
   if tableHandle == nil or menu == nil then
     debug("tableWingmans or menu is nil; cannot set column widths")
     return
@@ -1526,15 +1555,18 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
     return nil
   end
   local tables = {}
+
   local wings = pilotAcademy.wings or {}
   local wingId = pilotAcademy.selectedTab
   local existingWing = wingId ~= nil and wings[wingId] ~= nil
+  local wingData = existingWing and wings[wingId] or {}
+  local editData = pilotAcademy.editData or {}
+
   local factions, maxRelationNameWidth = pilotAcademy.getFactions(config, true)
   -- local factionsSorted =
   local tableTop = pilotAcademy.createTable(frame, 12, "table_wing_top", false, menu, config, maxRelationNameWidth)
 
-  local wingData = existingWing and wings[wingId] or {}
-  local editData = pilotAcademy.editData or {}
+
   local primaryGoal = editData.primaryGoal or wingData.primaryGoal or "rank"
   local refreshInterval = editData.refreshInterval or wingData.refreshInterval or 30
 
@@ -1560,7 +1592,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
     }
   )
   row[7]:setTextProperties({ halign = "left" })
-  row[7].handlers.onDropDownActivated = function () menu.noupdate = true end
+  row[7].handlers.onDropDownActivated = function() menu.noupdate = true end
   row[7].handlers.onDropDownConfirmed = function(_, id)
     menu.noupdate = false
     return pilotAcademy.onSelectPrimaryGoal(id)
@@ -1572,8 +1604,8 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
 
   local row = tableFactions:addRow(nil, { fixed = true })
   row[2]:setColSpan(10):createText(texts.factions, { halign = "left", titleColor = Color["row_title"] })
-  
-  pilotAcademy.displayFactions(tableFactions, factions,   editData, wingData, config)
+
+  pilotAcademy.displayFactions(tableFactions, factions, editData, wingData, config)
 
   tables[#tables + 1] = { table = tableFactions, height = tableFactions.properties.maxVisibleHeight }
 
@@ -1602,7 +1634,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
     }
   )
   row[2]:setTextProperties({ halign = "right" })
-  row[2].handlers.onDropDownActivated = function () menu.noupdate = true end
+  row[2].handlers.onDropDownActivated = function() menu.noupdate = true end
   row[2].handlers.onDropDownConfirmed = function(_, id)
     menu.noupdate = false
     return pilotAcademy.onSelectRefreshInterval(id)
@@ -1636,7 +1668,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
     )
     row[2]:setTextProperties({ halign = "left" })
     row[2]:setText2Properties({ halign = "right", color = Color["text_skills"] })
-    row[2].handlers.onDropDownActivated = function () menu.noupdate = true end
+    row[2].handlers.onDropDownActivated = function() menu.noupdate = true end
     row[2].handlers.onDropDownConfirmed = function(_, id)
       menu.noupdate = false
       return pilotAcademy.onSelectWingLeader(id)
@@ -1667,7 +1699,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
     )
     row[2]:setTextProperties({ halign = "left" })
     row[2]:setText2Properties({ halign = "right", color = Color["text_skills"] })
-    row[2].handlers.onDropDownActivated = function () menu.noupdate = true end
+    row[2].handlers.onDropDownActivated = function() menu.noupdate = true end
     row[2].handlers.onDropDownConfirmed = function(_, id)
       menu.noupdate = false
       return pilotAcademy.onSelectWingman(id, wingLeaderId, mimicGroupId)
@@ -1906,8 +1938,14 @@ function pilotAcademy.onTableRightMouseClick(uiTable, row, posX, posY)
     if posX == nil or posY == nil then
       posX, posY = GetLocalMousePosition()
     end
-    menu.contextMenuData = { width = Helper.scaleX(interactMenuConfig.width), xoffset = posX + Helper.viewWidth / 2, yoffset = Helper.viewHeight / 2 - posY, instance =
-        menu.instance, tableName = tableName, rowData = rowData }
+    menu.contextMenuData = {
+      width = Helper.scaleX(interactMenuConfig.width),
+      xoffset = posX + Helper.viewWidth / 2,
+      yoffset = Helper.viewHeight / 2 - posY,
+      instance = menu.instance,
+      tableName = tableName,
+      rowData = rowData
+    }
     menu.createContextFrame()
   elseif tableName == "table_personnel_cadets" or tableName == "table_personnel_pilots" then
     local isPlayerOwned = GetComponentData(pilotAcademy.commonData.locationId, "isplayerowned")
@@ -1920,8 +1958,17 @@ function pilotAcademy.onTableRightMouseClick(uiTable, row, posX, posY)
     if posX == nil or posY == nil then
       posX, posY = GetLocalMousePosition()
     end
-    menu.contextMenuData = { width = Helper.scaleX(interactMenuConfig.width), xoffset = posX + Helper.viewWidth / 2, yoffset = Helper.viewHeight / 2 - posY, instance =
-        menu.instance,  person = rowData.id, component = pilotAcademy.commonData.locationId, tableName = tableName, rowData = rowData, isAcademyPersonnel = true }
+    menu.contextMenuData = {
+      width = Helper.scaleX(interactMenuConfig.width),
+      xoffset = posX + Helper.viewWidth / 2,
+      yoffset = Helper.viewHeight / 2 - posY,
+      instance = menu.instance,
+      person = rowData.id,
+      component = pilotAcademy.commonData.locationId,
+      tableName = tableName,
+      rowData = rowData,
+      isAcademyPersonnel = true
+    }
 
     menu.createContextFrame()
   end
@@ -1980,8 +2027,14 @@ function pilotAcademy.createWingmanContextMenu(contextFrame, contextMenuData)
   local text = ffi.string(C.GetComponentName(wingmanId))
   local color = holomapColor.playercolor
   local ftable = contextFrame:addTable(5,
-    { tabOrder = 2, x = x, width = menuWidth, backgroundID = "solid", backgroundColor = Color["frame_background_semitransparent"], highlightMode =
-    "offnormalscroll" })
+    {
+      tabOrder = 2,
+      x = x,
+      width = menuWidth,
+      backgroundID = "solid",
+      backgroundColor = Color["frame_background_semitransparent"],
+      highlightMode = "offnormalscroll"
+    })
   ftable:setDefaultCellProperties("text", { minRowHeight = config.rowHeight, fontsize = config.entryFontSize, x = config.entryX })
   ftable:setDefaultCellProperties("button", { height = config.rowHeight })
   ftable:setDefaultCellProperties("checkbox", { height = config.rowHeight, width = config.rowHeight })
@@ -2129,7 +2182,6 @@ function pilotAcademy.fetchAllAcademyShipsForExclusion()
     return academyShips
   end
   for _, wingData in pairs(wings) do
-
     local wingLeaderId = wingData.wingLeaderId
     if wingLeaderId ~= nil then
       academyShips[tostring(wingLeaderId)] = true
@@ -2410,9 +2462,13 @@ function pilotAcademy.CheckOrdersOnWings()
     end
     if not wingIsOk and wingLeaderId ~= nil then
       wingData.errorsCount = (wingData.errorsCount or 0) + 1
-      debug("Wing leader " .. tostring(GetComponentData(wingData.wingLeaderId, "name")) .. " of wing " .. tostring(wingId) .. " is missing proper orders for its wing leader; reapplying orders. Current errors count: " .. tostring(wingData.errorsCount or 0))
+      debug("Wing leader " ..
+        tostring(GetComponentData(wingData.wingLeaderId, "name")) ..
+        " of wing " ..
+        tostring(wingId) .. " is missing proper orders for its wing leader; reapplying orders. Current errors count: " .. tostring(wingData.errorsCount or 0))
       if wingData.errorsCount ~= nil and wingData.errorsCount >= pilotAcademy.maxOrderErrors then
-        debug("Maximum order errors reached for wing leader " .. tostring(GetComponentData(wingData.wingLeaderId, "name")) .. " of wing " .. tostring(wingId) .. "; skipping reapplication of orders")
+        debug("Maximum order errors reached for wing leader " ..
+          tostring(GetComponentData(wingData.wingLeaderId, "name")) .. " of wing " .. tostring(wingId) .. "; skipping reapplication of orders")
         pilotAcademy.dismissWing(wingId)
         local subordinates = GetSubordinates(wingLeaderId)
         if #subordinates > 0 then
@@ -2428,7 +2484,6 @@ function pilotAcademy.CheckOrdersOnWings()
   end
   pilotAcademy.saveWings()
 end
-
 
 function pilotAcademy.loadWings()
   pilotAcademy.wings = {}
@@ -2535,13 +2590,12 @@ function pilotAcademy.addAppointAsCadetRowToContextMenu(contextFrame, contextMen
 
   local isPlayerOwned = true
   if isMapContext then
-
     -- Map context: data comes from contextMenuData
     entity = contextMenuData.entity
     person = contextMenuData.person
     controllable = contextMenuData.component
-    transferScheduled = false  -- Not relevant for map context
-    hasArrived = true          -- Not relevant for map context
+    transferScheduled = false -- Not relevant for map context
+    hasArrived = true         -- Not relevant for map context
     personrole = ""
     isPlayerOwned = GetComponentData(controllable, "isplayerowned")
     if contextMenuData.isAcademyPersonnel then
@@ -2603,7 +2657,7 @@ function pilotAcademy.addAppointAsCadetRowToContextMenu(contextFrame, contextMen
     if person or (entity and (entity ~= player)) then
       if isPlayerOwned then
         if (person and ((personrole == "service") or (personrole == "marine") or (personrole == "trainee_group") or (personrole == "unassigned"))) or
-           (entity and GetComponentData(entity, "isplayerowned") and GetComponentData(entity, "caninitiatecomm")) then
+            (entity and GetComponentData(entity, "isplayerowned") and GetComponentData(entity, "caninitiatecomm")) then
           canAdd = transferScheduled == false and hasArrived
         end
       else
@@ -2646,9 +2700,13 @@ function pilotAcademy.addAppointAsCadetRowToContextMenu(contextFrame, contextMen
         local row = mt.__index.addRow(menuTable, "info_person_worksomewhere", { fixed = true })
         row[1]:createButton({ bgColor = Color["button_background_hidden"], height = Helper.standardTextHeight }):setText(ReadText(1002, 3008))
         if entity then
-          row[1].handlers.onClick = function () Helper.closeMenuAndOpenNewMenu(menu, "MapMenu", { 0, 0, true, controllable, nil, "hire", { "signal", entity, 0 } }); menu.cleanup() end
+          row[1].handlers.onClick = function()
+            Helper.closeMenuAndOpenNewMenu(menu, "MapMenu", { 0, 0, true, controllable, nil, "hire", { "signal", entity, 0 } }); menu.cleanup()
+          end
         else
-          row[1].handlers.onClick = function () Helper.closeMenuAndOpenNewMenu(menu, "MapMenu", { 0, 0, true, controllable, nil, "hire", { "signal", controllable, 0, person } }); menu.cleanup() end
+          row[1].handlers.onClick = function()
+            Helper.closeMenuAndOpenNewMenu(menu, "MapMenu", { 0, 0, true, controllable, nil, "hire", { "signal", controllable, 0, person } }); menu.cleanup()
+          end
         end
 
         local row = mt.__index.addRow(menuTable, "info_person_fire", { fixed = true })
@@ -2722,7 +2780,8 @@ function pilotAcademy.onRankLevelReached(_, param)
   if cadets == nil or #cadets == 0 then
     if pilotAcademy.commonData.autoHire then
       trace("No cadets found, auto-hire is enabled, attempting to hire new cadet")
-      SignalObject(pilotAcademy.playerId, "PilotAcademyRAndR.CadetAutoHireRequest", ConvertStringToLuaID(tostring(controllable)), pilotAcademy.commonData.factions)
+      SignalObject(pilotAcademy.playerId, "PilotAcademyRAndR.CadetAutoHireRequest", ConvertStringToLuaID(tostring(controllable)),
+        pilotAcademy.commonData.factions)
       return
     else
       trace("No cadets found, signalling and returning")
@@ -2758,7 +2817,8 @@ function pilotAcademy.onPilotReturned(_, param)
   end
 
   if pilotAcademy.commonData.assign ~= "manual" then
-    trace("Auto-assigning returned pilot " .. tostring(ffi.string(C.GetPersonName(pilotTemplateId, pilotAcademy.commonData.locationId))) .. " to academy location")
+    trace("Auto-assigning returned pilot " ..
+      tostring(ffi.string(C.GetPersonName(pilotTemplateId, pilotAcademy.commonData.locationId))) .. " to academy location")
     pilotAcademy.autoAssignPilots()
   else
     trace("Auto-assign is disabled, not assigning returned pilot")
@@ -2851,17 +2911,12 @@ function pilotAcademy.fetchCandidatesForReplacement()
         local pilotRace = GetMacroData(pilotMacro)
         local skillBase = pilotAcademy.skillBase(pilotSkill)
         if skillBase < targetRankLevel and pilotRace ~= "drone" then
-          local class = Helper.isComponentClass(classId, "ship_s") and "ship_s" or Helper.isComponentClass(classId, "ship_m") and "ship_m" or Helper.isComponentClass(classId, "ship_l") and "ship_l" or  Helper.isComponentClass(classId, "ship_xl") and "ship_xl" or "unknown"
+          local class = Helper.isComponentClass(classId, "ship_s") and "ship_s" or Helper.isComponentClass(classId, "ship_m") and "ship_m" or
+              Helper.isComponentClass(classId, "ship_l") and "ship_l" or Helper.isComponentClass(classId, "ship_xl") and "ship_xl" or "unknown"
           trace(string.format("Evaluating ship '%s' (idcode: %s, class: %s, purpose: %s) with pilot '%s' (skill: %d, base rank: %d)",
             shipName, idcode, class, purpose, pilotName, pilotSkill, skillBase))
           if class ~= "unknown" then
-            if purpose == "mine" or purpose == "salvage" then
-              purpose = "mine"
-            elseif purpose == "fight" or purpose == "auxiliary" then
-              purpose = "military"
-            else
-              purpose = "trade"
-            end
+            purpose = pilotAcademy.normalizePurpose(purpose)
             candidateShips[#candidateShips + 1] = {
               shipId = shipId,
               shipName = shipName,
@@ -2880,72 +2935,14 @@ function pilotAcademy.fetchCandidatesForReplacement()
   return candidateShips
 end
 
-
 function pilotAcademy.sortCandidatesForReplacement(candidates, assign, assignPriority)
   table.sort(candidates, function(a, b)
+    -- Compare by purpose priority
     if a.purpose ~= b.purpose then
-      if assign == "military_miners_traders" then
-        if a.purpose == "military" then
-          return true
-        elseif b.purpose == "military" then
-          return false
-        elseif a.purpose == "mine" then
-          return true
-        elseif b.purpose == "mine" then
-          return false
-        end
-      elseif assign == "military_traders_miners" then
-        if a.purpose == "military" then
-          return true
-        elseif b.purpose == "military" then
-          return false
-        elseif a.purpose == "trade" then
-          return true
-        elseif b.purpose == "trade" then
-          return false
-        end
-      elseif assign == "miners_military_traders" then
-        if a.purpose == "mine" then
-          return true
-        elseif b.purpose == "mine" then
-          return false
-        elseif a.purpose == "military" then
-          return true
-        elseif b.purpose == "military" then
-          return false
-        end
-      elseif assign == "traders_military_miners" then
-        if a.purpose == "trade" then
-          return true
-        elseif b.purpose == "trade" then
-          return false
-        elseif a.purpose == "military" then
-          return true
-        elseif b.purpose == "military" then
-          return false
-        end
-      elseif assign == "miners_traders_military" then
-        if a.purpose == "mine" then
-          return true
-        elseif b.purpose == "mine" then
-          return false
-        elseif a.purpose == "trade" then
-          return true
-        elseif b.purpose == "trade" then
-          return false
-        end
-      elseif assign == "traders_miners_military" then
-        if a.purpose == "trade" then
-          return true
-        elseif b.purpose == "trade" then
-          return false
-        elseif a.purpose == "mine" then
-          return true
-        elseif b.purpose == "mine" then
-          return false
-        end
-      end
+      return pilotAcademy.comparePurposePriority(a, b, assign)
     end
+
+    -- Compare by ship class
     if a.class ~= b.class then
       if assignPriority == "priority_small_to_large" then
         return pilotAcademy.classOrderSmallToLarge[a.class] < pilotAcademy.classOrderSmallToLarge[b.class]
@@ -2956,10 +2953,11 @@ function pilotAcademy.sortCandidatesForReplacement(candidates, assign, assignPri
     if a.pilotSkill ~= b.pilotSkill then
       return a.pilotSkill < b.pilotSkill
     end
+
+    -- Tie-breaker: alphabetical by ship name
     return a.shipName < b.shipName
   end)
 end
-
 
 local function Init()
   pilotAcademy.playerId = ConvertStringTo64Bit(tostring(C.GetPlayerID()))
