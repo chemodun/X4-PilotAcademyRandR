@@ -313,7 +313,14 @@ Video demonstration of the mod (Version 1.00)
 [/list]
 [size=3][u][b]Changelog[/b][/u][/size]
 
-[size=3][u][i][1.00] - 2024-02-10[/i][/u][/size]
+[size=3][u][i][1.01] - 2026-02-12[/i][/u][/size]
+[list]
+[*] [b]Fixed[/b]
+[list]
+[*] Academy window not displayed properly on resolutions higher than Full HD (1920x1080)
+[/list]
+[/list]
+[size=3][u][i][1.00] - 2026-02-10[/i][/u][/size]
 [list]
 [*] [b]Added[/b]
 [list]
