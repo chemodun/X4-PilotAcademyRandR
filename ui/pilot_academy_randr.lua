@@ -108,6 +108,7 @@ local texts = {
   priority = ReadText(1972092412, 10141),                     -- "Priority:"
   priority_small_to_large = ReadText(1972092412, 10142),      -- "Small to Large"
   priority_large_to_small = ReadText(1972092412, 10143),      -- "Large to Small"
+  autoFireLessSkilledCrewMember = ReadText(1972092412, 10191), -- "Auto fire less skilled crew member if crew is full"
   cadets = ReadText(1972092412, 10201),                       -- "Cadets:"
   noCadetsAssigned = ReadText(1972092412, 10209),             -- "No cadets assigned"
   pilots = ReadText(1972092412, 10211),                       -- "Pilots:"
@@ -821,6 +822,22 @@ function pilotAcademy.createAssignmentTable(frame, menu, config, displayData, lo
       menu.noupdate = false
       return pilotAcademy.onSelectAssignPriority(id)
     end
+
+    tableAssign:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+    local autoFireLessSkilledCrewMember = displayData.editData.autoFireLessSkilledCrewMember
+    if autoFireLessSkilledCrewMember == nil then
+      autoFireLessSkilledCrewMember = displayData.academyData.autoFireLessSkilledCrewMember
+    end
+    if autoFireLessSkilledCrewMember == nil then
+      autoFireLessSkilledCrewMember = false
+    end
+    row = tableAssign:addRow("auto_fire_less_skilled", { fixed = true })
+    row[2]:createCheckBox(autoFireLessSkilledCrewMember == true, {
+      height = config.mapRowHeight,
+      width = config.mapRowHeight
+    })
+    row[2].handlers.onClick = function(_, checked) return pilotAcademy.onToggleAutoFireLessSkilledCrewMember(checked) end
+    row[3]:createText(texts.autoFireLessSkilledCrewMember, { halign = "left", titleColor = Color["row_title"] })
   end
 
   return { table = tableAssign, height = tableAssign:getFullHeight() }
@@ -1093,6 +1110,15 @@ function pilotAcademy.onSelectAssignPriority(priority)
   end
 end
 
+function pilotAcademy.onToggleAutoFireLessSkilledCrewMember(checked)
+  trace("Toggled auto fire less skilled crew member: " .. tostring(checked))
+  pilotAcademy.editData.autoFireLessSkilledCrewMember = checked
+  local menu = pilotAcademy.menuMap
+  if menu ~= nil then
+    menu.refreshInfoFrame()
+  end
+end
+
 function pilotAcademy.buttonCancelAcademyChanges()
   trace("Cancelling academy changes")
   pilotAcademy.editData = {}
@@ -1166,6 +1192,13 @@ function pilotAcademy.buttonSaveAcademy()
   end
   if academyData.assignPriority == nil then
     academyData.assignPriority = "priority_small_to_large"
+  end
+
+  if editData.autoFireLessSkilledCrewMember ~= nil then
+    academyData.autoFireLessSkilledCrewMember = editData.autoFireLessSkilledCrewMember
+  end
+  if academyData.autoFireLessSkilledCrewMember == nil then
+    academyData.autoFireLessSkilledCrewMember = false
   end
 
   pilotAcademy.editData = {}
@@ -1565,10 +1598,16 @@ function pilotAcademy.loadCommonData()
   end
 
   debug("loadCommonData: locationId is " .. tostring(pilotAcademy.commonData.locationId))
-  if pilotAcademy.commonData.autoHire == 0 then
-    pilotAcademy.commonData.autoHire = false
-  elseif pilotAcademy.commonData.autoHire == 1 then
+  if pilotAcademy.commonData.autoHire == 1 then
     pilotAcademy.commonData.autoHire = true
+  else
+    pilotAcademy.commonData.autoHire = true
+  end
+
+  if pilotAcademy.commonData.autoFireLessSkilledCrewMember == 1 then
+    pilotAcademy.commonData.autoFireLessSkilledCrewMember = true
+  else
+    pilotAcademy.commonData.autoFireLessSkilledCrewMember = false
   end
 
   if pilotAcademy.commonData.lastAutoAssignTime == nil then

@@ -266,7 +266,8 @@
               text="'Pilot Academy: Process_Move_New_Pilot: Iteration %s. Going to move new pilot %s (%s) to %s. Free capacity: %s.' .
                   [$iteration, $newPilotName, $newPilotTemplate, $shipName, $shipFreeCapacity]"
               chance="$debugchance" />
-            <do_if value="$shipFreeCapacity gt 0">
+            <do_if value="$shipFreeCapacity gt 0 or @$commonData.$autoFireLessSkilledCrewMember == true">
+              <include_actions ref="Fire_Least_Skilled_Crew_Member" />
               <transfer_people result="$personTransferred" object="$ship" otherobject="$academyObject"
                 receiveworkforce="false">
                 <existing_people people="[$newPilotTemplate]" />
@@ -432,6 +433,7 @@
               text="'Pilot Academy: Process_Pilot_Auto_Hire: Cadet macro is %s.' .
                 [@$cadetMacro]"
               chance="$debugchance" />
+            <include_actions ref="Fire_Least_Skilled_Crew_Member" />
             <create_npc_template object="$ship" role="entityrole.trainee_group" name="$cadetTemplate" macro="$cadetMacro" />
             <set_skill object="$ship" template="$cadetTemplate" type="skilltype.boarding" min="0" max="2" />
             <set_skill object="$ship" template="$cadetTemplate" type="skilltype.engineering" min="1" max="4" />
@@ -569,6 +571,33 @@
             </do_if>
           </actions>
 
+        </library>
+
+        <library name="Fire_Least_Skilled_Crew_Member" purpose="include_actions" version="1">
+          <actions>
+            <do_if value="$ship.people.free le 0">
+              <debug_text
+                text="'Pilot Academy: Fire_Least_Skilled_Crew_Member: no free crew slots to transfer replacement pilot. Going to fire lest skilled existing crew member'"
+                chance="$debugchance" />
+              <set_value name="$leastSkilledCrewMember" exact="null" />
+              <set_value name="$leastSkill" exact="9999" />
+              <do_for_each name="$crewMemberTemplate" in="$ship.people.list" counter="$i">
+                <set_value name="$crewMember" exact="$ship.people.{$crewMemberTemplate}" />
+                <set_value name="$crewMemberSkill" exact="$crewMember.skill.boarding + $crewMember.skill.engineering + $crewMember.skill.management + $crewMember.skill.morale + $crewMember.skill.piloting" />
+                <do_if value="$crewMemberSkill lt $leastSkill">
+                  <set_value name="$leastSkilledCrewMember" exact="$crewMember" />
+                  <set_value name="$leastSkill" exact="$crewMemberSkill" />
+                </do_if>
+              </do_for_each>
+              <do_if value="$leastSkilledCrewMember != null">
+                <debug_text
+                  text="'Pilot Academy: Fire_Least_Skilled_Crew_Member: firing least skilled crew member %s with skill %s to free up crew slot for replacement pilot' .
+              .     [$leastSkilledCrewMember.debugname, $leastSkill]"
+                  chance="$debugchance" />
+                <remove_npc_template object="$ship" template="$leastSkilledCrewMember" />
+              </do_if>
+            </do_if>
+          </actions>
         </library>
 
       </cues>
