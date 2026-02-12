@@ -1545,6 +1545,235 @@ function pilotAcademy.setButtonsColumnWidths(tableHandle, menu, config)
   tableHandle:setColWidth(7, Helper.scrollbarWidth + 1, false)
 end
 
+-- Helper: Extract and prepare wing display data
+local function getWingDisplayData()
+  local wings = pilotAcademy.wings or {}
+  local wingId = pilotAcademy.selectedTab
+  local existingWing = wingId ~= nil and wings[wingId] ~= nil
+  return {
+    wingId = wingId,
+    existingWing = existingWing,
+    wingData = existingWing and wings[wingId] or {},
+    editData = pilotAcademy.editData or {},
+    primaryGoal = nil,  -- Will be set by caller
+    refreshInterval = nil,  -- Will be set by caller
+    wingLeaderId = nil  -- Will be set by caller
+  }
+end
+
+-- Helper: Create wing header table with primary goal dropdown
+function pilotAcademy.createWingHeaderTable(frame, menu, config, wingDisplayData, maxRelationNameWidth)
+  local tableTop = pilotAcademy.createTable(frame, 12, "table_wing_top", false, menu, config, maxRelationNameWidth)
+
+  local row = tableTop:addRow(nil, { fixed = true })
+  local suffix = string.format(pilotAcademy.selectedTab ~= nil and texts.wing or texts.addNewWing,
+    wingDisplayData.existingWing and texts.wingNames[pilotAcademy.selectedTab] or "")
+  row[1]:setColSpan(12):createText(string.format("%s: %s", texts.pilotAcademy, suffix), Helper.headerRowCenteredProperties)
+  tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+
+  row = tableTop:addRow("wing_primary_goal", { fixed = true })
+  local primaryGoalOptions = {
+    { id = "rank",     icon = "", text = texts.increaseRank,   text2 = "", displayremoveoption = false },
+    { id = "relation", icon = "", text = texts.gainReputation, text2 = "", displayremoveoption = false },
+  }
+  row[2]:setColSpan(5):createText(texts.primaryGoal, { halign = "left", titleColor = Color["row_title"] })
+  row[7]:setColSpan(5):createDropDown(primaryGoalOptions, {
+    startOption = wingDisplayData.primaryGoal or -1,
+    active = true,
+    textOverride = (#primaryGoalOptions == 0) and texts.noAvailablePrimaryGoals or nil,
+  })
+  row[7]:setTextProperties({ halign = "left" })
+  row[7].handlers.onDropDownActivated = function() menu.noupdate = true end
+  row[7].handlers.onDropDownConfirmed = function(_, id)
+    menu.noupdate = false
+    return pilotAcademy.onSelectPrimaryGoal(id)
+  end
+  tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+
+  return { table = tableTop, height = tableTop:getFullHeight() }
+end
+
+-- Helper: Create factions table with restore capability
+function pilotAcademy.createWingFactionsSection(frame, menu, config, wingDisplayData, factions, maxRelationNameWidth)
+  local tableFactions = pilotAcademy.createTable(frame, 12, "table_wing_factions", false, menu, config, maxRelationNameWidth)
+
+  local row = tableFactions:addRow(nil, { fixed = true })
+  row[2]:setColSpan(10):createText(texts.factions, { halign = "left", titleColor = Color["row_title"] })
+
+  pilotAcademy.displayFactions(tableFactions, factions, wingDisplayData.editData, wingDisplayData.wingData, config)
+
+  -- Restore scroll position if available
+  local wingKey = tostring(pilotAcademy.selectedTab)
+  if #factions > 0 and pilotAcademy.topRows.tableWingsFactions[wingKey] ~= nil then
+    tableFactions:setTopRow(pilotAcademy.topRows.tableWingsFactions[wingKey])
+  end
+  pilotAcademy.topRows.tableWingsFactions[wingKey] = nil
+
+  return { table = tableFactions, height = tableFactions.properties.maxVisibleHeight }
+end
+
+-- Helper: Create refresh interval table
+function pilotAcademy.createWingRefreshIntervalTable(frame, menu, config, wingDisplayData, maxRelationNameWidth)
+  local tableRefreshInterval = pilotAcademy.createTable(frame, 12, "table_refresh_interval", false, menu, config, maxRelationNameWidth)
+
+  tableRefreshInterval:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  local row = tableRefreshInterval:addRow(nil, { fixed = true })
+  row[2]:setColSpan(10):createText(texts.tradeDataRefreshInterval, { halign = "left", titleColor = Color["row_title"] })
+
+  local refreshIntervalOptions = pilotAcademy.getRefreshIntervalOptions()
+  row = tableRefreshInterval:addRow("wing_refresh_interval", { fixed = true })
+  row[1]:createText("", { halign = "left" })
+  row[2]:setColSpan(10):createDropDown(refreshIntervalOptions, {
+    startOption = wingDisplayData.refreshInterval or -1,
+    active = true,
+    textOverride = (#refreshIntervalOptions == 0) and "0" or nil,
+  })
+  row[2]:setTextProperties({ halign = "right" })
+  row[2].handlers.onDropDownActivated = function() menu.noupdate = true end
+  row[2].handlers.onDropDownConfirmed = function(_, id)
+    menu.noupdate = false
+    return pilotAcademy.onSelectRefreshInterval(id)
+  end
+  tableRefreshInterval:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+
+  return { table = tableRefreshInterval, height = tableRefreshInterval:getFullHeight() }
+end
+
+-- Helper: Create wing leader table
+function pilotAcademy.createWingLeaderTable(frame, menu, config, wingDisplayData, maxRelationNameWidth)
+  local tableWingLeader = pilotAcademy.createTable(frame, 12, "table_wing_leader", false, menu, config, maxRelationNameWidth)
+
+  local row = tableWingLeader:addRow(nil, { fixed = true })
+  local wingLeaderOptions = pilotAcademy.fetchPotentialWingmans(wingDisplayData.existingWing, wingDisplayData.wingLeaderId)
+  row[2]:setColSpan(10):createText(texts.wingLeader, { halign = "left", titleColor = Color["row_title"] })
+
+  if wingDisplayData.existingWing then
+    -- Display existing wing leader
+    local leaderInfo = wingLeaderOptions[1] or {}
+    row = tableWingLeader:addRow({ tableName = tableWingLeader.name, rowData = leaderInfo }, { fixed = false })
+    row[1]:createText("", { halign = "left" })
+    local icon = row[2]:setColSpan(10):createIcon("order_pilotacademywing", { height = config.mapRowHeight, width = config.mapRowHeight })
+    icon:setText(leaderInfo.text, { x = config.mapRowHeight, halign = "left", color = Color["text_normal"] })
+    icon:setText2(leaderInfo.text2, { halign = "right", color = Color["text_skills"] })
+  else
+    -- Dropdown for selecting new wing leader
+    row = tableWingLeader:addRow("wing_leader", { fixed = true })
+    row[1]:createText("", { halign = "left" })
+    row[2]:setColSpan(10):createDropDown(wingLeaderOptions, {
+      startOption = wingDisplayData.wingLeaderId or -1,
+      active = not wingDisplayData.existingWing,
+      textOverride = (#wingLeaderOptions == 0) and texts.noAvailableWingLeaders or nil,
+    })
+    row[2]:setTextProperties({ halign = "left" })
+    row[2]:setText2Properties({ halign = "right", color = Color["text_skills"] })
+    row[2].handlers.onDropDownActivated = function() menu.noupdate = true end
+    row[2].handlers.onDropDownConfirmed = function(_, id)
+      menu.noupdate = false
+      return pilotAcademy.onSelectWingLeader(id)
+    end
+  end
+
+  return { table = tableWingLeader, height = tableWingLeader:getFullHeight() }
+end
+
+-- Helper: Create wingmans management table
+function pilotAcademy.createWingmansTable(frame, menu, config, wingDisplayData, maxRelationNameWidth)
+  local tableWingmans = pilotAcademy.createTable(frame, 12, "table_wing_wingmans", false, menu, config, maxRelationNameWidth)
+
+  tableWingmans:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  local tableWingmansMaxHeight = 0
+  local wingmans = {}
+  local mimicGroupId = nil
+
+  if wingDisplayData.existingWing then
+    -- Add wingman dropdown
+    local row = tableWingmans:addRow(nil, { fixed = true })
+    row[2]:setColSpan(10):createText(texts.addWingman, { halign = "left", titleColor = Color["row_title"] })
+
+    local addWingmanOptions = pilotAcademy.fetchPotentialWingmans(wingDisplayData.existingWing, nil)
+    mimicGroupId, wingmans = pilotAcademy.fetchWingmans(wingDisplayData.wingLeaderId)
+
+    row = tableWingmans:addRow("add_wingman", { fixed = true })
+    row[1]:createText("", { halign = "left" })
+    row[2]:setColSpan(10):createDropDown(addWingmanOptions, {
+      startOption = wingDisplayData.wingLeaderId or -1,
+      active = wingDisplayData.existingWing,
+      textOverride = (#addWingmanOptions == 0) and texts.noAvailableWingmanCandidates or nil,
+    })
+    row[2]:setTextProperties({ halign = "left" })
+    row[2]:setText2Properties({ halign = "right", color = Color["text_skills"] })
+    row[2].handlers.onDropDownActivated = function() menu.noupdate = true end
+    row[2].handlers.onDropDownConfirmed = function(_, id)
+      menu.noupdate = false
+      return pilotAcademy.onSelectWingman(id, wingDisplayData.wingLeaderId, mimicGroupId)
+    end
+
+    tableWingmans:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+
+    -- Display existing wingmans
+    row = tableWingmans:addRow(nil, { fixed = true })
+    row[2]:setColSpan(10):createText(texts.wingmans, { halign = "left", titleColor = Color["row_title"] })
+
+    for i = 1, #wingmans do
+      local wingman = wingmans[i]
+      if wingman ~= nil then
+        row = tableWingmans:addRow({ tableName = tableWingmans.name, rowData = wingman }, { fixed = false })
+        local icon = row[2]:setColSpan(10):createIcon("order_assist", { height = config.mapRowHeight, width = config.mapRowHeight })
+        icon:setText(wingman.text, { x = config.mapRowHeight, halign = "left", color = Color["text_normal"] })
+        icon:setText2(wingman.text2, { halign = "right", color = Color["text_skills"] })
+        if i == 10 then
+          tableWingmansMaxHeight = tableWingmans:getFullHeight()
+        end
+      end
+    end
+
+    if #wingmans == 0 then
+      row = tableWingmans:addRow("noWingmans", { fixed = true })
+      row[2]:setColSpan(10):createText(texts.noAvailableWingmans, { halign = "left", color = Color["text_warning"] })
+    end
+  end
+
+  if tableWingmansMaxHeight == 0 then
+    tableWingmansMaxHeight = tableWingmans:getFullHeight()
+  end
+
+  tableWingmans.properties.maxVisibleHeight = math.min(tableWingmans:getFullHeight(), tableWingmansMaxHeight)
+
+  -- Restore scroll position if available
+  local wingKey = tostring(pilotAcademy.selectedTab)
+  if #wingmans > 0 and pilotAcademy.topRows.tableWingsWingmans[wingKey] ~= nil then
+    tableWingmans:setTopRow(pilotAcademy.topRows.tableWingsWingmans[wingKey])
+  end
+  pilotAcademy.topRows.tableWingsWingmans[wingKey] = nil
+
+  return { table = tableWingmans, height = tableWingmans.properties.maxVisibleHeight }
+end
+
+-- Helper: Create bottom buttons table
+function pilotAcademy.createWingButtonsTable(frame, menu, config, wingDisplayData, maxRelationNameWidth)
+  local tableBottom = pilotAcademy.createTable(frame, 7, "table_wing_bottom", false, menu, config, maxRelationNameWidth)
+
+  tableBottom:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  local row = tableBottom:addRow("buttons", { fixed = true })
+
+  if wingDisplayData.existingWing then
+    row[2]:createButton({ active = next(wingDisplayData.editData) == nil }):setText(texts.dismissWing, { halign = "center" })
+    row[2].handlers.onClick = function() return pilotAcademy.buttonDismissWing() end
+  end
+
+  row[4]:createButton({ active = next(wingDisplayData.editData) ~= nil }):setText(texts.cancel, { halign = "center" })
+  row[4].handlers.onClick = function() return pilotAcademy.buttonCancelChanges() end
+
+  row[6]:createButton({ active = next(wingDisplayData.editData) ~= nil and wingDisplayData.wingLeaderId ~= nil }):setText(
+    wingDisplayData.existingWing and texts.update or texts.create, { halign = "center" })
+  row[6].handlers.onClick = function() return pilotAcademy.buttonSaveWing() end
+
+  tableBottom:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+
+  return { table = tableBottom, height = tableBottom:getFullHeight() }
+end
+
+-- Main function: Orchestrate wing info display
 function pilotAcademy.displayWingInfo(frame, menu, config)
   if frame == nil then
     trace("Frame is nil; cannot display wing info")
@@ -1554,208 +1783,27 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
     trace("Menu or config is nil; cannot display wing info")
     return nil
   end
+
   local tables = {}
 
-  local wings = pilotAcademy.wings or {}
-  local wingId = pilotAcademy.selectedTab
-  local existingWing = wingId ~= nil and wings[wingId] ~= nil
-  local wingData = existingWing and wings[wingId] or {}
-  local editData = pilotAcademy.editData or {}
+  -- Prepare display data
+  local wingDisplayData = getWingDisplayData()
+  wingDisplayData.primaryGoal = wingDisplayData.editData.primaryGoal or wingDisplayData.wingData.primaryGoal or "rank"
+  wingDisplayData.refreshInterval = wingDisplayData.editData.refreshInterval or wingDisplayData.wingData.refreshInterval or 30
+  wingDisplayData.wingLeaderId = wingDisplayData.editData.wingLeaderId or wingDisplayData.wingData.wingLeaderId or nil
 
+
+  -- Get factions data
   local factions, maxRelationNameWidth = pilotAcademy.getFactions(config, true)
-  -- local factionsSorted =
-  local tableTop = pilotAcademy.createTable(frame, 12, "table_wing_top", false, menu, config, maxRelationNameWidth)
 
+  -- Create all UI sections
+  tables[#tables + 1] = pilotAcademy.createWingHeaderTable(frame, menu, config, wingDisplayData, maxRelationNameWidth)
+  tables[#tables + 1] = pilotAcademy.createWingFactionsSection(frame, menu, config, wingDisplayData, factions, maxRelationNameWidth)
+  tables[#tables + 1] = pilotAcademy.createWingRefreshIntervalTable(frame, menu, config, wingDisplayData, maxRelationNameWidth)
+  tables[#tables + 1] = pilotAcademy.createWingLeaderTable(frame, menu, config, wingDisplayData, maxRelationNameWidth)
+  tables[#tables + 1] = pilotAcademy.createWingmansTable(frame, menu, config, wingDisplayData, maxRelationNameWidth)
+  tables[#tables + 1] = pilotAcademy.createWingButtonsTable(frame, menu, config, wingDisplayData, maxRelationNameWidth)
 
-  local primaryGoal = editData.primaryGoal or wingData.primaryGoal or "rank"
-  local refreshInterval = editData.refreshInterval or wingData.refreshInterval or 30
-
-  local wingLeaderId = editData.wingLeaderId or wingData.wingLeaderId or nil
-
-  local row = tableTop:addRow(nil, { fixed = true })
-  local suffix = string.format(pilotAcademy.selectedTab ~= nil and texts.wing or texts.addNewWing,
-    existingWing and texts.wingNames[pilotAcademy.selectedTab] or "")
-  row[1]:setColSpan(12):createText(string.format("%s: %s", texts.pilotAcademy, suffix), Helper.headerRowCenteredProperties)
-  tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-  local row = tableTop:addRow("wing_primary_goal", { fixed = true })
-  local primaryGoalOptions = {
-    { id = "rank",     icon = "", text = texts.increaseRank,   text2 = "", displayremoveoption = false },
-    { id = "relation", icon = "", text = texts.gainReputation, text2 = "", displayremoveoption = false },
-  }
-  row[2]:setColSpan(5):createText(texts.primaryGoal, { halign = "left", titleColor = Color["row_title"] })
-  row[7]:setColSpan(5):createDropDown(
-    primaryGoalOptions,
-    {
-      startOption = primaryGoal or -1,
-      active = true,
-      textOverride = (#primaryGoalOptions == 0) and texts.noAvailablePrimaryGoals or nil,
-    }
-  )
-  row[7]:setTextProperties({ halign = "left" })
-  row[7].handlers.onDropDownActivated = function() menu.noupdate = true end
-  row[7].handlers.onDropDownConfirmed = function(_, id)
-    menu.noupdate = false
-    return pilotAcademy.onSelectPrimaryGoal(id)
-  end
-  tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-  tables[#tables + 1] = { table = tableTop, height = tableTop:getFullHeight() }
-
-  local tableFactions = pilotAcademy.createTable(frame, 12, "table_wing_factions", false, menu, config, maxRelationNameWidth)
-
-  local row = tableFactions:addRow(nil, { fixed = true })
-  row[2]:setColSpan(10):createText(texts.factions, { halign = "left", titleColor = Color["row_title"] })
-
-  pilotAcademy.displayFactions(tableFactions, factions, editData, wingData, config)
-
-  tables[#tables + 1] = { table = tableFactions, height = tableFactions.properties.maxVisibleHeight }
-
-  local wingKey = tostring(pilotAcademy.selectedTab)
-  if #factions > 0 then
-    if pilotAcademy.topRows.tableWingsFactions[wingKey] ~= nil then
-      tableFactions:setTopRow(pilotAcademy.topRows.tableWingsFactions[wingKey])
-    end
-  end
-  pilotAcademy.topRows.tableWingsFactions[wingKey] = nil
-
-  local tableRefreshInterval = pilotAcademy.createTable(frame, 12, "table_refresh_interval", false, menu, config, maxRelationNameWidth)
-
-  tableRefreshInterval:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-  local row = tableRefreshInterval:addRow(nil, { fixed = true })
-  row[2]:setColSpan(10):createText(texts.tradeDataRefreshInterval, { halign = "left", titleColor = Color["row_title"] })
-  local refreshIntervalOptions = pilotAcademy.getRefreshIntervalOptions()
-  row = tableRefreshInterval:addRow("wing_refresh_interval", { fixed = true })
-  row[1]:createText("", { halign = "left" })
-  row[2]:setColSpan(10):createDropDown(
-    refreshIntervalOptions,
-    {
-      startOption = refreshInterval or -1,
-      active = true,
-      textOverride = (#refreshIntervalOptions == 0) and "0" or nil,
-    }
-  )
-  row[2]:setTextProperties({ halign = "right" })
-  row[2].handlers.onDropDownActivated = function() menu.noupdate = true end
-  row[2].handlers.onDropDownConfirmed = function(_, id)
-    menu.noupdate = false
-    return pilotAcademy.onSelectRefreshInterval(id)
-  end
-  tableRefreshInterval:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-
-  tables[#tables + 1] = { table = tableRefreshInterval, height = tableRefreshInterval:getFullHeight() }
-
-  local tableWingLeader = pilotAcademy.createTable(frame, 12, "table_wing_leader", false, menu, config, maxRelationNameWidth)
-
-  local row = tableWingLeader:addRow(nil, { fixed = true })
-  local wingLeaderOptions = pilotAcademy.fetchPotentialWingmans(existingWing, wingLeaderId)
-  row[2]:setColSpan(10):createText(texts.wingLeader, { halign = "left", titleColor = Color["row_title"] })
-  if existingWing then
-    local leaderInfo = wingLeaderOptions[1] or {}
-    row = tableWingLeader:addRow({ tableName = tableWingLeader.name, rowData = leaderInfo }, { fixed = false })
-    row[1]:createText("", { halign = "left" })
-    local icon = row[2]:setColSpan(10):createIcon("order_pilotacademywing", { height = config.mapRowHeight, width = config.mapRowHeight })
-    icon:setText(leaderInfo.text, { x = config.mapRowHeight, halign = "left", color = Color["text_normal"] })
-    icon:setText2(leaderInfo.text2, { halign = "right", color = Color["text_skills"] })
-  else
-    row = tableWingLeader:addRow("wing_leader", { fixed = true })
-    row[1]:createText("", { halign = "left" })
-    row[2]:setColSpan(10):createDropDown(
-      wingLeaderOptions,
-      {
-        startOption = wingLeaderId or -1,
-        active = not existingWing,
-        textOverride = (#wingLeaderOptions == 0) and texts.noAvailableWingLeaders or nil,
-      }
-    )
-    row[2]:setTextProperties({ halign = "left" })
-    row[2]:setText2Properties({ halign = "right", color = Color["text_skills"] })
-    row[2].handlers.onDropDownActivated = function() menu.noupdate = true end
-    row[2].handlers.onDropDownConfirmed = function(_, id)
-      menu.noupdate = false
-      return pilotAcademy.onSelectWingLeader(id)
-    end
-  end
-  tables[#tables + 1] = { table = tableWingLeader, height = tableWingLeader:getFullHeight() }
-
-  local tableWingmans = pilotAcademy.createTable(frame, 12, "table_wing_wingmans", false, menu, config, maxRelationNameWidth)
-
-  tableWingmans:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-  local tableWingmansMaxHeight = 0
-  local wingmans = {}
-  local mimicGroupId = nil
-  if existingWing then
-    row = tableWingmans:addRow(nil, { fixed = true })
-    row[2]:setColSpan(10):createText(texts.addWingman, { halign = "left", titleColor = Color["row_title"] })
-    local addWingmanOptions = pilotAcademy.fetchPotentialWingmans(existingWing, nil)
-    mimicGroupId, wingmans = pilotAcademy.fetchWingmans(wingLeaderId)
-    row = tableWingmans:addRow("add_wingman", { fixed = true })
-    row[1]:createText("", { halign = "left" })
-    row[2]:setColSpan(10):createDropDown(
-      addWingmanOptions,
-      {
-        startOption = wingLeaderId or -1,
-        active = existingWing,
-        textOverride = (#addWingmanOptions == 0) and texts.noAvailableWingmanCandidates or nil,
-      }
-    )
-    row[2]:setTextProperties({ halign = "left" })
-    row[2]:setText2Properties({ halign = "right", color = Color["text_skills"] })
-    row[2].handlers.onDropDownActivated = function() menu.noupdate = true end
-    row[2].handlers.onDropDownConfirmed = function(_, id)
-      menu.noupdate = false
-      return pilotAcademy.onSelectWingman(id, wingLeaderId, mimicGroupId)
-    end
-    tableWingmans:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-    row = tableWingmans:addRow(nil, { fixed = true })
-    row[2]:setColSpan(10):createText(texts.wingmans, { halign = "left", titleColor = Color["row_title"] })
-    for i = 1, #wingmans do
-      local wingman = wingmans[i]
-      if wingman ~= nil then
-        local row = tableWingmans:addRow({ tableName = tableWingmans.name, rowData = wingman }, { fixed = false })
-        local icon = row[2]:setColSpan(10):createIcon("order_assist", { height = config.mapRowHeight, width = config.mapRowHeight })
-        icon:setText(wingman.text, { x = config.mapRowHeight, halign = "left", color = Color["text_normal"] })
-        icon:setText2(wingman.text2, { halign = "right", color = Color["text_skills"] })
-        if i == 10 then
-          tableWingmansMaxHeight = tableWingmans:getFullHeight()
-        end
-      end
-    end
-    if #wingmans == 0 then
-      row = tableWingmans:addRow("noWingmans", { fixed = true })
-      row[2]:setColSpan(10):createText(texts.noAvailableWingmans, { halign = "left", color = Color["text_warning"] })
-    end
-  end
-  if tableWingmansMaxHeight == 0 then
-    tableWingmansMaxHeight = tableWingmans:getFullHeight()
-  end
-
-  tableWingmans.properties.maxVisibleHeight = math.min(tableWingmans:getFullHeight(), tableWingmansMaxHeight)
-  tables[#tables + 1] = { table = tableWingmans, height = tableWingmans.properties.maxVisibleHeight }
-
-  if #wingmans > 0 then
-    if pilotAcademy.topRows.tableWingsWingmans[wingKey] ~= nil then
-      tableFactions:setTopRow(pilotAcademy.topRows.tableWingsWingmans[wingKey])
-    end
-  end
-  pilotAcademy.topRows.tableWingsWingmans[wingKey] = nil
-
-  local tableBottom = pilotAcademy.createTable(frame, 7, "table_wing_bottom", false, menu, config, maxRelationNameWidth)
-
-  tableBottom:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-  row = tableBottom:addRow("buttons", { fixed = true })
-  if existingWing then
-    row[2]:createButton({ active = next(editData) == nil }):setText(texts.dismissWing, { halign = "center" })
-    row[2].handlers.onClick = function() return pilotAcademy.buttonDismissWing() end
-  end
-
-  row[4]:createButton({ active = next(editData) ~= nil }):setText(texts.cancel, { halign = "center" })
-  row[4].handlers.onClick = function() return pilotAcademy.buttonCancelChanges() end
-
-  row[6]:createButton({ active = next(editData) ~= nil and wingLeaderId ~= nil }):setText(existingWing and texts.update or texts.create,
-    { halign = "center" })
-  row[6].handlers.onClick = function() return pilotAcademy.buttonSaveWing() end
-
-  tableBottom:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-  tables[#tables + 1] = { table = tableBottom, height = tableBottom:getFullHeight() }
   return tables
 end
 
