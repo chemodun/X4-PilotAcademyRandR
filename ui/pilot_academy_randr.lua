@@ -618,45 +618,55 @@ function pilotAcademy.displayFactions(tableFactions, factions, editData, storedD
   tableFactions.properties.maxVisibleHeight = math.min(tableFactions:getFullHeight(), tableFactionsMaxHeight)
 end
 
-function pilotAcademy.displayAcademyInfo(frame, menu, config)
-  trace("displayAcademyInfo called at " .. tostring(C.GetCurrentGameTime()))
-  if frame == nil then
-    trace("Frame is nil; cannot display wing info")
-    return nil
-  end
-  if menu == nil or config == nil then
-    trace("Menu or config is nil; cannot display wing info")
-    return nil
-  end
-
+-- Helper: Extract and prepare academy display data
+local function getAcademyDisplayData()
   local academyData = pilotAcademy.commonData or {}
   local editData = pilotAcademy.editData or {}
-  local tables = {}
   local locationId = editData.locationId or academyData.locationId or nil
-  local locationSelectable = locationId == nil or editData.locationId ~= nil and editData.locationId ~= academyData.locationId or
-      editData.toChangeLocation == true
+  local locationSelectable = locationId == nil or
+    (editData.locationId ~= nil and editData.locationId ~= academyData.locationId) or
+    editData.toChangeLocation == true
 
-  local factions, maxRelationNameWidth = pilotAcademy.getFactions(config, false)
-  local emptyText, locationOptions = pilotAcademy.fetchPotentialLocations(locationSelectable, academyData.locationId, factions)
+  return {
+    academyData = academyData,
+    editData = editData,
+    locationId = locationId,
+    locationSelectable = locationSelectable
+  }
+end
 
+-- Helper: Get max rank level based on research
+local function getMaxRankLevel()
+  if C.HasResearched("research_pilot_academy_r_and_r_5_star") then
+    return 5
+  elseif C.HasResearched("research_pilot_academy_r_and_r_4_star") then
+    return 4
+  elseif C.HasResearched("research_pilot_academy_r_and_r_3_star") then
+    return 3
+  end
+  return 2
+end
+
+-- Helper: Create academy header with location selection
+function pilotAcademy.createAcademyHeaderTable(frame, menu, config, displayData, locationOptions, emptyText, maxRelationNameWidth)
   local tableTop = pilotAcademy.createTable(frame, 4, "table_academy_top", false, menu, config, maxRelationNameWidth)
 
   local row = tableTop:addRow(nil, { fixed = true })
   row[1]:setColSpan(4):createText(texts.pilotAcademyFull, Helper.headerRowCenteredProperties)
   tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+
+  -- Location selection
   row = tableTop:addRow(nil, { fixed = true })
   row[2]:setColSpan(2):createText(texts.location, { halign = "left", titleColor = Color["row_title"] })
   row = tableTop:addRow("location", { fixed = true })
   row[1]:createText("", { halign = "left" })
-  if locationSelectable then
-    row[2]:setColSpan(2):createDropDown(
-      locationOptions,
-      {
-        startOption = locationId or -1,
-        active = true,
-        textOverride = (#locationOptions == 0) and emptyText or nil,
-      }
-    )
+
+  if displayData.locationSelectable then
+    row[2]:setColSpan(2):createDropDown(locationOptions, {
+      startOption = displayData.locationId or -1,
+      active = true,
+      textOverride = (#locationOptions == 0) and emptyText or nil,
+    })
     row[2]:setTextProperties({ halign = "left" })
     row[2]:setText2Properties({ halign = "right" })
     row[2].handlers.onDropDownActivated = function() menu.noupdate = true end
@@ -666,32 +676,40 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
     end
   else
     local isAnyPersonNotArrived = pilotAcademy.isAnyPersonNotArrived()
-    row[2]:setColSpan(2):createButton({ active = not isAnyPersonNotArrived, mouseOverText = string.format("%s\027X %s", locationOptions[1].text,
-      locationOptions[1].text2) }):setText(locationOptions[1].text, { halign = "left" }):setText2(locationOptions[1].text2,
-      { halign = "right" })
+    row[2]:setColSpan(2):createButton({
+      active = not isAnyPersonNotArrived,
+      mouseOverText = string.format("%s\027X %s", locationOptions[1].text, locationOptions[1].text2)
+    }):setText(locationOptions[1].text, { halign = "left" }):setText2(locationOptions[1].text2, { halign = "right" })
     row[2].handlers.onClick = function() return pilotAcademy.onToChangeLocation() end
   end
   tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-  local owner = academyData.locationId and GetComponentData(academyData.locationId, "owner") or nil
+
+  -- Rent cost display for non-player locations
+  local owner = displayData.academyData.locationId and GetComponentData(displayData.academyData.locationId, "owner") or nil
   if owner ~= nil and owner ~= "player" then
-    local rentCost = academyData.rentCost or 0
+    local rentCost = displayData.academyData.rentCost or 0
     row = tableTop:addRow(nil, { fixed = true })
-    row[2]:setColSpan(2):createText(string.format(texts.locationRentCost, ConvertMoneyString(rentCost, false, true, nil, true) .. " " .. ReadText(1001, 101)),
-      { halign = "left", titleColor = Color["row_title"] })
+    row[2]:setColSpan(2):createText(
+      string.format(texts.locationRentCost, ConvertMoneyString(rentCost, false, true, nil, true) .. " " .. ReadText(1001, 101)),
+      { halign = "left", titleColor = Color["row_title"] }
+    )
     tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   end
-  local targetRankLevel = editData.targetRankLevel or academyData.targetRankLevel or 2
-  local maxRankLevel = 2
-  if C.HasResearched("research_pilot_academy_r_and_r_5_star") then
-    maxRankLevel = 5
-  elseif C.HasResearched("research_pilot_academy_r_and_r_4_star") then
-    maxRankLevel = 4
-  elseif C.HasResearched("research_pilot_academy_r_and_r_3_star") then
-    maxRankLevel = 3
-  end
-  row = tableTop:addRow(nil, { fixed = true })
+
+  return { table = tableTop, height = tableTop:getFullHeight() }
+end
+
+-- Helper: Create target rank level slider table
+function pilotAcademy.createTargetRankTable(frame, menu, config, displayData, maxRelationNameWidth)
+  local tableRank = pilotAcademy.createTable(frame, 4, "table_academy_rank", false, menu, config, maxRelationNameWidth)
+
+  local targetRankLevel = displayData.editData.targetRankLevel or displayData.academyData.targetRankLevel or 2
+  local maxRankLevel = getMaxRankLevel()
+
+  local row = tableRank:addRow(nil, { fixed = true })
   row[2]:setColSpan(2):createText(texts.targetRankLevel, { halign = "left", titleColor = Color["row_title"] })
-  row = tableTop:addRow("target_rank_level", { fixed = true })
+
+  row = tableRank:addRow("target_rank_level", { fixed = true })
   row[2]:setColSpan(2):createSliderCell({
     height = config.mapRowHeight,
     bgColor = Color["slider_background_transparent"],
@@ -707,59 +725,73 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
   row[2].handlers.onSliderCellActivated = function() menu.noupdate = true end
   row[2].handlers.onSliderCellDeactivated = function() menu.noupdate = false end
 
-  tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  tableRank:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
 
-  local autoHire = editData.autoHire
+  return { table = tableRank, height = tableRank:getFullHeight() }
+end
+
+-- Helper: Create auto hire checkbox table
+function pilotAcademy.createAutoHireTable(frame, menu, config, displayData, factions, maxRelationNameWidth)
+  local tableAutoHire = pilotAcademy.createTable(frame, 4, "table_academy_autohire", false, menu, config, maxRelationNameWidth)
+
+  local autoHire = displayData.editData.autoHire
   if autoHire == nil then
-    autoHire = academyData.autoHire
+    autoHire = displayData.academyData.autoHire
   end
-
   if autoHire == nil then
     autoHire = false
   end
 
   local autoHireActive = C.HasResearched("research_pilot_academy_r_and_r_auto_hire")
 
-  row = tableTop:addRow("auto_hire", { fixed = true })
-  row[2]:createCheckBox(autoHire == true, { active = autoHireActive and #factions > 0, height = config.mapRowHeight, width = config.mapRowHeight })
+  local row = tableAutoHire:addRow("auto_hire", { fixed = true })
+  row[2]:createCheckBox(autoHire == true, {
+    active = autoHireActive and #factions > 0,
+    height = config.mapRowHeight,
+    width = config.mapRowHeight
+  })
   row[2].handlers.onClick = function(_, checked) return pilotAcademy.onToggleAutoHire(checked) end
   row[3]:createText(texts.autoHire, { halign = "left", titleColor = Color["row_title"] })
-  tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-  tables[#tables + 1] = { table = tableTop, height = tableTop:getFullHeight() }
+  tableAutoHire:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
 
-  if #factions > 0 and autoHire == true then
-    local tableFactions = pilotAcademy.createTable(frame, 12, "table_academy_factions", false, menu, config, maxRelationNameWidth)
+  return { table = tableAutoHire, height = tableAutoHire:getFullHeight(), autoHire = autoHire }
+end
 
-    pilotAcademy.displayFactions(tableFactions, factions, editData, academyData, config)
+-- Helper: Create factions selection table (conditional)
+function pilotAcademy.createAcademyFactionsTable(frame, menu, config, displayData, factions, maxRelationNameWidth)
+  local tableFactions = pilotAcademy.createTable(frame, 12, "table_academy_factions", false, menu, config, maxRelationNameWidth)
 
-    tables[#tables + 1] = { table = tableFactions, height = tableFactions.properties.maxVisibleHeight }
+  pilotAcademy.displayFactions(tableFactions, factions, displayData.editData, displayData.academyData, config)
 
-    if pilotAcademy.topRows.tableAcademyFactions ~= nil then
-      tableFactions:setTopRow(pilotAcademy.topRows.tableAcademyFactions)
-    end
+  -- Restore scroll position if available
+  if pilotAcademy.topRows.tableAcademyFactions ~= nil then
+    tableFactions:setTopRow(pilotAcademy.topRows.tableAcademyFactions)
   end
   pilotAcademy.topRows.tableAcademyFactions = nil
 
+  return { table = tableFactions, height = tableFactions.properties.maxVisibleHeight }
+end
+
+-- Helper: Create assignment settings table
+function pilotAcademy.createAssignmentTable(frame, menu, config, displayData, locationOptions, maxRelationNameWidth)
   local tableAssign = pilotAcademy.createTable(frame, 4, "table_academy_assign", false, menu, config, maxRelationNameWidth)
 
   tableAssign:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
 
-  local assign = editData.assign or academyData.assign or "manual"
+  local assign = displayData.editData.assign or displayData.academyData.assign or "manual"
   local assignOptions = pilotAcademy.getAssignOptions()
   local autoAssignActive = C.HasResearched("research_pilot_academy_r_and_r_auto_assign")
 
-  row = tableAssign:addRow(nil, { fixed = true })
+  local row = tableAssign:addRow(nil, { fixed = true })
   row[2]:setColSpan(2):createText(texts.assign, { halign = "left", titleColor = Color["row_title"] })
+
   row = tableAssign:addRow("location", { fixed = true })
   row[1]:createText("", { halign = "left" })
-  row[2]:setColSpan(2):createDropDown(
-    assignOptions,
-    {
-      startOption = assign or "manual",
-      active = autoAssignActive,
-      textOverride = (#locationOptions == 0) and "" or nil,
-    }
-  )
+  row[2]:setColSpan(2):createDropDown(assignOptions, {
+    startOption = assign or "manual",
+    active = autoAssignActive,
+    textOverride = (#locationOptions == 0) and "" or nil,
+  })
   row[2]:setTextProperties({ halign = "left" })
   row[2].handlers.onDropDownActivated = function() menu.noupdate = true end
   row[2].handlers.onDropDownConfirmed = function(_, id)
@@ -767,22 +799,22 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
     return pilotAcademy.onSelectAssign(id)
   end
 
+  -- Priority dropdown (conditional on non-manual assignment)
   if assign ~= "manual" then
-    local assignPriority = editData.assignPriority or academyData.assignPriority or "priority_small_to_large"
+    local assignPriority = displayData.editData.assignPriority or displayData.academyData.assignPriority or "priority_small_to_large"
     local priorityOptions = pilotAcademy.getAssignPriorityOptions()
+
     tableAssign:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
     row = tableAssign:addRow(nil, { fixed = true })
     row[2]:setColSpan(2):createText(texts.priority, { halign = "left", titleColor = Color["row_title"] })
+
     row = tableAssign:addRow("assign_priority", { fixed = true })
     row[1]:createText("", { halign = "left" })
-    row[2]:setColSpan(2):createDropDown(
-      priorityOptions,
-      {
-        startOption = assignPriority or "priority_small_to_large",
-        active = true,
-        textOverride = (#priorityOptions == 0) and "" or nil,
-      }
-    )
+    row[2]:setColSpan(2):createDropDown(priorityOptions, {
+      startOption = assignPriority or "priority_small_to_large",
+      active = true,
+      textOverride = (#priorityOptions == 0) and "" or nil,
+    })
     row[2]:setTextProperties({ halign = "left" })
     row[2].handlers.onDropDownActivated = function() menu.noupdate = true end
     row[2].handlers.onDropDownConfirmed = function(_, id)
@@ -791,23 +823,71 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
     end
   end
 
-  tables[#tables + 1] = { table = tableAssign, height = tableAssign:getFullHeight() }
+  return { table = tableAssign, height = tableAssign:getFullHeight() }
+end
 
+-- Helper: Create bottom buttons table
+function pilotAcademy.createAcademyButtonsTable(frame, menu, config, displayData, maxRelationNameWidth)
   local tableBottom = pilotAcademy.createTable(frame, 7, "table_academy_bottom", false, menu, config, maxRelationNameWidth)
 
   tableBottom:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-  row = tableBottom:addRow("buttons", { fixed = true })
+  local row = tableBottom:addRow("buttons", { fixed = true })
 
-  row[4]:createButton({ active = next(editData) ~= nil }):setText(texts.cancel, { halign = "center" })
+  row[4]:createButton({ active = next(displayData.editData) ~= nil }):setText(texts.cancel, { halign = "center" })
   row[4].handlers.onClick = function() return pilotAcademy.buttonCancelAcademyChanges() end
 
-  row[6]:createButton({ active = hasItemsExcept(editData, "toChangeLocation") and locationId ~= nil }):setText(
-    academyData.locationId ~= nil and texts.update or texts.create,
-    { halign = "center" })
+  row[6]:createButton({
+    active = hasItemsExcept(displayData.editData, "toChangeLocation") and displayData.locationId ~= nil
+  }):setText(
+    displayData.academyData.locationId ~= nil and texts.update or texts.create,
+    { halign = "center" }
+  )
   row[6].handlers.onClick = function() return pilotAcademy.buttonSaveAcademy() end
 
   tableBottom:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-  tables[#tables + 1] = { table = tableBottom, height = tableBottom:getFullHeight() }
+
+  return { table = tableBottom, height = tableBottom:getFullHeight() }
+end
+
+-- Main function: Orchestrate academy info display
+function pilotAcademy.displayAcademyInfo(frame, menu, config)
+  trace("displayAcademyInfo called at " .. tostring(C.GetCurrentGameTime()))
+  if frame == nil then
+    trace("Frame is nil; cannot display wing info")
+    return nil
+  end
+  if menu == nil or config == nil then
+    trace("Menu or config is nil; cannot display wing info")
+    return nil
+  end
+
+  local tables = {}
+
+  -- Prepare display data
+  local displayData = getAcademyDisplayData()
+
+  -- Get factions and location data
+  local factions, maxRelationNameWidth = pilotAcademy.getFactions(config, false)
+  local emptyText, locationOptions = pilotAcademy.fetchPotentialLocations(
+    displayData.locationSelectable,
+    displayData.academyData.locationId,
+    factions
+  )
+
+  -- Create all UI sections
+  tables[#tables + 1] = pilotAcademy.createAcademyHeaderTable(frame, menu, config, displayData, locationOptions, emptyText, maxRelationNameWidth)
+  tables[#tables + 1] = pilotAcademy.createTargetRankTable(frame, menu, config, displayData, maxRelationNameWidth)
+
+  local autoHireResult = pilotAcademy.createAutoHireTable(frame, menu, config, displayData, factions, maxRelationNameWidth)
+  tables[#tables + 1] = autoHireResult
+
+  -- Conditionally add factions table if auto-hire is enabled
+  if #factions > 0 and autoHireResult.autoHire == true then
+    tables[#tables + 1] = pilotAcademy.createAcademyFactionsTable(frame, menu, config, displayData, factions, maxRelationNameWidth)
+  end
+
+  tables[#tables + 1] = pilotAcademy.createAssignmentTable(frame, menu, config, displayData, locationOptions, maxRelationNameWidth)
+  tables[#tables + 1] = pilotAcademy.createAcademyButtonsTable(frame, menu, config, displayData, maxRelationNameWidth)
   return tables
 end
 
