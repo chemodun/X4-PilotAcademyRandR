@@ -307,7 +307,12 @@ There are examples of texts and notifications screenshots:
 
 ## Changelog
 
-### [1.00] - 2024-02-10
+### [1.01] - 2026-02-12
+
+- **Fixed**
+  - Academy window not displayed properly on resolutions higher than Full HD (1920x1080)
+
+### [1.00] - 2026-02-10
 
 - **Added**
   - Initial public version
