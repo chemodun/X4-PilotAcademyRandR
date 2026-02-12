@@ -548,6 +548,22 @@ function pilotAcademy.setAcademyContentColumnWidths(tableHandle, menu, config)
   tableHandle:setColWidth(4, Helper.scrollbarWidth + 1, false)
 end
 
+function pilotAcademy.createTable(frame, numCols, id, reserveScrollBar, menu, config, maxRelationNameWidth) 
+  local tableHandle = frame:addTable(numCols, { tabOrder = 2, reserveScrollBar = reserveScrollBar })
+  tableHandle.name = id
+  tableHandle:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
+  tableHandle:setDefaultCellProperties("button", { height = config.mapRowHeight })
+  tableHandle:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
+  if numCols == 4 then
+    pilotAcademy.setAcademyContentColumnWidths(tableHandle, pilotAcademy.menuMap, config)
+  elseif numCols == 7 then
+    pilotAcademy.setButtonsColumnWidths(tableHandle, menu, config)
+  elseif numCols == 12 then
+    pilotAcademy.setInfoContentColumnWidths(tableHandle, menu, config, maxRelationNameWidth)
+  end
+  return tableHandle
+end
+
 function pilotAcademy.displayAcademyInfo(frame, menu, config)
   trace("displayAcademyInfo called at " .. tostring(C.GetCurrentGameTime()))
   if frame == nil then
@@ -562,22 +578,18 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
   local academyData = pilotAcademy.commonData or {}
   local editData = pilotAcademy.editData or {}
   local tables = {}
-  local tableTop = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
-  tableTop.name = "table_academy_top"
-  tableTop:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
-  tableTop:setDefaultCellProperties("button", { height = config.mapRowHeight })
-  tableTop:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-  pilotAcademy.setAcademyContentColumnWidths(tableTop, menu, config)
-  local row = tableTop:addRow(nil, { fixed = true })
-  row[1]:setColSpan(4):createText(texts.pilotAcademyFull, Helper.headerRowCenteredProperties)
-  tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local locationId = editData.locationId or academyData.locationId or nil
   local locationSelectable = locationId == nil or editData.locationId ~= nil and editData.locationId ~= academyData.locationId or
       editData.toChangeLocation == true
 
-  local factions, maxShortNameWidth, maxRelationNameWidth = pilotAcademy.getFactions(config, false)
+  local factions, maxRelationNameWidth = pilotAcademy.getFactions(config, false)
   local emptyText, locationOptions = pilotAcademy.fetchPotentialLocations(locationSelectable, academyData.locationId, factions)
 
+  local tableTop = pilotAcademy.createTable(frame, 4, "table_academy_top", false, menu, config, maxRelationNameWidth)
+
+  local row = tableTop:addRow(nil, { fixed = true })
+  row[1]:setColSpan(4):createText(texts.pilotAcademyFull, Helper.headerRowCenteredProperties)
+  tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   row = tableTop:addRow(nil, { fixed = true })
   row[2]:setColSpan(2):createText(texts.location, { halign = "left", titleColor = Color["row_title"] })
   row = tableTop:addRow("location", { fixed = true })
@@ -662,12 +674,8 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
   if #factions > 0 and autoHire == true then
     local tableFactionsMaxHeight = 0
 
-    local tableFactions = frame:addTable(12, { tabOrder = 2, reserveScrollBar = false })
-    tableFactions.name = "table_academy_factions"
-    tableFactions:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
-    tableFactions:setDefaultCellProperties("button", { height = config.mapRowHeight })
-    tableFactions:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-    pilotAcademy.setInfoContentColumnWidths(tableFactions, menu, config, maxShortNameWidth, maxRelationNameWidth)
+    local tableFactions = pilotAcademy.createTable(frame, 12, "table_academy_factions", false, menu, config, maxRelationNameWidth)
+
     local selectedFactions = pilotAcademy.combineFactionsSelections(editData, academyData)
     for i = 1, #factions do
       local faction = factions[i]
@@ -698,12 +706,8 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
   end
   pilotAcademy.topRows.tableAcademyFactions = nil
 
-  local tableAssign = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
-  tableAssign.name = "table_academy_top"
-  tableAssign:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
-  tableAssign:setDefaultCellProperties("button", { height = config.mapRowHeight })
-  tableAssign:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-  pilotAcademy.setAcademyContentColumnWidths(tableAssign, menu, config)
+  local tableAssign = pilotAcademy.createTable(frame, 4, "table_academy_assign", false, menu, config, maxRelationNameWidth)
+
   tableAssign:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
 
   local assign = editData.assign or academyData.assign or "manual"
@@ -755,12 +759,8 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
 
   tables[#tables + 1] = { table = tableAssign, height = tableAssign:getFullHeight() }
 
-  local tableBottom = frame:addTable(7, { tabOrder = 2, reserveScrollBar = false })
-  tableBottom.name = "table_wing_bottom"
-  tableBottom:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
-  tableBottom:setDefaultCellProperties("button", { height = config.mapRowHeight })
-  tableBottom:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-  pilotAcademy.setButtonsColumnWidths(tableBottom, menu, config)
+  local tableBottom = pilotAcademy.createTable(frame, 7, "table_academy_bottom", false, menu, config, maxRelationNameWidth)
+  
   tableBottom:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   row = tableBottom:addRow("buttons", { fixed = true })
 
@@ -1521,17 +1521,13 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
     return nil
   end
   local tables = {}
-  local tableTop = frame:addTable(12, { tabOrder = 2, reserveScrollBar = false })
-  tableTop.name = "table_wing_top"
-  tableTop:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
-  tableTop:setDefaultCellProperties("button", { height = config.mapRowHeight })
-  tableTop:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
   local wings = pilotAcademy.wings or {}
   local wingId = pilotAcademy.selectedTab
   local existingWing = wingId ~= nil and wings[wingId] ~= nil
   local factions, maxRelationNameWidth = pilotAcademy.getFactions(config, true)
   -- local factionsSorted =
-  pilotAcademy.setInfoContentColumnWidths(tableTop, menu, config, maxRelationNameWidth)
+  local tableTop = pilotAcademy.createTable(frame, 12, "table_wing_top", false, menu, config, maxRelationNameWidth)
+
   local wingData = existingWing and wings[wingId] or {}
   local editData = pilotAcademy.editData or {}
   local primaryGoal = editData.primaryGoal or wingData.primaryGoal or "rank"
@@ -1568,12 +1564,8 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   tables[#tables + 1] = { table = tableTop, height = tableTop:getFullHeight() }
 
-  local tableFactions = frame:addTable(12, { tabOrder = 2, reserveScrollBar = false })
-  tableFactions.name = "table_wing_factions"
-  tableFactions:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
-  tableFactions:setDefaultCellProperties("button", { height = config.mapRowHeight })
-  tableFactions:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-  pilotAcademy.setInfoContentColumnWidths(tableFactions, menu, config, maxRelationNameWidth)
+  local tableFactions = pilotAcademy.createTable(frame, 12, "table_wing_factions", false, menu, config, maxRelationNameWidth)
+
   local row = tableFactions:addRow(nil, { fixed = true })
   row[2]:setColSpan(10):createText(texts.factions, { halign = "left", titleColor = Color["row_title"] })
   local tableFactionMaxHeight = 0
@@ -1608,12 +1600,8 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   end
   pilotAcademy.topRows.tableWingsFactions[wingKey] = nil
 
-  local tableRefreshInterval = frame:addTable(12, { tabOrder = 2, reserveScrollBar = false })
-  tableRefreshInterval.name = "table_refresh_interval"
-  tableRefreshInterval:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
-  tableRefreshInterval:setDefaultCellProperties("button", { height = config.mapRowHeight })
-  tableRefreshInterval:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-  pilotAcademy.setInfoContentColumnWidths(tableRefreshInterval, menu, config, maxRelationNameWidth)
+  local tableRefreshInterval = pilotAcademy.createTable(frame, 12, "table_refresh_interval", false, menu, config, maxRelationNameWidth)
+
   tableRefreshInterval:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local row = tableRefreshInterval:addRow(nil, { fixed = true })
   row[2]:setColSpan(10):createText(texts.tradeDataRefreshInterval, { halign = "left", titleColor = Color["row_title"] })
@@ -1638,12 +1626,8 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
 
   tables[#tables + 1] = { table = tableRefreshInterval, height = tableRefreshInterval:getFullHeight() }
 
-  local tableWingLeader = frame:addTable(12, { tabOrder = 2, reserveScrollBar = false })
-  tableWingLeader.name = "table_wing_leader"
-  tableWingLeader:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
-  tableWingLeader:setDefaultCellProperties("button", { height = config.mapRowHeight })
-  tableWingLeader:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-  pilotAcademy.setInfoContentColumnWidths(tableWingLeader, menu, config, maxRelationNameWidth)
+  local tableWingLeader = pilotAcademy.createTable(frame, 12, "table_wing_leader", false, menu, config, maxRelationNameWidth)
+
   local row = tableWingLeader:addRow(nil, { fixed = true })
   local wingLeaderOptions = pilotAcademy.fetchPotentialWingmans(existingWing, wingLeaderId)
   row[2]:setColSpan(10):createText(texts.wingLeader, { halign = "left", titleColor = Color["row_title"] })
@@ -1675,12 +1659,8 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   end
   tables[#tables + 1] = { table = tableWingLeader, height = tableWingLeader:getFullHeight() }
 
-  local tableWingmans = frame:addTable(12, { tabOrder = 2, reserveScrollBar = false })
-  tableWingmans.name = "table_wing_wingmans"
-  tableWingmans:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
-  tableWingmans:setDefaultCellProperties("button", { height = config.mapRowHeight })
-  tableWingmans:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-  pilotAcademy.setInfoContentColumnWidths(tableWingmans, menu, config, maxRelationNameWidth)
+  local tableWingmans = pilotAcademy.createTable(frame, 12, "table_wing_wingmans", false, menu, config, maxRelationNameWidth)
+
   tableWingmans:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local tableWingmansMaxHeight = 0
   local wingmans = {}
@@ -1741,12 +1721,8 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   end
   pilotAcademy.topRows.tableWingsWingmans[wingKey] = nil
 
-  local tableBottom = frame:addTable(7, { tabOrder = 2, reserveScrollBar = false })
-  tableBottom.name = "table_wing_bottom"
-  tableBottom:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
-  tableBottom:setDefaultCellProperties("button", { height = config.mapRowHeight })
-  tableBottom:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-  pilotAcademy.setButtonsColumnWidths(tableBottom, menu, config)
+  local tableBottom = pilotAcademy.createTable(frame, 7, "table_wing_bottom", false, menu, config, maxRelationNameWidth)
+
   tableBottom:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   row = tableBottom:addRow("buttons", { fixed = true })
   if existingWing then
