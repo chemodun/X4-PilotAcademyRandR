@@ -295,11 +295,6 @@ There are examples of texts and notifications screenshots:
 [/list]
 [*] And hopefully, this warning will not be displayed: "Can't assign Academy training order on wing %s with leader ship %s! Please report the issue!"
 [/list]
-[h2][b]Video[/b][/h2]
-
-Video demonstration of the mod (Version 1.00)
-[previewyoutube=NUMBER;full][/previewyoutube]
-
 [h2][b]Credits[/b][/h2]
 [list]
 [*] [b]Author[/b]: Chem O`Dun, on [url=https://next.nexusmods.com/profile/ChemODun/mods?gameId=2659]Nexus Mods[/url] and [url=https://steamcommunity.com/id/chemodun/myworkshopfiles/?appid=392160]Steam Workshop[/url]
@@ -313,6 +308,17 @@ Video demonstration of the mod (Version 1.00)
 [/list]
 [h2][b]Changelog[/b][/h2]
 
+[h2][1.02] - 2026-02-12[/h2]
+[list]
+[*] [b]Fixed[/b]
+[list]
+[*] Some small code mistypings
+[/list]
+[*] [b]Improved[/b]
+[list]
+[*] Some code optimization and refactoring
+[/list]
+[/list]
 [h2][1.01] - 2026-02-12[/h2]
 [list]
 [*] [b]Fixed[/b]
