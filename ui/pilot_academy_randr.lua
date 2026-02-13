@@ -1409,12 +1409,7 @@ end
 
 -- Helper: Create personnel header table
 function pilotAcademy.createPersonnelHeaderTable(frame, menu, config)
-  local tableTop = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
-  tableTop.name = "table_personnel_top"
-  tableTop:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
-  tableTop:setDefaultCellProperties("button", { height = config.mapRowHeight })
-  tableTop:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-  pilotAcademy.setAcademyContentColumnWidths(tableTop, menu, config)
+  local tableTop = pilotAcademy.createTable(frame, 4, "table_personnel_top", false, menu, config)
 
   local row = tableTop:addRow(nil, { fixed = true })
   row[1]:setColSpan(4):createText(texts.cadetsAndPilotsTitle, Helper.headerRowCenteredProperties)
@@ -1424,12 +1419,7 @@ end
 
 -- Helper: Create personnel list table (cadets or pilots)
 function pilotAcademy.createPersonnelListTable(frame, menu, config, personnel, title, tableName)
-  local tablePersonnel = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
-  tablePersonnel.name = tableName
-  tablePersonnel:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
-  tablePersonnel:setDefaultCellProperties("button", { height = config.mapRowHeight })
-  tablePersonnel:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-  pilotAcademy.setAcademyContentColumnWidths(tablePersonnel, menu, config)
+  local tablePersonnel = pilotAcademy.createTable(frame, 4, tableName, false, menu, config)
 
   tablePersonnel:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local row = tablePersonnel:addRow(nil, { fixed = true })
@@ -1486,12 +1476,8 @@ end
 
 -- Helper: Create personnel bottom spacing table
 function pilotAcademy.createPersonnelBottomTable(frame, menu, config)
-  local tableBottom = frame:addTable(4, { tabOrder = 2, reserveScrollBar = false })
-  tableBottom.name = "table_personnel_bottom"
-  tableBottom:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
-  tableBottom:setDefaultCellProperties("button", { height = config.mapRowHeight })
-  tableBottom:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
-  pilotAcademy.setAcademyContentColumnWidths(tableBottom, menu, config)
+  local tableBottom = pilotAcademy.createTable(frame, 4, "table_personnel_bottom", false, menu, config)
+
   tableBottom:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
 
   return { table = tableBottom, height = tableBottom:getFullHeight() }
