@@ -51,6 +51,7 @@ This is a complex mod and may have undiscovered issues. Please report any proble
 - Otherwise, the `Trained Pilot` on the ship will be swapped with a `Cadet` and then moved to the `Academy` station.
 - If the `Assign` option is not set to `Manual`, and the last assignment turn was finished at least 2 minutes ago, the `Auto Assign` procedure will be initiated.
 - Based on the `Assign` setting, a ship with a pilot who has a lower rank (and is below the target rank level) will be selected.
+- Please take in account: if crew is full, by default you will get a warning notification and the pilot swapping will not be performed. But if the option `Auto fire less skilled crew member if crew is full` is enabled, the less qualified crew member will be automatically dismissed to free up space for the new pilot transfer.
 - If such a ship is found, the `Trained Pilot` will be assigned as its pilot, and the existing pilot will be transferred to the `Academy` station as a new `Cadet`.
 - Every 3 minutes, the `Auto Assign` procedure will repeat to check for available `Trained Pilots`.
 
@@ -112,6 +113,18 @@ Once researched, the Player can enable auto-assign in the `Academy` interface. T
 ![Auto-assign settings panel with ship class filters and priority options to automatically deploy trained pilots to the Player's fleet.](docs/images/auto_assign_options.png)
 
 When auto-assign is active, `Trained Pilots` will replace existing pilots on the Player's ships who have a lower rank than the target. The replaced pilots will be reassigned to the `Academy` as `Cadets`.
+
+Pilot will be assigned based on the selected priority:
+
+- `By ship purpose`: The Player can prioritize ships based on their role, such as combat, trading, or mining.
+  ![Auto-assign options by ship purpose.](docs/images/auto_assign_options_priority_by_ship_purpose.png)
+
+- `By ship size`: The Player can prioritize ships based on their size, from small to large or vice versa.
+  ![Auto-assign options by ship size.](docs/images/auto_assign_options_priority_by_size.png)
+
+In addition, please be aware about situation when the target ship's crew is full. By default, in this case, the pilot swapping will not be performed and the Player will get a warning notification.
+
+But if the option `Auto fire less skilled crew member if crew is full` is enabled, the less qualified crew member will be automatically dismissed to free up space for the new pilot transfer.
 
 ### Cadets and Pilots
 
