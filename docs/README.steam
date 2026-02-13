@@ -57,6 +57,7 @@ This is a complex mod and may have undiscovered issues. Please report any proble
 [*] Otherwise, the [b]Trained Pilot[/b] on the ship will be swapped with a [b]Cadet[/b] and then moved to the [b]Academy[/b] station.
 [*] If the [b]Assign[/b] option is not set to [b]Manual[/b], and the last assignment turn was finished at least 2 minutes ago, the [b]Auto Assign[/b] procedure will be initiated.
 [*] Based on the [b]Assign[/b] setting, a ship with a pilot who has a lower rank (and is below the target rank level) will be selected.
+[*] Please take in account: if crew is full, by default you will get a warning notification and the pilot swapping will not be performed. But if the option [b]Auto fire less skilled crew member if crew is full[/b] is enabled, the less qualified crew member will be automatically dismissed to free up space for the new pilot transfer.
 [*] If such a ship is found, the [b]Trained Pilot[/b] will be assigned as its pilot, and the existing pilot will be transferred to the [b]Academy[/b] station as a new [b]Cadet[/b].
 [*] Every 3 minutes, the [b]Auto Assign[/b] procedure will repeat to check for available [b]Trained Pilots[/b].
 [/list]
@@ -118,6 +119,18 @@ Once researched, the Player can enable auto-assign in the [b]Academy[/b] interfa
 [img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/auto_assign_options.png[/img]
 
 When auto-assign is active, [b]Trained Pilots[/b] will replace existing pilots on the Player's ships who have a lower rank than the target. The replaced pilots will be reassigned to the [b]Academy[/b] as [b]Cadets[/b].
+
+Pilot will be assigned based on the selected priority:
+[list]
+[*] [b]By ship purpose[/b]: The Player can prioritize ships based on their role, such as combat, trading, or mining.
+[/list]  [img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/auto_assign_options_priority_by_ship_purpose.png[/img]
+[list]
+[*] [b]By ship size[/b]: The Player can prioritize ships based on their size, from small to large or vice versa.
+[/list]  [img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/auto_assign_options_priority_by_size.png[/img]
+
+In addition, please be aware about situation when the target ship's crew is full. By default, in this case, the pilot swapping will not be performed and the Player will get a warning notification.
+
+But if the option [b]Auto fire less skilled crew member if crew is full[/b] is enabled, the less qualified crew member will be automatically dismissed to free up space for the new pilot transfer.
 
 [h2]Cadets and Pilots[/h2]
 
