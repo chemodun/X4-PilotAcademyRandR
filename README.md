@@ -316,6 +316,13 @@ There are examples of texts and notifications screenshots:
 
 ## Changelog
 
+### [1.03] - 2026-02-13
+
+- **Added**
+  - New option `Auto fire less skilled crew member if crew is full` to automatically dismiss the less qualified crew member if the target ship's crew is full during pilot swapping.
+- **Improved**
+  - Academy window drawing preparation
+
 ### [1.02] - 2026-02-12
 
 - **Fixed**
