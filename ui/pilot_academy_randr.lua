@@ -1601,7 +1601,7 @@ function pilotAcademy.loadCommonData()
   if pilotAcademy.commonData.autoHire == 1 then
     pilotAcademy.commonData.autoHire = true
   else
-    pilotAcademy.commonData.autoHire = true
+    pilotAcademy.commonData.autoHire = false
   end
 
   if pilotAcademy.commonData.autoFireLessSkilledCrewMember == 1 then
