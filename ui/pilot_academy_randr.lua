@@ -194,6 +194,8 @@ local pilotAcademy = {
   maxOrderErrors = 3,
   academyContentColumnWidths = nil,
   buttonsColumnWidths = nil,
+  infoContentColumnWidths = nil,
+  relationNameMaxLen = 8, -- will be calculated on init based on actual relation names
 }
 
 local config = {}
@@ -290,6 +292,24 @@ function pilotAcademy.Init(menuMap, menuPlayerInfo)
   pilotAcademy.onDebugLevelChanged()
   if pilotAcademy.setRentCost() or changed then
     pilotAcademy.saveCommonData()
+  end
+  local relations = GetLibrary("factions")
+  local relationNameMaxLen = 0
+  local relationNameMax = nil
+  for i, relation in ipairs(relations) do
+    if relation.id ~= "player" then
+      local relationInfo = C.GetUIRelationName("player", relation.id)
+      local relationName = ffi.string(relationInfo.name)
+      local relationNameLength = string.len(relationName)
+      if relationNameLength > relationNameMaxLen then
+        relationNameMaxLen = relationNameLength
+        relationNameMax = relationName
+      end
+    end
+  end
+  if relationNameMax then
+    trace("Longest relation name is '" .. relationNameMax .. "' with length " .. relationNameMaxLen)
+    pilotAcademy.relationNameMaxLen = relationNameMaxLen
   end
 end
 
@@ -483,7 +503,6 @@ end
 function pilotAcademy.getFactions(config, sortAscending)
   local factionsAll = GetLibrary("factions")
   local factions = {}
-  local maxRelationNameWidth = 0
   for i, faction in ipairs(factionsAll) do
     if faction.id ~= "player" then
       local shortName, isAtDockRelation, isRelationLocked = GetFactionData(faction.id, "shortname", "isatdockrelation", "isrelationlocked")
@@ -495,10 +514,6 @@ function pilotAcademy.getFactions(config, sortAscending)
         faction.relationName = ffi.string(relationInfo.name)
         faction.colorId = ffi.string(relationInfo.colorid)
         factions[#factions + 1] = faction
-        local relationNameWidth = C.GetTextWidth(faction.relationName, Helper.standardFont, Helper.scaleFont(Helper.standardFont, config.mapFontSize))
-        if relationNameWidth > maxRelationNameWidth then
-          maxRelationNameWidth = relationNameWidth
-        end
       end
     end
   end
@@ -507,7 +522,7 @@ function pilotAcademy.getFactions(config, sortAscending)
   else
     table.sort(factions, pilotAcademy.sortFactionsDescending)
   end
-  return factions, maxRelationNameWidth
+  return factions
 end
 
 function pilotAcademy.buttonSelectTab(selector)
@@ -587,28 +602,40 @@ function pilotAcademy.setAcademyContentColumnWidths(tableHandle, menu, config)
   end
 end
 
-function pilotAcademy.setInfoContentColumnWidths(tableHandle, menu, config, maxRelationNameWidth)
+function pilotAcademy.setInfoContentColumnWidths(tableHandle, menu, config)
   if tableHandle == nil or menu == nil then
     debug("tableWingmans or menu is nil; cannot set column widths")
     return
   end
-  local minWidth = Helper.scaleX(config.mapRowHeight)
-  tableHandle:setColWidth(1, Helper.scrollbarWidth + 1, false)
-  for i = 2, 3 do
-    tableHandle:setColWidth(i, minWidth, false)
+  if (pilotAcademy.infoContentColumnWidths == nil) then
+    local maxShortNameWidth = math.floor(C.GetTextWidth("[WWW]", Helper.standardFont, Helper.scaleFont(Helper.standardFont, config.mapFontSize)))
+    local maxRelationNameWidth = math.floor(C.GetTextWidth(string.rep("W", pilotAcademy.relationNameMaxLen), Helper.standardFont, Helper.scaleFont(Helper.standardFont, config.mapFontSize)))
+    local relationWidth = math.floor(C.GetTextWidth("99999", Helper.standardFont, Helper.scaleFont(Helper.standardFont, config.mapFontSize)))
+    local minWidth = Helper.scaleX(config.mapRowHeight)
+    pilotAcademy.infoContentColumnWidths = {
+      Helper.scrollbarWidth + 1,
+      minWidth,
+      minWidth,
+      maxShortNameWidth + Helper.borderSize * 2,
+      minWidth,
+      menu.sideBarWidth,
+      0, -- will be set to min width and allowed to expand
+      minWidth,
+      minWidth,
+      maxRelationNameWidth + Helper.borderSize * 2,
+      relationWidth + Helper.borderSize * 2,
+      Helper.scrollbarWidth + 1,
+    }
+    local preContentWidth = 0
+    for i = 1, #pilotAcademy.infoContentColumnWidths do
+      preContentWidth = preContentWidth + pilotAcademy.infoContentColumnWidths[i] + Helper.borderSize
+    end
+    pilotAcademy.infoContentColumnWidths[7] = menu.infoTableWidth - preContentWidth
+    trace(string.format("Calculated info content column widths: %s", table.concat(pilotAcademy.infoContentColumnWidths, ", ")))
   end
-  local maxShortNameWidth = C.GetTextWidth("[WWW]", Helper.standardFont, Helper.scaleFont(Helper.standardFont, config.mapFontSize))
-  tableHandle:setColWidth(4, maxShortNameWidth + Helper.borderSize * 2, false)
-  tableHandle:setColWidth(5, minWidth, false)
-  tableHandle:setColWidth(6, menu.sideBarWidth, false)
-  tableHandle:setColWidthMin(7, menu.sideBarWidth, 2, true)
-  for i = 8, 9 do
-    tableHandle:setColWidth(i, minWidth, false)
+  for i = 1, 12 do
+    tableHandle:setColWidth(i, pilotAcademy.infoContentColumnWidths[i], false)
   end
-  tableHandle:setColWidth(10, maxRelationNameWidth + Helper.borderSize * 2, false)
-  local relationWidth = C.GetTextWidth("99999", Helper.standardFont, Helper.scaleFont(Helper.standardFont, config.mapFontSize))
-  tableHandle:setColWidth(11, relationWidth + Helper.borderSize * 2, false)
-  tableHandle:setColWidth(12, Helper.scrollbarWidth + 1, false)
 end
 
 function pilotAcademy.setButtonsColumnWidths(tableHandle, menu, config)
@@ -636,7 +663,7 @@ function pilotAcademy.setButtonsColumnWidths(tableHandle, menu, config)
   end
 end
 
-function pilotAcademy.createTable(frame, numCols, id, reserveScrollBar, menu, config, maxRelationNameWidth)
+function pilotAcademy.createTable(frame, numCols, id, reserveScrollBar, menu, config)
   local tableHandle = frame:addTable(numCols, { tabOrder = 2, reserveScrollBar = reserveScrollBar })
   tableHandle.name = id
   tableHandle:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
@@ -647,7 +674,7 @@ function pilotAcademy.createTable(frame, numCols, id, reserveScrollBar, menu, co
   elseif numCols == 7 then
     pilotAcademy.setButtonsColumnWidths(tableHandle, menu, config)
   elseif numCols == 12 then
-    pilotAcademy.setInfoContentColumnWidths(tableHandle, menu, config, maxRelationNameWidth)
+    pilotAcademy.setInfoContentColumnWidths(tableHandle, menu, config)
   end
   return tableHandle
 end
@@ -708,8 +735,8 @@ local function getMaxRankLevel()
 end
 
 -- Helper: Create academy header with location selection
-function pilotAcademy.createAcademyHeaderTable(frame, menu, config, displayData, locationOptions, emptyText, maxRelationNameWidth)
-  local tableTop = pilotAcademy.createTable(frame, 4, "table_academy_top", false, menu, config, maxRelationNameWidth)
+function pilotAcademy.createAcademyHeaderTable(frame, menu, config, displayData, locationOptions, emptyText)
+  local tableTop = pilotAcademy.createTable(frame, 4, "table_academy_top", false, menu, config)
 
   local row = tableTop:addRow(nil, { fixed = true })
   row[1]:setColSpan(4):createText(texts.pilotAcademyFull, Helper.headerRowCenteredProperties)
@@ -760,8 +787,8 @@ function pilotAcademy.createAcademyHeaderTable(frame, menu, config, displayData,
 end
 
 -- Helper: Create target rank level slider table
-function pilotAcademy.createTargetRankTable(frame, menu, config, displayData, maxRelationNameWidth)
-  local tableRank = pilotAcademy.createTable(frame, 4, "table_academy_rank", false, menu, config, maxRelationNameWidth)
+function pilotAcademy.createTargetRankTable(frame, menu, config, displayData)
+  local tableRank = pilotAcademy.createTable(frame, 4, "table_academy_rank", false, menu, config)
 
   local targetRankLevel = displayData.editData.targetRankLevel or displayData.academyData.targetRankLevel or 2
   local maxRankLevel = getMaxRankLevel()
@@ -791,8 +818,8 @@ function pilotAcademy.createTargetRankTable(frame, menu, config, displayData, ma
 end
 
 -- Helper: Create auto hire checkbox table
-function pilotAcademy.createAutoHireTable(frame, menu, config, displayData, factions, maxRelationNameWidth)
-  local tableAutoHire = pilotAcademy.createTable(frame, 4, "table_academy_autohire", false, menu, config, maxRelationNameWidth)
+function pilotAcademy.createAutoHireTable(frame, menu, config, displayData, factions)
+  local tableAutoHire = pilotAcademy.createTable(frame, 4, "table_academy_autohire", false, menu, config)
 
   local autoHire = displayData.editData.autoHire
   if autoHire == nil then
@@ -811,15 +838,15 @@ function pilotAcademy.createAutoHireTable(frame, menu, config, displayData, fact
     width = config.mapRowHeight
   })
   row[2].handlers.onClick = function(_, checked) return pilotAcademy.onToggleAutoHire(checked) end
-  row[3]:createText(texts.autoHire, { halign = "left", titleColor = Color["row_title"] })
+  row[3]:createText(texts.autoHire, { halign = "left", titleColor = Color["row_title"], x = Helper.scaleX(Helper.borderSize * 2) })
   tableAutoHire:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
 
   return { table = tableAutoHire, height = tableAutoHire:getFullHeight(), autoHire = autoHire }
 end
 
 -- Helper: Create factions selection table (conditional)
-function pilotAcademy.createAcademyFactionsTable(frame, menu, config, displayData, factions, maxRelationNameWidth)
-  local tableFactions = pilotAcademy.createTable(frame, 12, "table_academy_factions", false, menu, config, maxRelationNameWidth)
+function pilotAcademy.createAcademyFactionsTable(frame, menu, config, displayData, factions)
+  local tableFactions = pilotAcademy.createTable(frame, 12, "table_academy_factions", false, menu, config)
 
   pilotAcademy.displayFactions(tableFactions, factions, displayData.editData, displayData.academyData, config)
 
@@ -833,8 +860,8 @@ function pilotAcademy.createAcademyFactionsTable(frame, menu, config, displayDat
 end
 
 -- Helper: Create assignment settings table
-function pilotAcademy.createAssignmentTable(frame, menu, config, displayData, locationOptions, maxRelationNameWidth)
-  local tableAssign = pilotAcademy.createTable(frame, 4, "table_academy_assign", false, menu, config, maxRelationNameWidth)
+function pilotAcademy.createAssignmentTable(frame, menu, config, displayData, locationOptions)
+  local tableAssign = pilotAcademy.createTable(frame, 4, "table_academy_assign", false, menu, config)
 
   tableAssign:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
 
@@ -896,15 +923,15 @@ function pilotAcademy.createAssignmentTable(frame, menu, config, displayData, lo
       width = config.mapRowHeight
     })
     row[2].handlers.onClick = function(_, checked) return pilotAcademy.onToggleAutoFireLessSkilledCrewMember(checked) end
-    row[3]:createText(texts.autoFireLessSkilledCrewMember, { halign = "left", titleColor = Color["row_title"] })
+    row[3]:createText(texts.autoFireLessSkilledCrewMember, { halign = "left", titleColor = Color["row_title"], x = Helper.scaleX(Helper.borderSize * 2) })
   end
 
   return { table = tableAssign, height = tableAssign:getFullHeight() }
 end
 
 -- Helper: Create bottom buttons table
-function pilotAcademy.createAcademyButtonsTable(frame, menu, config, displayData, maxRelationNameWidth)
-  local tableBottom = pilotAcademy.createTable(frame, 7, "table_academy_bottom", false, menu, config, maxRelationNameWidth)
+function pilotAcademy.createAcademyButtonsTable(frame, menu, config, displayData)
+  local tableBottom = pilotAcademy.createTable(frame, 7, "table_academy_bottom", false, menu, config)
 
   tableBottom:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local row = tableBottom:addRow("buttons", { fixed = true })
@@ -943,7 +970,7 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
   local displayData = getAcademyDisplayData()
 
   -- Get factions and location data
-  local factions, maxRelationNameWidth = pilotAcademy.getFactions(config, false)
+  local factions = pilotAcademy.getFactions(config, false)
   local emptyText, locationOptions = pilotAcademy.fetchPotentialLocations(
     displayData.locationSelectable,
     displayData.academyData.locationId,
@@ -951,19 +978,19 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
   )
 
   -- Create all UI sections
-  tables[#tables + 1] = pilotAcademy.createAcademyHeaderTable(frame, menu, config, displayData, locationOptions, emptyText, maxRelationNameWidth)
-  tables[#tables + 1] = pilotAcademy.createTargetRankTable(frame, menu, config, displayData, maxRelationNameWidth)
+  tables[#tables + 1] = pilotAcademy.createAcademyHeaderTable(frame, menu, config, displayData, locationOptions, emptyText)
+  tables[#tables + 1] = pilotAcademy.createTargetRankTable(frame, menu, config, displayData)
 
-  local autoHireResult = pilotAcademy.createAutoHireTable(frame, menu, config, displayData, factions, maxRelationNameWidth)
+  local autoHireResult = pilotAcademy.createAutoHireTable(frame, menu, config, displayData, factions)
   tables[#tables + 1] = autoHireResult
 
   -- Conditionally add factions table if auto-hire is enabled
   if #factions > 0 and autoHireResult.autoHire == true then
-    tables[#tables + 1] = pilotAcademy.createAcademyFactionsTable(frame, menu, config, displayData, factions, maxRelationNameWidth)
+    tables[#tables + 1] = pilotAcademy.createAcademyFactionsTable(frame, menu, config, displayData, factions)
   end
 
-  tables[#tables + 1] = pilotAcademy.createAssignmentTable(frame, menu, config, displayData, locationOptions, maxRelationNameWidth)
-  tables[#tables + 1] = pilotAcademy.createAcademyButtonsTable(frame, menu, config, displayData, maxRelationNameWidth)
+  tables[#tables + 1] = pilotAcademy.createAssignmentTable(frame, menu, config, displayData, locationOptions)
+  tables[#tables + 1] = pilotAcademy.createAcademyButtonsTable(frame, menu, config, displayData)
   return tables
 end
 
@@ -1728,8 +1755,8 @@ local function getWingDisplayData()
 end
 
 -- Helper: Create wing header table with primary goal dropdown
-function pilotAcademy.createWingHeaderTable(frame, menu, config, wingDisplayData, maxRelationNameWidth)
-  local tableTop = pilotAcademy.createTable(frame, 12, "table_wing_top", false, menu, config, maxRelationNameWidth)
+function pilotAcademy.createWingHeaderTable(frame, menu, config, wingDisplayData)
+  local tableTop = pilotAcademy.createTable(frame, 12, "table_wing_top", false, menu, config)
 
   local row = tableTop:addRow(nil, { fixed = true })
   local suffix = string.format(pilotAcademy.selectedTab ~= nil and texts.wing or texts.addNewWing,
@@ -1760,8 +1787,8 @@ function pilotAcademy.createWingHeaderTable(frame, menu, config, wingDisplayData
 end
 
 -- Helper: Create factions table with restore capability
-function pilotAcademy.createWingFactionsSection(frame, menu, config, wingDisplayData, factions, maxRelationNameWidth)
-  local tableFactions = pilotAcademy.createTable(frame, 12, "table_wing_factions", false, menu, config, maxRelationNameWidth)
+function pilotAcademy.createWingFactionsSection(frame, menu, config, wingDisplayData, factions)
+  local tableFactions = pilotAcademy.createTable(frame, 12, "table_wing_factions", false, menu, config)
 
   local row = tableFactions:addRow(nil, { fixed = true })
   row[2]:setColSpan(10):createText(texts.factions, { halign = "left", titleColor = Color["row_title"] })
@@ -1779,8 +1806,8 @@ function pilotAcademy.createWingFactionsSection(frame, menu, config, wingDisplay
 end
 
 -- Helper: Create refresh interval table
-function pilotAcademy.createWingRefreshIntervalTable(frame, menu, config, wingDisplayData, maxRelationNameWidth)
-  local tableRefreshInterval = pilotAcademy.createTable(frame, 12, "table_refresh_interval", false, menu, config, maxRelationNameWidth)
+function pilotAcademy.createWingRefreshIntervalTable(frame, menu, config, wingDisplayData)
+  local tableRefreshInterval = pilotAcademy.createTable(frame, 12, "table_refresh_interval", false, menu, config)
 
   tableRefreshInterval:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local row = tableRefreshInterval:addRow(nil, { fixed = true })
@@ -1806,8 +1833,8 @@ function pilotAcademy.createWingRefreshIntervalTable(frame, menu, config, wingDi
 end
 
 -- Helper: Create wing leader table
-function pilotAcademy.createWingLeaderTable(frame, menu, config, wingDisplayData, maxRelationNameWidth)
-  local tableWingLeader = pilotAcademy.createTable(frame, 12, "table_wing_leader", false, menu, config, maxRelationNameWidth)
+function pilotAcademy.createWingLeaderTable(frame, menu, config, wingDisplayData)
+  local tableWingLeader = pilotAcademy.createTable(frame, 12, "table_wing_leader", false, menu, config)
 
   local row = tableWingLeader:addRow(nil, { fixed = true })
   local wingLeaderOptions = pilotAcademy.fetchPotentialWingmans(wingDisplayData.existingWing, wingDisplayData.wingLeaderId)
@@ -1843,8 +1870,8 @@ function pilotAcademy.createWingLeaderTable(frame, menu, config, wingDisplayData
 end
 
 -- Helper: Create wingmans management table
-function pilotAcademy.createWingmansTable(frame, menu, config, wingDisplayData, maxRelationNameWidth)
-  local tableWingmans = pilotAcademy.createTable(frame, 12, "table_wing_wingmans", false, menu, config, maxRelationNameWidth)
+function pilotAcademy.createWingmansTable(frame, menu, config, wingDisplayData)
+  local tableWingmans = pilotAcademy.createTable(frame, 12, "table_wing_wingmans", false, menu, config)
 
   tableWingmans:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local tableWingmansMaxHeight = 0
@@ -1916,8 +1943,8 @@ function pilotAcademy.createWingmansTable(frame, menu, config, wingDisplayData, 
 end
 
 -- Helper: Create bottom buttons table
-function pilotAcademy.createWingButtonsTable(frame, menu, config, wingDisplayData, maxRelationNameWidth)
-  local tableBottom = pilotAcademy.createTable(frame, 7, "table_wing_bottom", false, menu, config, maxRelationNameWidth)
+function pilotAcademy.createWingButtonsTable(frame, menu, config, wingDisplayData)
+  local tableBottom = pilotAcademy.createTable(frame, 7, "table_wing_bottom", false, menu, config)
 
   tableBottom:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local row = tableBottom:addRow("buttons", { fixed = true })
@@ -1960,15 +1987,15 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
 
 
   -- Get factions data
-  local factions, maxRelationNameWidth = pilotAcademy.getFactions(config, true)
+  local factions = pilotAcademy.getFactions(config, true)
 
   -- Create all UI sections
-  tables[#tables + 1] = pilotAcademy.createWingHeaderTable(frame, menu, config, wingDisplayData, maxRelationNameWidth)
-  tables[#tables + 1] = pilotAcademy.createWingFactionsSection(frame, menu, config, wingDisplayData, factions, maxRelationNameWidth)
-  tables[#tables + 1] = pilotAcademy.createWingRefreshIntervalTable(frame, menu, config, wingDisplayData, maxRelationNameWidth)
-  tables[#tables + 1] = pilotAcademy.createWingLeaderTable(frame, menu, config, wingDisplayData, maxRelationNameWidth)
-  tables[#tables + 1] = pilotAcademy.createWingmansTable(frame, menu, config, wingDisplayData, maxRelationNameWidth)
-  tables[#tables + 1] = pilotAcademy.createWingButtonsTable(frame, menu, config, wingDisplayData, maxRelationNameWidth)
+  tables[#tables + 1] = pilotAcademy.createWingHeaderTable(frame, menu, config, wingDisplayData)
+  tables[#tables + 1] = pilotAcademy.createWingFactionsSection(frame, menu, config, wingDisplayData, factions)
+  tables[#tables + 1] = pilotAcademy.createWingRefreshIntervalTable(frame, menu, config, wingDisplayData)
+  tables[#tables + 1] = pilotAcademy.createWingLeaderTable(frame, menu, config, wingDisplayData)
+  tables[#tables + 1] = pilotAcademy.createWingmansTable(frame, menu, config, wingDisplayData)
+  tables[#tables + 1] = pilotAcademy.createWingButtonsTable(frame, menu, config, wingDisplayData)
 
   return tables
 end
