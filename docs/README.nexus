@@ -321,6 +321,17 @@ There are examples of texts and notifications screenshots:
 [/list]
 [size=3][u][b]Changelog[/b][/u][/size]
 
+[size=3][u][i][1.03] - 2026-02-13[/i][/u][/size]
+[list]
+[*] [b]Added[/b]
+[list]
+[*] New option [b]Auto fire less skilled crew member if crew is full[/b] to automatically dismiss the less qualified crew member if the target ship's crew is full during pilot swapping.
+[/list]
+[*] [b]Improved[/b]
+[list]
+[*] Academy window drawing preparation
+[/list]
+[/list]
 [size=3][u][i][1.02] - 2026-02-12[/i][/u][/size]
 [list]
 [*] [b]Fixed[/b]
