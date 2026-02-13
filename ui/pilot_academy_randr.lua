@@ -192,6 +192,8 @@ local pilotAcademy = {
     60,
   },
   maxOrderErrors = 3,
+  academyContentColumnWidths = nil,
+  buttonsColumnWidths = nil,
 }
 
 local config = {}
@@ -564,17 +566,74 @@ function pilotAcademy.storeTopRows()
   end
 end
 
+
 function pilotAcademy.setAcademyContentColumnWidths(tableHandle, menu, config)
   if tableHandle == nil or menu == nil then
     debug("tableWingmans or menu is nil; cannot set column widths")
     return
   end
+  if (pilotAcademy.academyContentColumnWidths == nil) then
+    local contentWidth = menu.infoTableWidth - Helper.scrollbarWidth * 2 - config.mapRowHeight - Helper.borderSize * 5
+    pilotAcademy.academyContentColumnWidths = {
+      Helper.scrollbarWidth + 1,
+      config.mapRowHeight,
+      contentWidth,
+      Helper.scrollbarWidth + 1,
+    }
+    trace(string.format("Calculated academy content column widths: %s", table.concat(pilotAcademy.academyContentColumnWidths, ", ")))
+  end
+  for i = 1, 4 do
+    tableHandle:setColWidth(i, pilotAcademy.academyContentColumnWidths[i], false)
+  end
+end
 
-  local contentWidth = menu.infoTableWidth - Helper.scrollbarWidth * 2 - config.mapRowHeight - Helper.borderSize * 5
+function pilotAcademy.setInfoContentColumnWidths(tableHandle, menu, config, maxRelationNameWidth)
+  if tableHandle == nil or menu == nil then
+    debug("tableWingmans or menu is nil; cannot set column widths")
+    return
+  end
+  local minWidth = Helper.scaleX(config.mapRowHeight)
   tableHandle:setColWidth(1, Helper.scrollbarWidth + 1, false)
-  tableHandle:setColWidth(2, config.mapRowHeight, false)
-  tableHandle:setColWidth(3, contentWidth, false)
-  tableHandle:setColWidth(4, Helper.scrollbarWidth + 1, false)
+  for i = 2, 3 do
+    tableHandle:setColWidth(i, minWidth, false)
+  end
+  local maxShortNameWidth = C.GetTextWidth("[WWW]", Helper.standardFont, Helper.scaleFont(Helper.standardFont, config.mapFontSize))
+  tableHandle:setColWidth(4, maxShortNameWidth + Helper.borderSize * 2, false)
+  tableHandle:setColWidth(5, minWidth, false)
+  tableHandle:setColWidth(6, menu.sideBarWidth, false)
+  tableHandle:setColWidthMin(7, menu.sideBarWidth, 2, true)
+  for i = 8, 9 do
+    tableHandle:setColWidth(i, minWidth, false)
+  end
+  tableHandle:setColWidth(10, maxRelationNameWidth + Helper.borderSize * 2, false)
+  local relationWidth = C.GetTextWidth("99999", Helper.standardFont, Helper.scaleFont(Helper.standardFont, config.mapFontSize))
+  tableHandle:setColWidth(11, relationWidth + Helper.borderSize * 2, false)
+  tableHandle:setColWidth(12, Helper.scrollbarWidth + 1, false)
+end
+
+function pilotAcademy.setButtonsColumnWidths(tableHandle, menu, config)
+  if tableHandle == nil or menu == nil then
+    debug("tableWingmans or menu is nil; cannot set column widths")
+    return
+  end
+
+  if pilotAcademy.buttonsColumnWidths == nil then
+    local buttonWidth = math.floor((menu.infoTableWidth - Helper.scrollbarWidth * 5 - 2) / 3)
+    pilotAcademy.buttonsColumnWidths = {
+      Helper.scrollbarWidth + 1,
+      buttonWidth,
+      Helper.scrollbarWidth,
+      buttonWidth,
+      Helper.scrollbarWidth,
+      buttonWidth,
+      Helper.scrollbarWidth + 1,
+    }
+    trace(string.format("Calculated buttons column widths: %s", table.concat(pilotAcademy.buttonsColumnWidths, ", ")))
+  end
+
+  for i = 1, 7 do
+    tableHandle:setColWidth(i, pilotAcademy.buttonsColumnWidths[i], false)
+  end
 end
 
 function pilotAcademy.createTable(frame, numCols, id, reserveScrollBar, menu, config, maxRelationNameWidth)
@@ -1650,48 +1709,6 @@ function pilotAcademy.onDebugLevelChanged(event)
   if pilotAcademy.commonData ~= nil then
     debugLevel = pilotAcademy.commonData.debugLevel or "none"
   end
-end
-
-function pilotAcademy.setInfoContentColumnWidths(tableHandle, menu, config, maxRelationNameWidth)
-  if tableHandle == nil or menu == nil then
-    debug("tableWingmans or menu is nil; cannot set column widths")
-    return
-  end
-  local minWidth = Helper.scaleX(config.mapRowHeight)
-  tableHandle:setColWidth(1, Helper.scrollbarWidth + 1, false)
-  for i = 2, 3 do
-    tableHandle:setColWidth(i, minWidth, false)
-  end
-  local maxShortNameWidth = C.GetTextWidth("[WWW]", Helper.standardFont, Helper.scaleFont(Helper.standardFont, config.mapFontSize))
-  tableHandle:setColWidth(4, maxShortNameWidth + Helper.borderSize * 2, false)
-  tableHandle:setColWidth(5, minWidth, false)
-  tableHandle:setColWidth(6, menu.sideBarWidth, false)
-  tableHandle:setColWidthMin(7, menu.sideBarWidth, 2, true)
-  for i = 8, 9 do
-    tableHandle:setColWidth(i, minWidth, false)
-  end
-  tableHandle:setColWidth(10, maxRelationNameWidth + Helper.borderSize * 2, false)
-  local relationWidth = C.GetTextWidth("99999", Helper.standardFont, Helper.scaleFont(Helper.standardFont, config.mapFontSize))
-  tableHandle:setColWidth(11, relationWidth + Helper.borderSize * 2, false)
-  tableHandle:setColWidth(12, Helper.scrollbarWidth + 1, false)
-end
-
-function pilotAcademy.setButtonsColumnWidths(tableHandle, menu, config)
-  if tableHandle == nil or menu == nil then
-    debug("tableWingmans or menu is nil; cannot set column widths")
-    return
-  end
-
-  local buttonWidth = math.floor((menu.infoTableWidth - Helper.scrollbarWidth * 5 - 2) / 3)
-  tableHandle:setColWidth(1, Helper.scrollbarWidth + 1, false)
-  for i = 2, 6 do
-    if i % 2 == 0 then
-      tableHandle:setColWidth(i, buttonWidth, false)
-    else
-      tableHandle:setColWidth(i, Helper.scrollbarWidth, false)
-    end
-  end
-  tableHandle:setColWidth(7, Helper.scrollbarWidth + 1, false)
 end
 
 -- Helper: Extract and prepare wing display data
