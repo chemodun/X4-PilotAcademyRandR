@@ -363,6 +363,7 @@ function pilotAcademy.createInfoFrame()
   end
 
   local menu = pilotAcademy.menuMap
+  pilotAcademy.storeTopRows()
   if menu.infoTableMode ~= pilotAcademy.academySideBarInfo.mode then
     trace("Info table mode is not Pilot Academy R&R, clearing edit data!")
     pilotAcademy.resetData()
@@ -942,7 +943,7 @@ function pilotAcademy.createAssignOptionsTable(frame, menu, config, displayData)
 end
 
 -- Helper: Create fleet assignment table (conditional on assignment type)
-function pilotAcademy.createFleetAssignmentTable(frame, fleets, menu, config, displayData)
+function pilotAcademy.createFleetAssignmentTable(frame, fleets, fleetsExists, menu, config, displayData)
   local tableFleets = pilotAcademy.createTable(frame, 12, "table_academy_fleets", false, menu, config)
 
   tableFleets:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
@@ -951,14 +952,21 @@ function pilotAcademy.createFleetAssignmentTable(frame, fleets, menu, config, di
   row[2]:setColSpan(10):createText(texts.fleets, { halign = "left", titleColor = Color["row_title"] })
 
   local tableFleetsMaxHeight = 0
-  local selectedFleet = pilotAcademy.combineSelections("fleets", displayData.editData, displayData.academyData)
+
+  local fleetsSaved = displayData.academyData.fleets or {}
+  for fleetId, _ in pairs(fleetsSaved) do
+    if fleetsExists and fleetsExists[fleetId] == nil then
+      fleetsSaved[fleetId] = nil
+    end
+  end
+  local fleetsEdit = displayData.editData.fleets or {}
   for i = 1, #fleets do
     local fleet = fleets[i]
     if fleet ~= nil then
       local row = tableFleets:addRow(fleet.commanderId, { fixed = false })
-      row[2]:createCheckBox(selectedFleet[fleet.commanderId] == true, { scaling = false })
-      row[2].handlers.onClick = function(_, checked) return pilotAcademy.onSelectFleet(fleet.commanderId, checked, displayData.academyData) end
-      row[3]:setColSpan(7):createText(fleet.fleetName, { halign = "left", color = Color["text_normal"] })
+      row[2]:createCheckBox(fleetsEdit[fleet.commanderId] == true or fleetsEdit[fleet.commanderId] ~= false and fleetsSaved[fleet.commanderId] == true, { scaling = false })
+      row[2].handlers.onClick = function(_, checked) return pilotAcademy.onSelectFleet(fleet.commanderId, checked) end
+      row[3]:setColSpan(7):createText(string.format("\027G%s\027X: %s", fleet.fleetName, fleet.commander), { halign = "left", color = Color["text_normal"] })
       row[10]:setColSpan(2):createText(fleet.sector, { halign = "right", color = Color["text_normal"] })
       if i == 10 then
         tableFleetsMaxHeight = tableFleets:getFullHeight()
@@ -986,6 +994,7 @@ end
 
 function pilotAcademy.fetchFleets()
   local fleets = {}
+  local fleetsExists = {}
   local allShipsCount = C.GetNumAllFactionShips("player")
   local allShips = ffi.new("UniverseID[?]", allShipsCount)
   allShipsCount = C.GetAllFactionShips(allShips, allShipsCount, "player")
@@ -996,23 +1005,25 @@ function pilotAcademy.fetchFleets()
       "classid", "idcode", "icon", "fleetname", "sector")
     local isLasertower, shipWare = GetMacroData(shipMacro, "islasertower", "ware")
     local isUnit = C.IsUnit(shipId)
-    if shipWare and (not isUnit) and (not isLasertower) and (not isDeployable) and Helper.isComponentClass(classId, "ship_s") and pilot and IsValidComponent(pilot) then
+    if shipWare and (not isUnit) and (not isLasertower) and (not isDeployable) and pilot and IsValidComponent(pilot) then
       local subordinates = GetSubordinates(shipId)
       local commander = GetCommander(shipId)
       if #subordinates > 0 and commander == nil then
         if academyShips[tostring(shipId)] ~= true then
           local candidate = {}
           candidate.commanderId = shipId
+          candidate.commanderName = shipName
           candidate.commander = string.format("\027[%s] %s (%s)", icon, shipName, idcode)
-          candidate.fleetName = fleetName
+          candidate.fleetName = fleetName or shipName
           candidate.sector = sector
           fleets[#fleets + 1] = candidate
+          fleetsExists[shipId] = true
         end
       end
     end
   end
   table.sort(fleets, function(a, b) return a.fleetName < b.fleetName end)
-  return fleets
+  return fleets, fleetsExists
 end
 
 -- Helper: Create bottom buttons table
@@ -1078,9 +1089,9 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
   local assign = displayData.editData.assign or displayData.academyData.assign or "manual"
   tables[#tables + 1] = pilotAcademy.createAssignmentTable(frame, assign, menu, config, displayData, locationOptions)
 
-  local fleets = pilotAcademy.fetchFleets()
+  local fleets, fleetsExits = pilotAcademy.fetchFleets()
   if assign == "perFleet" then
-    tables[#tables + 1] = pilotAcademy.createFleetAssignmentTable(frame, fleets, menu, config, displayData)
+    tables[#tables + 1] = pilotAcademy.createFleetAssignmentTable(frame, fleets, fleetsExits, menu, config, displayData)
   end
 
   if assign ~= "manual" then
@@ -1275,6 +1286,29 @@ function pilotAcademy.onSelectAssign(priority)
   end
 end
 
+function pilotAcademy.onSelectFleet(fleetId, isSelected, savedData)
+  trace("onSelectFleet called with fleetId: " .. tostring(fleetId) .. ", isSelected: " .. tostring(isSelected))
+  if fleetId == nil then
+    trace("fleetId is nil; cannot process")
+    return
+  else
+    fleetId = ConvertStringTo64Bit(tostring(fleetId))
+  end
+  if pilotAcademy.editData.fleets == nil or type(pilotAcademy.editData.fleets) ~= "table" then
+    pilotAcademy.editData.fleets = {}
+  end
+
+  pilotAcademy.editData.fleets[fleetId] = isSelected
+
+  local menu = pilotAcademy.menuMap
+  if menu == nil then
+    trace("Menu is nil; cannot refresh info frame")
+    return
+  end
+  pilotAcademy.storeTopRows()
+  menu.refreshInfoFrame()
+end
+
 function pilotAcademy.getAssignPriorityOptions()
   local options = {}
   for i = 1, #pilotAcademy.assignPriority do
@@ -1369,6 +1403,23 @@ function pilotAcademy.buttonSaveAcademy()
   if academyData.assign == nil then
     academyData.assign = "manual"
   end
+
+  local fleetsSaved = pilotAcademy.commonData.fleets or {}
+  local fleetsEdit = pilotAcademy.editData.fleets or {}
+  pilotAcademy.commonData.fleetObjects = {}
+  for fleetId, _ in pairs(fleetsSaved) do
+    if fleetsSaved[fleetId] == true and fleetsEdit[fleetId] ~= false then
+      pilotAcademy.commonData.fleetObjects[#pilotAcademy.commonData.fleetObjects + 1] = ConvertStringToLuaID(tostring(fleetId))
+    end
+  end
+
+  for fleetId, _ in pairs(fleetsEdit) do
+    if fleetsEdit[fleetId] == true and fleetsSaved[fleetId] ~= true then
+      pilotAcademy.commonData.fleetObjects[#pilotAcademy.commonData.fleetObjects + 1] = ConvertStringToLuaID(tostring(fleetId))
+    end
+  end
+
+  pilotAcademy.commonData.fleets = nil
 
   if editData.assignPriority ~= nil then
     academyData.assignPriority = editData.assignPriority
@@ -1775,6 +1826,18 @@ function pilotAcademy.loadCommonData()
     pilotAcademy.commonData.autoHire = false
   end
 
+  pilotAcademy.commonData.fleets = {}
+  if pilotAcademy.commonData.fleetObjects == nil then
+    pilotAcademy.commonData.fleetObjects = {}
+  end
+  for i = 1, #pilotAcademy.commonData.fleetObjects do
+    local fleetObject = pilotAcademy.commonData.fleetObjects[i]
+    if fleetObject ~= nil then
+      local fleetId = ConvertStringTo64Bit(tostring(fleetObject))
+      pilotAcademy.commonData.fleets[fleetId] = true
+    end
+  end
+
   if pilotAcademy.commonData.autoFireLessSkilledCrewMember == 1 then
     pilotAcademy.commonData.autoFireLessSkilledCrewMember = true
   else
@@ -1809,6 +1872,7 @@ function pilotAcademy.saveCommonData()
     SetNPCBlackboard(pilotAcademy.playerId, variableId, {})
     return
   end
+
   SetNPCBlackboard(pilotAcademy.playerId, variableId, pilotAcademy.commonData)
   debug("saveCommonData: saved common data to saved data")
   -- Save common data to persistent storage
