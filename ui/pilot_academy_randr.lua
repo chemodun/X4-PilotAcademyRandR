@@ -321,13 +321,6 @@ end
 function pilotAcademy.resetData()
   pilotAcademy.editData = {}
   pilotAcademy.selectedTab = "settings"
-  pilotAcademy.topRows = {
-    tableWingsFactions = {},
-    tableWingsWingmans = {},
-    tableAcademyFactions = nil,
-    tablePersonnelCadets = nil,
-    tablePersonnelPilots = nil,
-  }
 end
 
 function pilotAcademy.createSideBar(config)
@@ -363,7 +356,6 @@ function pilotAcademy.createInfoFrame()
   end
 
   local menu = pilotAcademy.menuMap
-  pilotAcademy.storeTopRows()
   if menu.infoTableMode ~= pilotAcademy.academySideBarInfo.mode then
     trace("Info table mode is not Pilot Academy R&R, clearing edit data!")
     pilotAcademy.resetData()
@@ -485,6 +477,8 @@ function pilotAcademy.createInfoFrame()
     end
   end
 
+  pilotAcademy.frame = frame
+
   local topY = tabsTable.properties.y + tabsTable:getFullHeight() + Helper.borderSize
   for i = 1, #tables do
     tables[i].table.properties.y = topY
@@ -539,7 +533,6 @@ function pilotAcademy.buttonSelectTab(selector)
     return
   end
   if selector ~= pilotAcademy.selectedTab then
-    pilotAcademy.storeTopRows()
     pilotAcademy.selectedTab = selector or nil
     pilotAcademy.editData = {}
 
@@ -547,49 +540,6 @@ function pilotAcademy.buttonSelectTab(selector)
   end
 end
 
-function pilotAcademy.storeTopRows()
-  if pilotAcademy.selectedTab ~= "settings" then
-    pilotAcademy.topRows.tableWingsFactions[tostring(pilotAcademy.selectedTab)] = nil
-    pilotAcademy.topRows.tableWingsWingmans[tostring(pilotAcademy.selectedTab)] = nil
-  end
-  local menu = pilotAcademy.menuMap
-  if menu == nil then
-    trace("Menu is nil; cannot store table factions top row")
-    return
-  end
-
-  local infoFrame = menu.infoFrame
-  if infoFrame == nil or type(infoFrame.content) ~= "table" or #infoFrame.content == 0 then
-    trace("Info frame is nil or has no content; cannot store table factions top row")
-    return
-  end
-  for i = 1, #infoFrame.content do
-    local item = infoFrame.content[i]
-    if type(item) == "table" and item.type == "table" and item.id ~= nil then
-      if item.name == "table_wing_factions" then
-        pilotAcademy.topRows.tableWingsFactions[tostring(pilotAcademy.selectedTab)] = GetTopRow(item.id)
-      end
-      if item.name == "table_wing_wingmans" then
-        pilotAcademy.topRows.tableWingsWingmans[tostring(pilotAcademy.selectedTab)] = GetTopRow(item.id)
-      end
-
-      if item.name == "table_academy_factions" then
-        pilotAcademy.topRows.tableAcademyFactions = GetTopRow(item.id)
-      end
-
-      if item.name == "table_academy_fleets" then
-        pilotAcademy.topRows.tableAcademyFleets = GetTopRow(item.id)
-      end
-      if item.name == "table_personnel_cadets" then
-        pilotAcademy.topRows.tablePersonnelCadets = GetTopRow(item.id)
-      end
-
-      if item.name == "table_personnel_pilots" then
-        pilotAcademy.topRows.tablePersonnelPilots = GetTopRow(item.id)
-      end
-    end
-  end
-end
 
 
 function pilotAcademy.setAcademyContentColumnWidths(tableHandle, menu, config)
@@ -856,15 +806,14 @@ end
 
 -- Helper: Create factions selection table (conditional)
 function pilotAcademy.createAcademyFactionsTable(frame, menu, config, displayData, factions)
-  local tableFactions = pilotAcademy.createTable(frame, 12, "table_academy_factions", false, menu, config)
+  local tableName = "table_academy_factions"
+  local tableFactions = pilotAcademy.createTable(frame, 12, tableName, false, menu, config)
 
   pilotAcademy.displayFactions(tableFactions, factions, displayData.editData, displayData.academyData, config)
 
   -- Restore scroll position if available
-  if pilotAcademy.topRows.tableAcademyFactions ~= nil then
-    tableFactions:setTopRow(pilotAcademy.topRows.tableAcademyFactions)
-  end
-  pilotAcademy.topRows.tableAcademyFactions = nil
+  pilotAcademy.setTopRow(tableFactions, tableName)
+
 
   return { table = tableFactions, height = tableFactions.properties.maxVisibleHeight }
 end
@@ -944,7 +893,8 @@ end
 
 -- Helper: Create fleet assignment table (conditional on assignment type)
 function pilotAcademy.createFleetAssignmentTable(frame, fleets, fleetsExists, menu, config, displayData)
-  local tableFleets = pilotAcademy.createTable(frame, 12, "table_academy_fleets", false, menu, config)
+  local tableName = "table_academy_fleets"
+  local tableFleets = pilotAcademy.createTable(frame, 12, tableName, false, menu, config)
 
   tableFleets:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
 
@@ -983,11 +933,9 @@ function pilotAcademy.createFleetAssignmentTable(frame, fleets, fleetsExists, me
     local emptyText = texts.noFleetsAvailable
     row[2]:setColSpan(2):createText(emptyText, { halign = "center", color = Color["text_warning"] })
   else
-    if pilotAcademy.topRows.tableAcademyFleets ~= nil then
-      tableFleets:setTopRow(pilotAcademy.topRows.tableAcademyFleets)
-    end
+    -- Restore scroll position if available
+    pilotAcademy.setTopRow(tableFleets, tableName)
   end
-  pilotAcademy.topRows.tableAcademyFleets = nil
 
   return { table = tableFleets, height = tableFleets.properties.maxVisibleHeight }
 end
@@ -1100,6 +1048,22 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
 
   tables[#tables + 1] = pilotAcademy.createAcademyButtonsTable(frame, assign ~= "perFleet" or #fleets > 0, menu, config, displayData)
   return tables
+end
+
+function pilotAcademy.setTopRow(tableHandle, tableName)
+  if pilotAcademy.frame ~= nil then
+    for i = 1, #pilotAcademy.frame.content do
+      local item = pilotAcademy.frame.content[i]
+      if type(item) == "table" and item.type == "table" and item.name == tableName then
+        local topRow = GetTopRow(item.id)
+        if topRow ~= nil then
+          trace(string.format("Set top row %d for table name %s", topRow, tableName))
+          tableHandle:setTopRow(topRow)
+        end
+        break
+      end
+    end
+  end
 end
 
 function pilotAcademy.fetchPotentialLocations(selectable, currentLocationId, factions)
@@ -1255,7 +1219,6 @@ function pilotAcademy.onSelectFaction(factionId, isSelected, savedData)
     trace("Menu is nil; cannot refresh info frame")
     return
   end
-  pilotAcademy.storeTopRows()
   menu.refreshInfoFrame()
 end
 
@@ -1305,7 +1268,6 @@ function pilotAcademy.onSelectFleet(fleetId, isSelected, savedData)
     trace("Menu is nil; cannot refresh info frame")
     return
   end
-  pilotAcademy.storeTopRows()
   menu.refreshInfoFrame()
 end
 
@@ -1609,11 +1571,8 @@ function pilotAcademy.createPersonnelListTable(frame, menu, config, personnel, t
     row[2]:setColSpan(2):createText(emptyText, { halign = "center", color = Color["text_warning"] })
   else
     -- Restore scroll position if available
-    if pilotAcademy.topRows.tablePersonnelPilots ~= nil then
-      tablePersonnel:setTopRow(pilotAcademy.topRows.tablePersonnelPilots)
-    end
+    pilotAcademy.setTopRow(tablePersonnel, tableName)
   end
-  pilotAcademy.topRows.tablePersonnelPilots = nil
 
   -- Set max visible height
   if tablePersonnelMaxHeight == 0 then
@@ -1937,7 +1896,8 @@ end
 
 -- Helper: Create factions table with restore capability
 function pilotAcademy.createWingFactionsSection(frame, menu, config, wingDisplayData, factions)
-  local tableFactions = pilotAcademy.createTable(frame, 12, "table_wing_factions", false, menu, config)
+  local tableName = string.format("table_wing_%s_factions", tostring(pilotAcademy.selectedTab or "new"))
+  local tableFactions = pilotAcademy.createTable(frame, 12, tableName, false, menu, config)
 
   local row = tableFactions:addRow(nil, { fixed = true })
   row[2]:setColSpan(10):createText(texts.factions, { halign = "left", titleColor = Color["row_title"] })
@@ -1945,11 +1905,7 @@ function pilotAcademy.createWingFactionsSection(frame, menu, config, wingDisplay
   pilotAcademy.displayFactions(tableFactions, factions, wingDisplayData.editData, wingDisplayData.wingData, config)
 
   -- Restore scroll position if available
-  local wingKey = tostring(pilotAcademy.selectedTab)
-  if #factions > 0 and pilotAcademy.topRows.tableWingsFactions[wingKey] ~= nil then
-    tableFactions:setTopRow(pilotAcademy.topRows.tableWingsFactions[wingKey])
-  end
-  pilotAcademy.topRows.tableWingsFactions[wingKey] = nil
+  pilotAcademy.setTopRow(tableFactions, tableName)
 
   return { table = tableFactions, height = tableFactions.properties.maxVisibleHeight }
 end
@@ -2020,7 +1976,9 @@ end
 
 -- Helper: Create wingmans management table
 function pilotAcademy.createWingmansTable(frame, menu, config, wingDisplayData)
-  local tableWingmans = pilotAcademy.createTable(frame, 12, "table_wing_wingmans", false, menu, config)
+
+  local tableName = string.format("table_wing_%s_wingmans", tostring(pilotAcademy.selectedTab or "new"))
+  local tableWingmans = pilotAcademy.createTable(frame, 12, tableName, false, menu, config)
 
   tableWingmans:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local tableWingmansMaxHeight = 0
@@ -2083,10 +2041,9 @@ function pilotAcademy.createWingmansTable(frame, menu, config, wingDisplayData)
 
   -- Restore scroll position if available
   local wingKey = tostring(pilotAcademy.selectedTab)
-  if #wingmans > 0 and pilotAcademy.topRows.tableWingsWingmans[wingKey] ~= nil then
-    tableWingmans:setTopRow(pilotAcademy.topRows.tableWingsWingmans[wingKey])
+  if #wingmans > 0 then
+    pilotAcademy.setTopRow(tableWingmans, tableName)
   end
-  pilotAcademy.topRows.tableWingsWingmans[wingKey] = nil
 
   return { table = tableWingmans, height = tableWingmans.properties.maxVisibleHeight }
 end
@@ -2161,7 +2118,6 @@ function pilotAcademy.onSelectPrimaryGoal(id)
     trace("Menu is nil; cannot refresh info frame")
     return
   end
-  pilotAcademy.storeTopRows()
   menu.refreshInfoFrame()
 end
 
@@ -2618,7 +2574,6 @@ function pilotAcademy.onSelectWingLeader(id)
     trace("Menu is nil; cannot refresh info frame")
     return
   end
-  pilotAcademy.storeTopRows()
   menu.refreshInfoFrame()
 end
 
@@ -2671,8 +2626,6 @@ function pilotAcademy.dismissWing(wingId)
     trace("No wing selected or invalid index; cannot dismiss wing")
     return
   end
-  pilotAcademy.topRows.tableWingsFactions[wingId] = nil
-  pilotAcademy.topRows.tableWingsWingmans[wingId] = nil
   if wings[wingId] and wings[wingId].wingLeaderId ~= nil then
     SignalObject(wings[wingId].wingLeaderId, "PilotAcademyRAndR.DismissWingRequest")
     local name, idcode = GetComponentData(wings[wingId].wingLeaderId, "name", "idcode")
@@ -2730,7 +2683,6 @@ function pilotAcademy.buttonCancelChanges()
     trace("Menu is nil; cannot refresh info frame")
     return
   end
-  pilotAcademy.storeTopRows()
   menu.refreshInfoFrame()
 end
 
@@ -2769,14 +2721,7 @@ function pilotAcademy.buttonSaveWing()
       end
     end
     wings[wingId] = wingData
-    pilotAcademy.storeTopRows()
-    local currentTopRowFactions = pilotAcademy.topRows.tableWingsFactions[tostring(pilotAcademy.selectedTab)]
-    local currentTopRowWingmans = pilotAcademy.topRows.tableWingsWingmans[tostring(pilotAcademy.selectedTab)]
-    pilotAcademy.topRows.tableWingsFactions[tostring(pilotAcademy.selectedTab)] = nil
-    pilotAcademy.topRows.tableWingsWingmans[tostring(pilotAcademy.selectedTab)] = nil
     pilotAcademy.selectedTab = wingId
-    pilotAcademy.topRows.tableWingsFactions[tostring(pilotAcademy.selectedTab)] = currentTopRowFactions
-    pilotAcademy.topRows.tableWingsWingmans[tostring(pilotAcademy.selectedTab)] = currentTopRowWingmans
   end
   pilotAcademy.saveWings()
   pilotAcademy.setOrderForWingLeader(wingData.wingLeaderId, pilotAcademy.selectedTab, existingWing)
