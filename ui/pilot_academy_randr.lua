@@ -3199,7 +3199,12 @@ function pilotAcademy.autoAssignPilots()
   end
   pilotAcademy.commonData.lastAutoAssignTime = currentTime
   pilotAcademy.saveCommonData()
-  local candidateShips = pilotAcademy.fetchCandidatesForReplacement()
+  local candidateShips = {}
+  if pilotAcademy.commonData.assign == "perFleet" and next(pilotAcademy.commonData.fleets) ~= nil then
+    candidateShips = pilotAcademy.fetchCandidatesForReplacementPerFleet()
+  else
+    candidateShips = pilotAcademy.fetchCandidatesForReplacement()
+  end
   if candidateShips == nil or #candidateShips == 0 then
     trace("No candidate ships found for replacement, returning")
     return
@@ -3231,6 +3236,38 @@ function pilotAcademy.autoAssignPilots()
   end
 end
 
+function pilotAcademy.processCandidateForReplacement(shipId, candidateShips, academyShips, targetRankLevel)
+  local shipMacro, isDeployable, shipName, pilot, classId, idcode, purpose = GetComponentData(shipId, "macro", "isdeployable", "name", "assignedaipilot",
+    "classid", "idcode", "primarypurpose")
+  local isLasertower, shipWare = GetMacroData(shipMacro, "islasertower", "ware")
+  local isUnit = C.IsUnit(shipId)
+  if shipWare and (not isUnit) and (not isLasertower) and (not isDeployable) and not Helper.isComponentClass(classId, "ship_xs") and pilot and IsValidComponent(pilot) then
+    if academyShips[tostring(shipId)] ~= true then
+      local pilotName, pilotSkill, pilotMacro = GetComponentData(pilot, "name", "combinedskill", "macro")
+      local pilotRace = GetMacroData(pilotMacro)
+      local skillBase = pilotAcademy.skillBase(pilotSkill)
+      if skillBase < targetRankLevel and pilotRace ~= "drone" then
+        local class = Helper.isComponentClass(classId, "ship_s") and "ship_s" or Helper.isComponentClass(classId, "ship_m") and "ship_m" or
+            Helper.isComponentClass(classId, "ship_l") and "ship_l" or Helper.isComponentClass(classId, "ship_xl") and "ship_xl" or "unknown"
+        trace(string.format("Evaluating ship '%s' (idcode: %s, class: %s, purpose: %s) with pilot '%s' (skill: %d, base rank: %d)",
+          shipName, idcode, class, purpose, pilotName, pilotSkill, skillBase))
+        if class ~= "unknown" then
+          purpose = pilotAcademy.normalizePurpose(purpose)
+          candidateShips[#candidateShips + 1] = {
+            shipId = shipId,
+            shipName = shipName,
+            shipIdCode = idcode,
+            class = class,
+            purpose = purpose,
+            pilotName = pilotName,
+            pilotSkill = pilotSkill,
+          }
+        end
+      end
+    end
+  end
+end
+
 function pilotAcademy.fetchCandidatesForReplacement()
   trace("fetchCandidatesForReplacement called")
   local targetRankLevel = pilotAcademy.commonData and pilotAcademy.commonData.targetRankLevel or 2
@@ -3241,35 +3278,31 @@ function pilotAcademy.fetchCandidatesForReplacement()
   local academyShips = pilotAcademy.fetchAllAcademyShipsForExclusion()
   for i = 0, allShipsCount - 1 do
     local shipId = ConvertStringTo64Bit(tostring(allShips[i]))
-    local shipMacro, isDeployable, shipName, pilot, classId, idcode, purpose = GetComponentData(shipId, "macro", "isdeployable", "name", "assignedaipilot",
-      "classid", "idcode", "primarypurpose")
-    local isLasertower, shipWare = GetMacroData(shipMacro, "islasertower", "ware")
-    local isUnit = C.IsUnit(shipId)
-    if shipWare and (not isUnit) and (not isLasertower) and (not isDeployable) and not Helper.isComponentClass(classId, "ship_xs") and pilot and IsValidComponent(pilot) then
-      if academyShips[tostring(shipId)] ~= true then
-        local pilotName, pilotSkill, pilotMacro = GetComponentData(pilot, "name", "combinedskill", "macro")
-        local pilotRace = GetMacroData(pilotMacro)
-        local skillBase = pilotAcademy.skillBase(pilotSkill)
-        if skillBase < targetRankLevel and pilotRace ~= "drone" then
-          local class = Helper.isComponentClass(classId, "ship_s") and "ship_s" or Helper.isComponentClass(classId, "ship_m") and "ship_m" or
-              Helper.isComponentClass(classId, "ship_l") and "ship_l" or Helper.isComponentClass(classId, "ship_xl") and "ship_xl" or "unknown"
-          trace(string.format("Evaluating ship '%s' (idcode: %s, class: %s, purpose: %s) with pilot '%s' (skill: %d, base rank: %d)",
-            shipName, idcode, class, purpose, pilotName, pilotSkill, skillBase))
-          if class ~= "unknown" then
-            purpose = pilotAcademy.normalizePurpose(purpose)
-            candidateShips[#candidateShips + 1] = {
-              shipId = shipId,
-              shipName = shipName,
-              shipIdCode = idcode,
-              class = class,
-              purpose = purpose,
-              pilotName = pilotName,
-              pilotSkill = pilotSkill,
-            }
-          end
-        end
-      end
-    end
+    pilotAcademy.processCandidateForReplacement(shipId, candidateShips, academyShips, targetRankLevel)
+  end
+  pilotAcademy.sortCandidatesForReplacement(candidateShips, pilotAcademy.commonData.assign, pilotAcademy.commonData.assignPriority)
+  return candidateShips
+end
+
+function pilotAcademy.collectCandidatesFromFleets(shipId, candidateShips, academyShips, targetRankLevel)
+  shipId = ConvertStringTo64Bit(tostring(shipId))
+  pilotAcademy.processCandidateForReplacement(shipId, candidateShips, academyShips, targetRankLevel)
+  local subordinates = GetSubordinates(shipId)
+  for i = 1, #subordinates do
+    local subordinate = ConvertIDTo64Bit(subordinates[i])
+    pilotAcademy.collectCandidatesFromFleets(subordinate, candidateShips, academyShips, targetRankLevel)
+  end
+end
+
+function pilotAcademy.fetchCandidatesForReplacementPerFleet()
+  trace("fetchCandidatesForReplacementPerFleet called")
+  local targetRankLevel = pilotAcademy.commonData and pilotAcademy.commonData.targetRankLevel or 2
+  local candidateShips = {}
+  local fleetCommanders = pilotAcademy.commonData.fleets or {}
+
+  local academyShips = pilotAcademy.fetchAllAcademyShipsForExclusion()
+  for commanderId, _ in pairs(fleetCommanders) do
+    pilotAcademy.collectCandidatesFromFleets(commanderId, candidateShips, academyShips, targetRankLevel)
   end
   pilotAcademy.sortCandidatesForReplacement(candidateShips, pilotAcademy.commonData.assign, pilotAcademy.commonData.assignPriority)
   return candidateShips
@@ -3278,7 +3311,7 @@ end
 function pilotAcademy.sortCandidatesForReplacement(candidates, assign, assignPriority)
   table.sort(candidates, function(a, b)
     -- Compare by purpose priority
-    if a.purpose ~= b.purpose then
+    if assign ~= "perFleet" and a.purpose ~= b.purpose then
       return pilotAcademy.comparePurposePriority(a, b, assign)
     end
 
