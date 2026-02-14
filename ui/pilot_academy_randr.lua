@@ -819,12 +819,13 @@ function pilotAcademy.createAcademyFactionsTable(frame, menu, config, displayDat
 end
 
 -- Helper: Create assignment settings table
-function pilotAcademy.createAssignmentTable(frame, assign, menu, config, displayData, locationOptions)
+function pilotAcademy.createAssignmentTable(frame, menu, config, displayData, locationOptions)
   local tableAssign = pilotAcademy.createTable(frame, 4, "table_academy_assign", false, menu, config)
 
   tableAssign:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
 
   local assignOptions = pilotAcademy.getAssignOptions()
+  local assign = displayData.editData.assign or displayData.academyData.assign or "manual"
   local autoAssignActive = C.HasResearched("research_pilot_academy_r_and_r_auto_assign")
 
   local row = tableAssign:addRow(nil, { fixed = true })
@@ -844,7 +845,7 @@ function pilotAcademy.createAssignmentTable(frame, assign, menu, config, display
     return pilotAcademy.onSelectAssign(id)
   end
 
-  return { table = tableAssign, height = tableAssign:getFullHeight() }
+  return { table = tableAssign, height = tableAssign:getFullHeight(), assign = assign }
 end
 
 function pilotAcademy.createAssignOptionsTable(frame, menu, config, displayData)
@@ -855,7 +856,7 @@ function pilotAcademy.createAssignOptionsTable(frame, menu, config, displayData)
   local priorityOptions = pilotAcademy.getAssignPriorityOptions()
 
   tableAssignOptions:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-  row = tableAssignOptions:addRow(nil, { fixed = true })
+  local row = tableAssignOptions:addRow(nil, { fixed = true })
   row[2]:setColSpan(2):createText(texts.priority, { halign = "left", titleColor = Color["row_title"] })
 
   row = tableAssignOptions:addRow("assign_priority", { fixed = true })
@@ -892,7 +893,7 @@ function pilotAcademy.createAssignOptionsTable(frame, menu, config, displayData)
 end
 
 -- Helper: Create fleet assignment table (conditional on assignment type)
-function pilotAcademy.createFleetAssignmentTable(frame, fleets, fleetsExists, menu, config, displayData)
+function pilotAcademy.createFleetAssignmentTable(frame, menu, config, displayData)
   local tableName = "table_academy_fleets"
   local tableFleets = pilotAcademy.createTable(frame, 12, tableName, false, menu, config)
 
@@ -904,6 +905,7 @@ function pilotAcademy.createFleetAssignmentTable(frame, fleets, fleetsExists, me
   local tableFleetsMaxHeight = 0
 
   local fleetsSaved = displayData.academyData.fleets or {}
+  local fleets, fleetsExists = pilotAcademy.fetchFleets()
   for fleetId, _ in pairs(fleetsSaved) do
     if fleetsExists and fleetsExists[fleetId] == nil then
       fleetsSaved[fleetId] = nil
@@ -937,7 +939,7 @@ function pilotAcademy.createFleetAssignmentTable(frame, fleets, fleetsExists, me
     pilotAcademy.setTopRow(tableFleets, tableName)
   end
 
-  return { table = tableFleets, height = tableFleets.properties.maxVisibleHeight }
+  return { table = tableFleets, height = tableFleets.properties.maxVisibleHeight, fleetsCount = #fleets }
 end
 
 function pilotAcademy.fetchFleets()
@@ -1034,19 +1036,22 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
     tables[#tables + 1] = pilotAcademy.createAcademyFactionsTable(frame, menu, config, displayData, factions)
   end
 
-  local assign = displayData.editData.assign or displayData.academyData.assign or "manual"
-  tables[#tables + 1] = pilotAcademy.createAssignmentTable(frame, assign, menu, config, displayData, locationOptions)
 
-  local fleets, fleetsExits = pilotAcademy.fetchFleets()
-  if assign == "perFleet" then
-    tables[#tables + 1] = pilotAcademy.createFleetAssignmentTable(frame, fleets, fleetsExits, menu, config, displayData)
+  local assignmentResult = pilotAcademy.createAssignmentTable(frame, menu, config, displayData, locationOptions)
+  tables[#tables + 1] = assignmentResult
+
+  local fleetsCount = 0
+  if assignmentResult.assign == "perFleet" then
+    local fleetResult = pilotAcademy.createFleetAssignmentTable(frame, menu, config, displayData)
+    tables[#tables + 1] = fleetResult
+    fleetsCount = fleetResult.fleetsCount
   end
 
-  if assign ~= "manual" then
+  if assignmentResult.assign ~= "manual" then
     tables[#tables + 1] = pilotAcademy.createAssignOptionsTable(frame, menu, config, displayData)
   end
 
-  tables[#tables + 1] = pilotAcademy.createAcademyButtonsTable(frame, assign ~= "perFleet" or #fleets > 0, menu, config, displayData)
+  tables[#tables + 1] = pilotAcademy.createAcademyButtonsTable(frame, assignmentResult.assign ~= "perFleet" or fleetsCount > 0, menu, config, displayData)
   return tables
 end
 
