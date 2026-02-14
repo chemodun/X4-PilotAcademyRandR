@@ -104,11 +104,14 @@ local texts = {
   miners_military_traders = ReadText(1972092412, 10135),      -- "Miners - Military - Traders"
   traders_military_miners = ReadText(1972092412, 10136),      -- "Traders - Military - Miners"
   traders_miners_military = ReadText(1972092412, 10137),      -- "Traders - Miners - Military"
+  perFleet = ReadText(1972092412, 10138),                     -- "Per Fleet"
   manual = ReadText(1972092412, 10139),                       -- "Manual"
   priority = ReadText(1972092412, 10141),                     -- "Priority:"
   priority_small_to_large = ReadText(1972092412, 10142),      -- "Small to Large"
   priority_large_to_small = ReadText(1972092412, 10143),      -- "Large to Small"
+  noFleetsAvailable = ReadText(1972092412, 10151),           -- "No fleets available"
   autoFireLessSkilledCrewMember = ReadText(1972092412, 10191), -- "Auto fire less skilled crew member if crew is full"
+  fleets = string.format("%s:", ReadText(1001, 8326)),  -- "Fleets:"
   cadets = ReadText(1972092412, 10201),                       -- "Cadets:"
   noCadetsAssigned = ReadText(1972092412, 10209),             -- "No cadets assigned"
   pilots = ReadText(1972092412, 10211),                       -- "Pilots:"
@@ -161,6 +164,7 @@ local pilotAcademy = {
   orderId = "PilotAcademyWing",
   assignOptions = {
     "manual",
+    "perFleet",
     "military_miners_traders",
     "military_traders_miners",
     "miners_traders_military",
@@ -572,6 +576,9 @@ function pilotAcademy.storeTopRows()
         pilotAcademy.topRows.tableAcademyFactions = GetTopRow(item.id)
       end
 
+      if item.name == "table_academy_fleets" then
+        pilotAcademy.topRows.tableAcademyFleets = GetTopRow(item.id)
+      end
       if item.name == "table_personnel_cadets" then
         pilotAcademy.topRows.tablePersonnelCadets = GetTopRow(item.id)
       end
@@ -683,7 +690,7 @@ end
 
 function pilotAcademy.displayFactions(tableFactions, factions, editData, storedData, config)
   local tableFactionsMaxHeight = 0
-  local selectedFactions = pilotAcademy.combineFactionsSelections(editData, storedData)
+  local selectedFactions = pilotAcademy.combineSelections("factions", editData, storedData)
   for i = 1, #factions do
     local faction = factions[i]
     if faction ~= nil then
@@ -862,12 +869,11 @@ function pilotAcademy.createAcademyFactionsTable(frame, menu, config, displayDat
 end
 
 -- Helper: Create assignment settings table
-function pilotAcademy.createAssignmentTable(frame, menu, config, displayData, locationOptions)
+function pilotAcademy.createAssignmentTable(frame, assign, menu, config, displayData, locationOptions)
   local tableAssign = pilotAcademy.createTable(frame, 4, "table_academy_assign", false, menu, config)
 
   tableAssign:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
 
-  local assign = displayData.editData.assign or displayData.academyData.assign or "manual"
   local assignOptions = pilotAcademy.getAssignOptions()
   local autoAssignActive = C.HasResearched("research_pilot_academy_r_and_r_auto_assign")
 
@@ -888,51 +894,129 @@ function pilotAcademy.createAssignmentTable(frame, menu, config, displayData, lo
     return pilotAcademy.onSelectAssign(id)
   end
 
-  -- Priority dropdown (conditional on non-manual assignment)
-  if assign ~= "manual" then
-    local assignPriority = displayData.editData.assignPriority or displayData.academyData.assignPriority or "priority_small_to_large"
-    local priorityOptions = pilotAcademy.getAssignPriorityOptions()
-
-    tableAssign:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-    row = tableAssign:addRow(nil, { fixed = true })
-    row[2]:setColSpan(2):createText(texts.priority, { halign = "left", titleColor = Color["row_title"] })
-
-    row = tableAssign:addRow("assign_priority", { fixed = true })
-    row[1]:createText("", { halign = "left" })
-    row[2]:setColSpan(2):createDropDown(priorityOptions, {
-      startOption = assignPriority or "priority_small_to_large",
-      active = true,
-      textOverride = (#priorityOptions == 0) and "" or nil,
-    })
-    row[2]:setTextProperties({ halign = "left" })
-    row[2].handlers.onDropDownActivated = function() menu.noupdate = true end
-    row[2].handlers.onDropDownConfirmed = function(_, id)
-      menu.noupdate = false
-      return pilotAcademy.onSelectAssignPriority(id)
-    end
-
-    tableAssign:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-    local autoFireLessSkilledCrewMember = displayData.editData.autoFireLessSkilledCrewMember
-    if autoFireLessSkilledCrewMember == nil then
-      autoFireLessSkilledCrewMember = displayData.academyData.autoFireLessSkilledCrewMember
-    end
-    if autoFireLessSkilledCrewMember == nil then
-      autoFireLessSkilledCrewMember = false
-    end
-    row = tableAssign:addRow("auto_fire_less_skilled", { fixed = true })
-    row[2]:createCheckBox(autoFireLessSkilledCrewMember == true, {
-      height = config.mapRowHeight,
-      width = config.mapRowHeight
-    })
-    row[2].handlers.onClick = function(_, checked) return pilotAcademy.onToggleAutoFireLessSkilledCrewMember(checked) end
-    row[3]:createText(texts.autoFireLessSkilledCrewMember, { halign = "left", titleColor = Color["row_title"], x = Helper.scaleX(Helper.borderSize * 2) })
-  end
-
   return { table = tableAssign, height = tableAssign:getFullHeight() }
 end
 
+function pilotAcademy.createAssignOptionsTable(frame, menu, config, displayData)
+  local tableAssignOptions = pilotAcademy.createTable(frame, 4, "table_academy_assign", false, menu, config)
+
+  -- Priority dropdown (conditional on non-manual assignment)
+  local assignPriority = displayData.editData.assignPriority or displayData.academyData.assignPriority or "priority_small_to_large"
+  local priorityOptions = pilotAcademy.getAssignPriorityOptions()
+
+  tableAssignOptions:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  row = tableAssignOptions:addRow(nil, { fixed = true })
+  row[2]:setColSpan(2):createText(texts.priority, { halign = "left", titleColor = Color["row_title"] })
+
+  row = tableAssignOptions:addRow("assign_priority", { fixed = true })
+  row[1]:createText("", { halign = "left" })
+  row[2]:setColSpan(2):createDropDown(priorityOptions, {
+    startOption = assignPriority or "priority_small_to_large",
+    active = true,
+    textOverride = (#priorityOptions == 0) and "" or nil,
+  })
+  row[2]:setTextProperties({ halign = "left" })
+  row[2].handlers.onDropDownActivated = function() menu.noupdate = true end
+  row[2].handlers.onDropDownConfirmed = function(_, id)
+    menu.noupdate = false
+    return pilotAcademy.onSelectAssignPriority(id)
+  end
+
+  tableAssignOptions:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  local autoFireLessSkilledCrewMember = displayData.editData.autoFireLessSkilledCrewMember
+  if autoFireLessSkilledCrewMember == nil then
+    autoFireLessSkilledCrewMember = displayData.academyData.autoFireLessSkilledCrewMember
+  end
+  if autoFireLessSkilledCrewMember == nil then
+    autoFireLessSkilledCrewMember = false
+  end
+  local row = tableAssignOptions:addRow("auto_fire_less_skilled", { fixed = true })
+  row[2]:createCheckBox(autoFireLessSkilledCrewMember == true, {
+    height = config.mapRowHeight,
+    width = config.mapRowHeight
+  })
+  row[2].handlers.onClick = function(_, checked) return pilotAcademy.onToggleAutoFireLessSkilledCrewMember(checked) end
+  row[3]:createText(texts.autoFireLessSkilledCrewMember, { halign = "left", titleColor = Color["row_title"], x = Helper.scaleX(Helper.borderSize * 2) })
+
+  return { table = tableAssignOptions, height = tableAssignOptions:getFullHeight() }
+end
+
+-- Helper: Create fleet assignment table (conditional on assignment type)
+function pilotAcademy.createFleetAssignmentTable(frame, fleets, menu, config, displayData)
+  local tableFleets = pilotAcademy.createTable(frame, 12, "table_academy_fleets", false, menu, config)
+
+  tableFleets:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+
+  local row = tableFleets:addRow(nil, { fixed = true })
+  row[2]:setColSpan(10):createText(texts.fleets, { halign = "left", titleColor = Color["row_title"] })
+
+  local tableFleetsMaxHeight = 0
+  local selectedFleet = pilotAcademy.combineSelections("fleets", displayData.editData, displayData.academyData)
+  for i = 1, #fleets do
+    local fleet = fleets[i]
+    if fleet ~= nil then
+      local row = tableFleets:addRow(fleet.commanderId, { fixed = false })
+      row[2]:createCheckBox(selectedFleet[fleet.commanderId] == true, { scaling = false })
+      row[2].handlers.onClick = function(_, checked) return pilotAcademy.onSelectFleet(fleet.commanderId, checked, displayData.academyData) end
+      row[3]:setColSpan(7):createText(fleet.name, { halign = "left", color = Color["text_normal"] })
+      row[10]:setColSpan(2):createText(fleet.sector, { halign = "right", color = Color["text_normal"] })
+      if i == 10 then
+        tableFleetsMaxHeight = tableFleets:getFullHeight()
+      end
+    end
+  end
+  if tableFleetsMaxHeight == 0 then
+    tableFleetsMaxHeight = tableFleets:getFullHeight()
+  end
+  tableFleets.properties.maxVisibleHeight = math.min(tableFleets:getFullHeight(), tableFleetsMaxHeight)
+
+  if #fleets == 0 then
+    row = tableFleets:addRow(nil, { fixed = false })
+    local emptyText = texts.noFleetsAvailable
+    row[2]:setColSpan(2):createText(emptyText, { halign = "center", color = Color["text_warning"] })
+  else
+    if pilotAcademy.topRows.tableAcademyFleets ~= nil then
+      tableFleets:setTopRow(pilotAcademy.topRows.tableAcademyFleets)
+    end
+  end
+  pilotAcademy.topRows.tableAcademyFleets = nil
+
+  return { table = tableFleets, height = tableFleets.properties.maxVisibleHeight }
+end
+
+function pilotAcademy.fetchFleets()
+  local fleets = {}
+  local allShipsCount = C.GetNumAllFactionShips("player")
+  local allShips = ffi.new("UniverseID[?]", allShipsCount)
+  allShipsCount = C.GetAllFactionShips(allShips, allShipsCount, "player")
+  local academyShips = pilotAcademy.fetchAllAcademyShipsForExclusion()
+  for i = 0, allShipsCount - 1 do
+    local shipId = ConvertStringTo64Bit(tostring(allShips[i]))
+    local shipMacro, isDeployable, shipName, pilot, classId, idcode, icon, fleetName, sector = GetComponentData(shipId, "macro", "isdeployable", "name", "assignedaipilot",
+      "classid", "idcode", "icon", "fleetname", "sector")
+    local isLasertower, shipWare = GetMacroData(shipMacro, "islasertower", "ware")
+    local isUnit = C.IsUnit(shipId)
+    if shipWare and (not isUnit) and (not isLasertower) and (not isDeployable) and Helper.isComponentClass(classId, "ship_s") and pilot and IsValidComponent(pilot) then
+      local subordinates = GetSubordinates(shipId)
+      local commander = GetCommander(shipId)
+      if #subordinates > 0 and commander == nil then
+        if academyShips[tostring(shipId)] ~= true then
+          local candidate = {}
+          candidate.commanderId = shipId
+          candidate.commander = string.format("\027[%s] %s (%s)", icon, shipName, idcode)
+          candidate.fleetName = fleetName
+          candidate.sector = sector
+          fleets[#fleets + 1] = candidate
+        end
+      end
+    end
+  end
+  table.sort(fleets, function(a, b) return a.fleetName < b.fleetName end)
+  return fleets
+end
+
 -- Helper: Create bottom buttons table
-function pilotAcademy.createAcademyButtonsTable(frame, menu, config, displayData)
+function pilotAcademy.createAcademyButtonsTable(frame, canSave, menu, config, displayData)
   local tableBottom = pilotAcademy.createTable(frame, 7, "table_academy_bottom", false, menu, config)
 
   tableBottom:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
@@ -942,7 +1026,7 @@ function pilotAcademy.createAcademyButtonsTable(frame, menu, config, displayData
   row[4].handlers.onClick = function() return pilotAcademy.buttonCancelAcademyChanges() end
 
   row[6]:createButton({
-    active = hasItemsExcept(displayData.editData, "toChangeLocation") and displayData.locationId ~= nil
+    active = hasItemsExcept(displayData.editData, "toChangeLocation") and displayData.locationId ~= nil and canSave == true
   }):setText(
     displayData.academyData.locationId ~= nil and texts.update or texts.create,
     { halign = "center" }
@@ -991,8 +1075,19 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
     tables[#tables + 1] = pilotAcademy.createAcademyFactionsTable(frame, menu, config, displayData, factions)
   end
 
-  tables[#tables + 1] = pilotAcademy.createAssignmentTable(frame, menu, config, displayData, locationOptions)
-  tables[#tables + 1] = pilotAcademy.createAcademyButtonsTable(frame, menu, config, displayData)
+  local assign = displayData.editData.assign or displayData.academyData.assign or "manual"
+  tables[#tables + 1] = pilotAcademy.createAssignmentTable(frame, assign, menu, config, displayData, locationOptions)
+
+  local fleets = pilotAcademy.fetchFleets()
+  if assign == "perFleet" then
+    tables[#tables + 1] = pilotAcademy.createFleetAssignmentTable(frame, fleets, menu, config, displayData)
+  end
+
+  if assign ~= "manual" then
+    tables[#tables + 1] = pilotAcademy.createAssignOptionsTable(frame, menu, config, displayData)
+  end
+
+  tables[#tables + 1] = pilotAcademy.createAcademyButtonsTable(frame, assign ~= "perFleet" or #fleets > 0, menu, config, displayData)
   return tables
 end
 
@@ -1391,20 +1486,20 @@ function pilotAcademy.getOrCreateEntity(person, controllable)
   return entity
 end
 
-function pilotAcademy.combineFactionsSelections(editData, savedData)
-  local selectedFactions = {}
-  if editData.factions ~= nil and type(editData.factions) == "table" then
-    for i = 1, #editData.factions do
-      local factionId = editData.factions[i]
-      selectedFactions[factionId] = true
+function pilotAcademy.combineSelections(field, editData, savedData)
+  local selectedItems = {}
+  if editData[field] ~= nil and type(editData[field]) == "table" then
+    for i = 1, #editData[field] do
+      local content = editData[field][i]
+      selectedItems[content] = true
     end
-  elseif savedData.factions ~= nil and type(savedData.factions) == "table" then
-    for i = 1, #savedData.factions do
-      local factionId = savedData.factions[i]
-      selectedFactions[factionId] = true
+  elseif savedData[field] ~= nil and type(savedData[field]) == "table" then
+    for i = 1, #savedData[field] do
+      local content = savedData[field][i]
+      selectedItems[content] = true
     end
   end
-  return selectedFactions
+  return selectedItems
 end
 
 function pilotAcademy.skillBase(skill)
