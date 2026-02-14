@@ -296,8 +296,9 @@ function pilotAcademy.Init(menuMap, menuPlayerInfo)
   local relations = GetLibrary("factions")
   local relationNameMaxLen = 0
   local relationNameMax = nil
-  for i, relation in ipairs(relations) do
-    if relation.id ~= "player" then
+  for i = 1, #relations do
+    local relation = relations[i]
+    if relation ~= nil and relation.id ~= "player" then
       local relationInfo = C.GetUIRelationName("player", relation.id)
       local relationName = ffi.string(relationInfo.name)
       local relationNameLength = string.len(relationName)
@@ -503,8 +504,9 @@ end
 function pilotAcademy.getFactions(config, sortAscending)
   local factionsAll = GetLibrary("factions")
   local factions = {}
-  for i, faction in ipairs(factionsAll) do
-    if faction.id ~= "player" then
+  for i = 1, #factionsAll do
+    local faction = factionsAll[i]
+    if faction ~= nil and faction.id ~= "player" then
       local shortName, isAtDockRelation, isRelationLocked = GetFactionData(faction.id, "shortname", "isatdockrelation", "isrelationlocked")
       if isAtDockRelation and not isRelationLocked then
         faction.shortName = shortName
@@ -1392,11 +1394,13 @@ end
 function pilotAcademy.combineFactionsSelections(editData, savedData)
   local selectedFactions = {}
   if editData.factions ~= nil and type(editData.factions) == "table" then
-    for _, factionId in ipairs(editData.factions) do
+    for i = 1, #editData.factions do
+      local factionId = editData.factions[i]
       selectedFactions[factionId] = true
     end
   elseif savedData.factions ~= nil and type(savedData.factions) == "table" then
-    for _, factionId in ipairs(savedData.factions) do
+    for i = 1, #savedData.factions do
+      local factionId = savedData.factions[i]
       selectedFactions[factionId] = true
     end
   end
