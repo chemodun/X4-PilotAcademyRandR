@@ -319,7 +319,7 @@ There are examples of texts and notifications screenshots:
 ### [1.04] - 2026-02-??
 
 - **Added**
-  - New target selection for `Trained Pilots` assignment: `To exact Fleets`. With this option, the Player can select a specific fleets for the pilot assignment.
+  - New target selection for `Trained Pilots` assignment: `To Selected Fleets`. With this option, the Player can select a specific fleets for the pilot assignment.
 - **Fixed**
   - Factions and Wingmans scrolling in the Academy window
   - Wing Leander an Wingmans selections
