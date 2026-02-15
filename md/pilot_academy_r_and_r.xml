@@ -85,7 +85,7 @@
                 delay="3s" />
               <set_value name="$messageTemplate" exact="if $isCadet then {1972092412,1000002} else {1972092412,1000007} " />
               <run_actions ref="Notify_Player">
-                <param name="title" value="{1972092412,1000001}" />
+                <param name="title" value="{1972092412,1}" />
                 <param name="text" value="$messageTemplate.[$replacementPilotName, $shipName]" />
                 <param name="object" value="$ship" />
               </run_actions>
