@@ -1268,12 +1268,6 @@ function pilotAcademy.onSelectFleet(fleetId, isSelected, savedData)
 
   pilotAcademy.editData.fleets[fleetId] = isSelected
 
-  local menu = pilotAcademy.menuMap
-  if menu == nil then
-    trace("Menu is nil; cannot refresh info frame")
-    return
-  end
-  menu.refreshInfoFrame()
 end
 
 function pilotAcademy.getAssignPriorityOptions()
