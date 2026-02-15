@@ -28,10 +28,12 @@
       <t id="10135">Górnicy - Wojskowi - Handlowcy</t>
       <t id="10136">Handlowcy - Wojskowi - Górnicy</t>
       <t id="10137">Handlowcy - Górnicy - Wojskowi</t>
+      <t id="10138">Do Wybranych Flot</t>
       <t id="10139">Ręczne</t>
       <t id="10141">Priorytet według klasy statku:</t>
       <t id="10142">Od Małego do Dużego</t>
       <t id="10143">Od Dużego do Małego</t>
+      <t id="10151">Brak dostępnych flot</t>
       <t id="10191">Automatycznie zwolnij mniej wykwalifikowanego członka załogi, jeśli załoga jest pełna</t>
       <t id="10201">Kadeci:</t>
       <t id="10209">Brak przypisanych kadetów</t>

@@ -28,10 +28,12 @@
       <t id="10135">Miners - Military - Traders</t>
       <t id="10136">Traders - Military - Miners</t>
       <t id="10137">Traders - Miners - Military</t>
+      <t id="10138">To Selected Fleets</t>
       <t id="10139">Manual</t>
       <t id="10141">Priority by ship class:</t>
       <t id="10142">Small to Large</t>
       <t id="10143">Large to Small</t>
+      <t id="10151">No fleets available</t>
       <t id="10191">Auto fire less skilled crew member if crew is full</t>
       <t id="10201">Cadets:</t>
       <t id="10209">No cadets assigned</t>
