@@ -1365,7 +1365,7 @@ function pilotAcademy.fleetsSave(savedDate, editData, countOnly)
   end
 
   if countOnly ~= true then
-    savedDate.fleetObject = fleetObjects
+    savedDate.fleetObjects = fleetObjects
     trace("Saving fleets to common data: " .. tostring(#fleetObjects) .. " fleet objects saved")
     savedDate.fleets = nil
   else
