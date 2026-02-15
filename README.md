@@ -323,6 +323,7 @@ There are examples of texts and notifications screenshots:
 - **Fixed**
   - Factions and Wingmans scrolling in the Academy window
   - Wing Leander an Wingmans selections
+  - Title for pilot moving notifications
 
 ### [1.03] - 2026-02-14
 
