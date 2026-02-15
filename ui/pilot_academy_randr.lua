@@ -697,17 +697,24 @@ local function getMaxRankLevel()
 end
 
 -- Helper: Create academy header with location selection
-function pilotAcademy.createAcademyHeaderTable(frame, menu, config, displayData, locationOptions, emptyText)
-  local tableTop = pilotAcademy.createTable(frame, 4, "table_academy_top", false, menu, config)
+function pilotAcademy.createAcademyHeaderTable(frame, menu, config)
+  local tableHeader = pilotAcademy.createTable(frame, 4, "table_academy_header", false, menu, config)
 
-  local row = tableTop:addRow(nil, { fixed = true })
+  local row = tableHeader:addRow(nil, { fixed = true })
   row[1]:setColSpan(4):createText(texts.pilotAcademyFull, Helper.headerRowCenteredProperties)
-  tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  tableHeader:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+
+  return { table = tableHeader, height = tableHeader:getFullHeight() }
+end
+
+-- Helper: Create academy location table
+function pilotAcademy.createAcademyLocationTable(frame, menu, config, displayData, locationOptions, emptyText)
+  local tableLocation = pilotAcademy.createTable(frame, 4, "table_academy_location", false, menu, config)
 
   -- Location selection
-  row = tableTop:addRow(nil, { fixed = true })
+  local row = tableLocation:addRow(nil, { fixed = true })
   row[2]:setColSpan(2):createText(texts.location, { halign = "left", titleColor = Color["row_title"] })
-  row = tableTop:addRow("location", { fixed = true })
+  row = tableLocation:addRow("location", { fixed = true })
   row[1]:createText("", { halign = "left" })
 
   if displayData.locationSelectable then
@@ -731,21 +738,21 @@ function pilotAcademy.createAcademyHeaderTable(frame, menu, config, displayData,
     }):setText(locationOptions[1].text, { halign = "left" }):setText2(locationOptions[1].text2, { halign = "right" })
     row[2].handlers.onClick = function() return pilotAcademy.onToChangeLocation() end
   end
-  tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  tableLocation:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
 
   -- Rent cost display for non-player locations
   local owner = displayData.academyData.locationId and GetComponentData(displayData.academyData.locationId, "owner") or nil
   if owner ~= nil and owner ~= "player" then
     local rentCost = displayData.academyData.rentCost or 0
-    row = tableTop:addRow(nil, { fixed = true })
+    row = tableLocation:addRow(nil, { fixed = true })
     row[2]:setColSpan(2):createText(
       string.format(texts.locationRentCost, ConvertMoneyString(rentCost, false, true, nil, true) .. " " .. ReadText(1001, 101)),
       { halign = "left", titleColor = Color["row_title"] }
     )
-    tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+    tableLocation:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   end
 
-  return { table = tableTop, height = tableTop:getFullHeight() }
+  return { table = tableLocation, height = tableLocation:getFullHeight() }
 end
 
 -- Helper: Create target rank level slider table
@@ -1042,7 +1049,8 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
   )
 
   -- Create all UI sections
-  tables[#tables + 1] = pilotAcademy.createAcademyHeaderTable(frame, menu, config, displayData, locationOptions, emptyText)
+  tables[#tables + 1] = pilotAcademy.createAcademyHeaderTable(frame, menu, config)
+  tables[#tables + 1] = pilotAcademy.createAcademyLocationTable(frame, menu, config, displayData, locationOptions, emptyText)
   tables[#tables + 1] = pilotAcademy.createTargetRankTable(frame, menu, config, displayData)
 
   local autoHireResult = pilotAcademy.createAutoHireTable(frame, menu, config, displayData, factions)
@@ -1666,7 +1674,7 @@ function pilotAcademy.displayPersonnelInfo(frame, menu, config)
   local cadets, pilots = pilotAcademy.fetchAcademyPersonnel()
 
   -- Create all UI sections
-  tables[#tables + 1] = pilotAcademy.createPersonnelHeaderTable(frame, menu, config)
+  tables[#tables + 1] = pilotAcademy.createAcademyHeaderTable(frame, menu, config)
   tables[#tables + 1] = pilotAcademy.createPersonnelListTable(frame, menu, config, cadets, texts.cadets, "table_personnel_cadets")
   tables[#tables + 1] = pilotAcademy.createPersonnelListTable(frame, menu, config, pilots, texts.pilots, "table_personnel_pilots")
   tables[#tables + 1] = pilotAcademy.createPersonnelBottomTable(frame, menu, config)
@@ -1912,16 +1920,10 @@ local function getWingDisplayData()
 end
 
 -- Helper: Create wing header table with primary goal dropdown
-function pilotAcademy.createWingHeaderTable(frame, menu, config, wingDisplayData)
-  local tableTop = pilotAcademy.createTable(frame, 12, "table_wing_top", false, menu, config)
+function pilotAcademy.createWingPrimaryGoalTable(frame, menu, config, wingDisplayData)
+  local tableGoal = pilotAcademy.createTable(frame, 12, "table_wing_primary_goal", false, menu, config)
 
-  local row = tableTop:addRow(nil, { fixed = true })
-  local suffix = string.format(pilotAcademy.selectedTab ~= nil and texts.wing or texts.addNewWing,
-    wingDisplayData.existingWing and texts.wingNames[pilotAcademy.selectedTab] or "")
-  row[1]:setColSpan(12):createText(string.format("%s: %s", texts.pilotAcademy, suffix), Helper.headerRowCenteredProperties)
-  tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
-
-  row = tableTop:addRow("wing_primary_goal", { fixed = true })
+  local row = tableGoal:addRow("wing_primary_goal", { fixed = true })
   local primaryGoalOptions = {
     { id = "rank",     icon = "", text = texts.increaseRank,   text2 = "", displayremoveoption = false },
     { id = "relation", icon = "", text = texts.gainReputation, text2 = "", displayremoveoption = false },
@@ -1938,9 +1940,9 @@ function pilotAcademy.createWingHeaderTable(frame, menu, config, wingDisplayData
     menu.noupdate = false
     return pilotAcademy.onSelectPrimaryGoal(id)
   end
-  tableTop:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  tableGoal:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
 
-  return { table = tableTop, height = tableTop:getFullHeight() }
+  return { table = tableGoal, height = tableGoal:getFullHeight() }
 end
 
 -- Helper: Create factions table with restore capability
@@ -2167,7 +2169,8 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   local factions = pilotAcademy.getFactions(config, true)
 
   -- Create all UI sections
-  tables[#tables + 1] = pilotAcademy.createWingHeaderTable(frame, menu, config, wingDisplayData)
+  tables[#tables + 1] = pilotAcademy.createAcademyHeaderTable(frame, menu, config)
+  tables[#tables + 1] = pilotAcademy.createWingPrimaryGoalTable(frame, menu, config, wingDisplayData)
   tables[#tables + 1] = pilotAcademy.createWingFactionsSection(frame, menu, config, wingDisplayData, factions)
   tables[#tables + 1] = pilotAcademy.createWingRefreshIntervalTable(frame, menu, config, wingDisplayData)
   tables[#tables + 1] = pilotAcademy.createWingLeaderTable(frame, menu, config, wingDisplayData)
