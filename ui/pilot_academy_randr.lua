@@ -923,6 +923,7 @@ function pilotAcademy.createFleetAssignmentTable(frame, menu, config, displayDat
   local fleetsEdit = displayData.editData.fleets or {}
   local selectedRow = 0
   local selectedShip = pilotAcademy.selectedShips[tableName] or nil
+  local staticRows = #tableFleets.rows
   for i = 1, #fleets do
     local fleet = fleets[i]
     if fleet ~= nil then
@@ -954,7 +955,7 @@ function pilotAcademy.createFleetAssignmentTable(frame, menu, config, displayDat
     -- Restore scroll position if available
     pilotAcademy.setTopRow(tableFleets, tableName)
     if selectedRow > 0 then
-      tableFleets:setSelectedRow(selectedRow + 2)
+      tableFleets:setSelectedRow(selectedRow + staticRows)
     end
   end
 
