@@ -200,6 +200,7 @@ local pilotAcademy = {
   buttonsColumnWidths = nil,
   infoContentColumnWidths = nil,
   relationNameMaxLen = 8, -- will be calculated on init based on actual relation names
+  selectedShips = {}
 }
 
 local config = {}
@@ -913,14 +914,21 @@ function pilotAcademy.createFleetAssignmentTable(frame, menu, config, displayDat
     end
   end
   local fleetsEdit = displayData.editData.fleets or {}
+  local selectedRow = 0
+  local selectedShip = pilotAcademy.selectedShips[tableName] or nil
   for i = 1, #fleets do
     local fleet = fleets[i]
     if fleet ~= nil then
-      local row = tableFleets:addRow(fleet.commanderId, { fixed = false })
+      local bgColor = nil
+      if selectedShip and fleet.commanderId == selectedShip then
+        bgColor = Color["row_background_selected"]
+        selectedRow = i
+      end
+      local row = tableFleets:addRow({ tableName = tableFleets.name, rowData = fleet }, { fixed = false, bgColor = bgColor })
       row[2]:createCheckBox(fleetsEdit[fleet.commanderId] == true or fleetsEdit[fleet.commanderId] ~= false and fleetsSaved[fleet.commanderId] == true, { scaling = false })
       row[2].handlers.onClick = function(_, checked) return pilotAcademy.onSelectFleet(fleet.commanderId, checked) end
       row[3]:setColSpan(7):createText(string.format("\027G%s\027X: %s", fleet.fleetName, fleet.commander), { halign = "left", color = Color["text_normal"] })
-      row[10]:setColSpan(2):createText(fleet.sector, { halign = "right", color = Color["text_normal"] })
+      row[10]:setColSpan(2):createText(fleet.sector, { halign = "right", color = Color["text_normal"]})
       if i == 10 then
         tableFleetsMaxHeight = tableFleets:getFullHeight()
       end
@@ -938,6 +946,9 @@ function pilotAcademy.createFleetAssignmentTable(frame, menu, config, displayDat
   else
     -- Restore scroll position if available
     pilotAcademy.setTopRow(tableFleets, tableName)
+    if selectedRow > 0 then
+      tableFleets:setSelectedRow(selectedRow + 2)
+    end
   end
 
   return
@@ -1986,11 +1997,21 @@ function pilotAcademy.createWingLeaderTable(frame, menu, config, wingDisplayData
   if wingDisplayData.existingWing then
     -- Display existing wing leader
     local leaderInfo = wingLeaderOptions[1] or {}
-    row = tableWingLeader:addRow({ tableName = tableWingLeader.name, rowData = leaderInfo }, { fixed = false })
+    local selectedRow = 0
+    local bgColor = nil
+    local selectedShip = pilotAcademy.selectedShips[tableWingLeader.name] or nil
+    if selectedShip and leaderInfo.id == selectedShip then
+      bgColor = Color["row_background_selected"]
+      selectedRow = 2
+    end
+    row = tableWingLeader:addRow({ tableName = tableWingLeader.name, rowData = leaderInfo }, { fixed = false, bgColor = bgColor })
     row[1]:createText("", { halign = "left" })
     local icon = row[2]:setColSpan(10):createIcon("order_pilotacademywing", { height = config.mapRowHeight, width = config.mapRowHeight })
     icon:setText(leaderInfo.text, { x = config.mapRowHeight, halign = "left", color = Color["text_normal"] })
     icon:setText2(leaderInfo.text2, { halign = "right", color = Color["text_skills"] })
+    if selectedRow > 0 then
+      tableWingLeader:setSelectedRow(selectedRow)
+    end
   else
     -- Dropdown for selecting new wing leader
     row = tableWingLeader:addRow("wing_leader", { fixed = true })
@@ -2023,6 +2044,9 @@ function pilotAcademy.createWingmansTable(frame, menu, config, wingDisplayData)
   local wingmans = {}
   local mimicGroupId = nil
 
+  local selectedRow = 0
+  local staticRows = 0
+
   if wingDisplayData.existingWing then
     -- Add wingman dropdown
     local row = tableWingmans:addRow(nil, { fixed = true })
@@ -2051,11 +2075,17 @@ function pilotAcademy.createWingmansTable(frame, menu, config, wingDisplayData)
     -- Display existing wingmans
     row = tableWingmans:addRow(nil, { fixed = true })
     row[2]:setColSpan(10):createText(texts.wingmans, { halign = "left", titleColor = Color["row_title"] })
-
+    local selectedShip = pilotAcademy.selectedShips[tableName] or nil
+    staticRows = #tableWingmans.rows
     for i = 1, #wingmans do
       local wingman = wingmans[i]
       if wingman ~= nil then
-        row = tableWingmans:addRow({ tableName = tableWingmans.name, rowData = wingman }, { fixed = false })
+        local bgColor = nil
+        if selectedShip and wingman.id == selectedShip then
+          bgColor = Color["row_background_selected"]
+          selectedRow = i
+        end
+        row = tableWingmans:addRow({ tableName = tableWingmans.name, rowData = wingman }, { fixed = false, bgColor = bgColor })
         local icon = row[2]:setColSpan(10):createIcon("order_assist", { height = config.mapRowHeight, width = config.mapRowHeight })
         icon:setText(wingman.text, { x = config.mapRowHeight, halign = "left", color = Color["text_normal"] })
         icon:setText2(wingman.text2, { halign = "right", color = Color["text_skills"] })
@@ -2081,6 +2111,9 @@ function pilotAcademy.createWingmansTable(frame, menu, config, wingDisplayData)
   local wingKey = tostring(pilotAcademy.selectedTab)
   if #wingmans > 0 then
     pilotAcademy.setTopRow(tableWingmans, tableName)
+    if selectedRow > 0 then
+      tableWingmans:setSelectedRow(selectedRow + staticRows)
+    end
   end
 
   return { table = tableWingmans, height = tableWingmans.properties.maxVisibleHeight }
@@ -2270,20 +2303,29 @@ function pilotAcademy.onSelectElement(uiTable, modified, row, isDoubleClick, inp
     trace("Row data is nil; cannot process onSelectElement")
     return
   end
-  if tableName == "table_wing_leader" or tableName == "table_wing_wingmans" then
-    if rowData.id == nil then
+  if tableName == "table_wing_leader" or tableName:match("table_wing_.*_wingmans") or tableName == "table_academy_fleets" then
+    local shipId = rowData.id or rowData.commanderId
+    if shipId == nil then
       trace("Row data id is nil; cannot process onSelectElement")
       return
     end
+    local unselect = pilotAcademy.selectedShips[tableName] == shipId
     if isDoubleClick or (input ~= "mouse") then
-      trace("Double click or non-mouse input detected; setting focus to component " .. tostring(rowData.id))
-      C.SetFocusMapComponent(menu.holomap, ConvertStringTo64Bit(tostring(rowData.id)), true)
-    else
-      trace("Single click detected; selecting component " .. tostring(rowData.id))
-      menu.selectedcomponents = {}
-      menu.addSelectedComponent(rowData.id, true, true)
-      menu.setSelectedMapComponents()
+      trace("Double click or non-mouse input detected; setting focus to component " .. tostring(shipId))
+      C.SetFocusMapComponent(menu.holomap, ConvertStringTo64Bit(tostring(shipId)), true)
+      unselect = false
     end
+    trace("Single click detected; selecting component " .. tostring(shipId))
+    menu.selectedcomponents = {}
+    if unselect then
+      pilotAcademy.selectedShips[tableName] = nil
+    else
+      pilotAcademy.selectedShips = {}
+      pilotAcademy.selectedShips[tableName] = shipId
+      menu.addSelectedComponent(shipId, true, true)
+    end
+    menu.setSelectedMapComponents()
+    menu.refreshInfoFrame()
   end
 end
 
@@ -2316,9 +2358,9 @@ function pilotAcademy.onTableRightMouseClick(uiTable, row, posX, posY)
     trace("Row data is nil; cannot process onSelectElement")
     return
   end
-  if tableName == "table_wing_leader" or tableName == "table_wing_wingmans" then
+  if tableName == "table_wing_leader" or tableName:match("table_wing_.*_wingmans") or tableName == "table_academy_fleets" then
     config = pilotAcademy.menuMapConfig
-    menu.contextMenuMode = "academyWingman"
+    menu.contextMenuMode = "academyShip"
     if posX == nil or posY == nil then
       posX, posY = GetLocalMousePosition()
     end
@@ -2361,38 +2403,39 @@ end
 function pilotAcademy.createInfoFrameContext(contextFrame, contextMenuData, contextMenuMode)
   trace("createInfoFrameContext called with mode: " .. tostring(contextMenuMode))
   if contextFrame == nil then
-    trace("Context frame is nil; cannot create wingman context menu")
+    trace("Context frame is nil; cannot create ship context menu")
     return
   end
-  if contextMenuMode == "academyWingman" then
-    pilotAcademy.createWingmanContextMenu(contextFrame, contextMenuData)
+  if contextMenuMode == "academyShip" then
+    pilotAcademy.createShipContextMenu(contextFrame, contextMenuData)
   end
 end
 
-function pilotAcademy.createWingmanContextMenu(contextFrame, contextMenuData)
-  trace("createWingmanContextMenu called")
+function pilotAcademy.createShipContextMenu(contextFrame, contextMenuData)
+  trace("createShipContextMenu called")
 
   if contextMenuData == nil or type(contextMenuData) ~= "table" then
-    trace("Context menu data is nil or invalid; cannot create wingman context menu")
+    trace("Context menu data is nil or invalid; cannot create ship context menu")
     return
   end
   local rowData = contextMenuData.rowData
   if rowData == nil then
-    trace("Row data is nil; cannot create wingman context menu")
+    trace("Row data is nil; cannot create ship context menu")
     return
   end
 
-  if rowData.id == nil then
-    trace("Wingman id is nil; cannot create wingman context menu")
+  local shipId = rowData.id or rowData.commanderId
+  if shipId == nil then
+    trace("Ship id is nil; cannot create ship context menu")
     return
   end
-  local wingmanId = ConvertStringTo64Bit(tostring(rowData.id))
-  local commander = GetCommander(wingmanId)
+  shipId = ConvertStringTo64Bit(tostring(shipId))
+  local commander = GetCommander(shipId)
 
   local menu = pilotAcademy.menuInteractMenu
   local config = pilotAcademy.menuInteractMenuConfig
   if menu == nil or config == nil then
-    trace("Menu or config is nil; cannot create wingman context menu")
+    trace("Menu or config is nil; cannot create ship context menu")
     return
   end
 
@@ -2408,7 +2451,7 @@ function pilotAcademy.createWingmanContextMenu(contextFrame, contextMenuData)
   local commanderName = commanderShortName .. " (" .. (commander and ffi.string(C.GetObjectIDCode(commanderId)) or "") .. ")"
   local x = 0
   local menuWidth = menu.width or Helper.scaleX(config.width)
-  local text = ffi.string(C.GetComponentName(wingmanId))
+  local text = ffi.string(C.GetComponentName(shipId))
   local color = holomapColor.playercolor
   local ftable = contextFrame:addTable(5,
     {
@@ -2461,7 +2504,7 @@ function pilotAcademy.createWingmanContextMenu(contextFrame, contextMenuData)
         pilotAcademy.contextFrame:close()
         pilotAcademy.contextFrame = nil
       end
-      menuMap.openDetails(wingmanId)
+      menuMap.openDetails(shipId)
       menuMap.closeContextMenu()
     end
     height = height + row:getHeight() + Helper.borderSize
@@ -2476,7 +2519,7 @@ function pilotAcademy.createWingmanContextMenu(contextFrame, contextMenuData)
     row[1]:createText(string.format(ReadText(1001, 7803), commanderShortName),
       { font = Helper.standardFontBold, mouseOverText = commanderName, titleColor = Color["row_title"] })
 
-    row[4]:createText("[" .. GetComponentData(wingmanId, "assignmentname") .. "]",
+    row[4]:createText("[" .. GetComponentData(shipId, "assignmentname") .. "]",
       { font = Helper.standardFontBold, halign = "right", height = Helper.subHeaderHeight, titleColor = Color["row_title"] })
     height = height + row:getHeight() + Helper.borderSize
     row = ftable:addRow(true, {})
@@ -2488,7 +2531,7 @@ function pilotAcademy.createWingmanContextMenu(contextFrame, contextMenuData)
       -- helpOverlayText = entry.helpOverlayText,
       -- helpOverlayHighlightOnly = entry.helpOverlayHighlightOnly,
     }):setText(ReadText(1001, 7810), { color = Color["text_normal"] })
-    row[1].handlers.onClick = function() return pilotAcademy.wingmanRemoveAssignment(wingmanId) end
+    row[1].handlers.onClick = function() return pilotAcademy.wingmanRemoveAssignment(shipId) end
     height = height + row:getHeight() + Helper.borderSize
   end
 end
