@@ -116,11 +116,14 @@ When auto-assign is active, `Trained Pilots` will replace existing pilots on the
 
 Pilot will be assigned based on the selected priority:
 
-- `By ship purpose`: The Player can prioritize ships based on their role, such as combat, trading, or mining.
+- `By ship purpose`: The Player can prioritize ships based on their role, such as combat, trading, mining, or by presence in selected fleets.
   ![Auto-assign options by ship purpose.](docs/images/auto_assign_options_priority_by_ship_purpose.png)
 
 - `By ship size`: The Player can prioritize ships based on their size, from small to large or vice versa.
   ![Auto-assign options by ship size.](docs/images/auto_assign_options_priority_by_size.png)
+
+In case of selecting the `To Selected Fleets` option, the Player can select specific fleets for pilot assignment. Only ships that are part of the selected fleets will be considered for auto-assignment.
+![Auto-assign options by selected fleets.](docs/images/auto_assign_options_select_fleets.png)
 
 In addition, please be aware about situation when the target ship's crew is full. By default, in this case, the pilot swapping will not be performed and the Player will get a warning notification.
 
@@ -215,9 +218,9 @@ Note: It takes several seconds for an added `Wingman` to appear in the `Wingmen`
 
 ![Wing Alpha tab with Wing Leader and assigned Wingman.](docs/images/wing_alpha_with_wingman.png)
 
-##### Wing Leader and Wingman Context Menus and Hotkey
+### Fleets, Wing Leader and Wingman Context Menus, Hotkey and Mouse Double-click
 
-The Player can use the standard `I` key (or another, depending on key binding settings) to open the `Information` window if a `Wing Leader` or `Wingman` is selected on the `Wing` tab.
+The Player can use the standard `I` key (or another, depending on key binding settings) to open the `Information` window if a `Fleet`, `Wing Leader` or `Wingman` item is selected.
 
 The same action is available via the `Context Menu`.
 
@@ -226,6 +229,11 @@ The same action is available via the `Context Menu`.
 For a `Wingman`, the `Remove Assignment` action is also available.
 
 ![Context menu for a Wingman.](docs/images/wingman_context_menu.png)
+
+In addition, please be aware:
+
+- If a `Fleet`, `Wing Leader` or `Wingman` item is selected (by one or two mouse clicks), it will be selected as a map object too.
+- Double-clicking on a `Fleet`, `Wing Leader` or `Wingman` item will shift a map focus to the corresponding ship.
 
 ### Research
 
@@ -316,7 +324,7 @@ There are examples of texts and notifications screenshots:
 
 ## Changelog
 
-### [1.04] - 2026-02-??
+### [1.04] - 2026-02-15
 
 - **Added**
   - New target selection for `Trained Pilots` assignment: `To Selected Fleets`. With this option, the Player can select a specific fleets for the pilot assignment.
@@ -324,6 +332,7 @@ There are examples of texts and notifications screenshots:
   - Factions and Wingmans scrolling in the Academy window
   - Wing Leander an Wingmans selections
   - Title for pilot moving notifications
+  - Other small visual issues in the Academy window
 
 ### [1.03] - 2026-02-14
 
