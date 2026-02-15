@@ -940,7 +940,12 @@ function pilotAcademy.createFleetAssignmentTable(frame, menu, config, displayDat
     pilotAcademy.setTopRow(tableFleets, tableName)
   end
 
-  return { table = tableFleets, height = tableFleets.properties.maxVisibleHeight, fleetsCount = #fleets }
+  return
+  {
+    table = tableFleets,
+    height = tableFleets.properties.maxVisibleHeight,
+    fleetsCount = pilotAcademy.fleetsSave(displayData.academyData, displayData.editData, true)
+  }
 end
 
 function pilotAcademy.fetchFleets()
@@ -1200,6 +1205,10 @@ function pilotAcademy.onSelectFaction(factionId, isSelected, savedData)
 
   pilotAcademy.editData.factionsTable[factionId] = isSelected
 
+  local menu = pilotAcademy.menuMap
+  if menu ~= nil then
+    menu.refreshInfoFrame()
+  end
 end
 
 function pilotAcademy.onToggleAutoHire(checked)
@@ -1243,6 +1252,10 @@ function pilotAcademy.onSelectFleet(fleetId, isSelected, savedData)
 
   pilotAcademy.editData.fleets[fleetId] = isSelected
 
+  local menu = pilotAcademy.menuMap
+  if menu ~= nil then
+    menu.refreshInfoFrame()
+  end
 end
 
 function pilotAcademy.getAssignPriorityOptions()
@@ -1316,7 +1329,7 @@ function pilotAcademy.factionsLoad(savedData)
   savedData.factionsTable = factionsTable
 end
 
-function pilotAcademy.fleetsSave(savedDate, editData)
+function pilotAcademy.fleetsSave(savedDate, editData, countOnly)
   local fleetsSaved = savedDate.fleets or {}
   local fleetsEdit = editData.fleets or {}
   local fleetObjects = {}
@@ -1332,9 +1345,15 @@ function pilotAcademy.fleetsSave(savedDate, editData)
     end
   end
 
-  savedDate.fleetObject = fleetObjects
-  trace("Saving fleets to common data: " .. tostring(#fleetObjects) .. " fleet objects saved")
-  savedDate.fleets = nil
+  if countOnly ~= true then
+    savedDate.fleetObject = fleetObjects
+    trace("Saving fleets to common data: " .. tostring(#fleetObjects) .. " fleet objects saved")
+    savedDate.fleets = nil
+  else
+    trace("Counting fleets: " .. tostring(#fleetObjects) .. " fleet objects counted")
+  end
+
+  return #fleetObjects
 end
 
 function pilotAcademy.fleetsLoad()
@@ -1407,7 +1426,7 @@ function pilotAcademy.buttonSaveAcademy()
     academyData.assign = "manual"
   end
 
-  pilotAcademy.fleetsSave(academyData, editData)
+  pilotAcademy.fleetsSave(academyData, editData, false)
 
   if editData.assignPriority ~= nil then
     academyData.assignPriority = editData.assignPriority
