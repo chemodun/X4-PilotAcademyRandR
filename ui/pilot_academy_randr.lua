@@ -641,12 +641,13 @@ end
 
 function pilotAcademy.displayFactions(tableFactions, factions, editData, storedData, config)
   local tableFactionsMaxHeight = 0
-  local selectedFactions = pilotAcademy.combineSelections("factions", editData, storedData)
+  local factionsEdit = editData.factionsTable or {}
+  local factionsSaved = storedData.factionsTable or {}
   for i = 1, #factions do
     local faction = factions[i]
     if faction ~= nil then
       local row = tableFactions:addRow(faction.id, { fixed = false })
-      row[2]:createCheckBox(selectedFactions[faction.id] == true, { scaling = false })
+      row[2]:createCheckBox(factionsEdit[faction.id] == true or factionsEdit[faction.id] ~= false and factionsSaved[faction.id] == true, { scaling = false })
       row[2].handlers.onClick = function(_, checked) return pilotAcademy.onSelectFaction(faction.id, checked, storedData) end
       row[3]:createIcon(faction.icon, { height = config.mapRowHeight, width = config.mapRowHeight, color = Color[faction.colorId] or Color["text_normal"] })
       row[4]:createText(string.format("[%s]", faction.shortName), { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
@@ -671,8 +672,8 @@ local function getAcademyDisplayData()
   local editData = pilotAcademy.editData or {}
   local locationId = editData.locationId or academyData.locationId or nil
   local locationSelectable = locationId == nil or
-    (editData.locationId ~= nil and editData.locationId ~= academyData.locationId) or
-    editData.toChangeLocation == true
+      (editData.locationId ~= nil and editData.locationId ~= academyData.locationId) or
+      editData.toChangeLocation == true
 
   return {
     academyData = academyData,
@@ -1193,38 +1194,12 @@ function pilotAcademy.onSelectFaction(factionId, isSelected, savedData)
     trace("factionId is nil; cannot process")
     return
   end
-  if pilotAcademy.editData.factions == nil or type(pilotAcademy.editData.factions) ~= "table" then
-    pilotAcademy.editData.factions = savedData.factions ~= nil and type(savedData.factions) == "table" and savedData.factions or {}
-  end
-  local factions = pilotAcademy.editData.factions
-  if isSelected then
-    -- Add faction if not already present
-    local found = false
-    for i = 1, #factions do
-      if factions[i] == factionId then
-        found = true
-        break
-      end
-    end
-    if not found then
-      factions[#factions + 1] = factionId
-    end
-  else
-    -- Remove faction if present
-    for i = 1, #factions do
-      if factions[i] == factionId then
-        table.remove(factions, i)
-        break
-      end
-    end
+  if pilotAcademy.editData.factionsTable == nil or type(pilotAcademy.editData.factionsTable) ~= "table" then
+    pilotAcademy.editData.factionsTable = {}
   end
 
-  local menu = pilotAcademy.menuMap
-  if menu == nil then
-    trace("Menu is nil; cannot refresh info frame")
-    return
-  end
-  menu.refreshInfoFrame()
+  pilotAcademy.editData.factionsTable[factionId] = isSelected
+
 end
 
 function pilotAcademy.onToggleAutoHire(checked)
@@ -1306,6 +1281,78 @@ function pilotAcademy.buttonCancelAcademyChanges()
   end
 end
 
+function pilotAcademy.factionsSave(savedDate, editData)
+  local factions = {}
+  local factionsSaved = savedDate.factionsTable or {}
+  local factionsEdit = editData.factionsTable or {}
+  for factionId, _ in pairs(factionsSaved) do
+    if factionsSaved[factionId] == true and factionsEdit[factionId] ~= false then
+      factions[#factions + 1] = factionId
+    end
+  end
+
+  for factionId, _ in pairs(factionsEdit) do
+    if factionsEdit[factionId] == true and factionsSaved[factionId] ~= true then
+      factions[#factions + 1] = factionId
+    end
+  end
+  savedDate.factions = factions
+  trace("Saving factions to saved data: " .. tostring(#factions) .. " factions saved")
+  savedDate.factionsTable = nil
+end
+
+function pilotAcademy.factionsLoad(savedData)
+  local factionsTable = {}
+  if savedData.factions == nil then
+    savedData.factions = {}
+  end
+  trace("Loading factions from saved data: " .. tostring(#savedData.factions) .. " factions found")
+  for i = 1, #savedData.factions do
+    local factionId = savedData.factions[i]
+    if factionId ~= nil then
+      factionsTable[factionId] = true
+    end
+  end
+  savedData.factionsTable = factionsTable
+end
+
+function pilotAcademy.fleetsSave(savedDate, editData)
+  local fleetsSaved = savedDate.fleets or {}
+  local fleetsEdit = editData.fleets or {}
+  local fleetObjects = {}
+  for fleetId, _ in pairs(fleetsSaved) do
+    if fleetsSaved[fleetId] == true and fleetsEdit[fleetId] ~= false then
+      fleetObjects[#fleetObjects + 1] = ConvertStringToLuaID(tostring(fleetId))
+    end
+  end
+
+  for fleetId, _ in pairs(fleetsEdit) do
+    if fleetsEdit[fleetId] == true and fleetsSaved[fleetId] ~= true then
+      fleetObjects[#fleetObjects + 1] = ConvertStringToLuaID(tostring(fleetId))
+    end
+  end
+
+  savedDate.fleetObject = fleetObjects
+  trace("Saving fleets to common data: " .. tostring(#fleetObjects) .. " fleet objects saved")
+  savedDate.fleets = nil
+end
+
+function pilotAcademy.fleetsLoad()
+  pilotAcademy.commonData.fleets = {}
+  if pilotAcademy.commonData.fleetObjects == nil then
+    pilotAcademy.commonData.fleetObjects = {}
+  end
+  trace("Loading fleets from common data: " .. tostring(#pilotAcademy.commonData.fleetObjects) .. " fleet objects found")
+  for i = 1, #pilotAcademy.commonData.fleetObjects do
+    local fleetObject = pilotAcademy.commonData.fleetObjects[i]
+    if fleetObject ~= nil then
+      local fleetId = ConvertStringTo64Bit(tostring(fleetObject))
+      pilotAcademy.commonData.fleets[fleetId] = true
+    end
+  end
+end
+
+
 function pilotAcademy.buttonSaveAcademy()
   trace("Saving academy changes")
   local menu = pilotAcademy.menuMap
@@ -1351,12 +1398,7 @@ function pilotAcademy.buttonSaveAcademy()
     academyData.autoHire = false
   end
 
-  if editData.factions ~= nil then
-    academyData.factions = editData.factions
-  end
-  if academyData.factions == nil then
-    academyData.factions = {}
-  end
+  pilotAcademy.factionsSave(academyData, editData)
 
   if editData.assign ~= nil then
     academyData.assign = editData.assign
@@ -1365,22 +1407,7 @@ function pilotAcademy.buttonSaveAcademy()
     academyData.assign = "manual"
   end
 
-  local fleetsSaved = pilotAcademy.commonData.fleets or {}
-  local fleetsEdit = pilotAcademy.editData.fleets or {}
-  pilotAcademy.commonData.fleetObjects = {}
-  for fleetId, _ in pairs(fleetsSaved) do
-    if fleetsSaved[fleetId] == true and fleetsEdit[fleetId] ~= false then
-      pilotAcademy.commonData.fleetObjects[#pilotAcademy.commonData.fleetObjects + 1] = ConvertStringToLuaID(tostring(fleetId))
-    end
-  end
-
-  for fleetId, _ in pairs(fleetsEdit) do
-    if fleetsEdit[fleetId] == true and fleetsSaved[fleetId] ~= true then
-      pilotAcademy.commonData.fleetObjects[#pilotAcademy.commonData.fleetObjects + 1] = ConvertStringToLuaID(tostring(fleetId))
-    end
-  end
-
-  pilotAcademy.commonData.fleets = nil
+  pilotAcademy.fleetsSave(academyData, editData)
 
   if editData.assignPriority ~= nil then
     academyData.assignPriority = editData.assignPriority
@@ -1405,6 +1432,7 @@ function pilotAcademy.buttonSaveAcademy()
   if rankLevelChanged then
     SignalObject(pilotAcademy.playerId, "PilotAcademyRAndR.TargetRankLevelChangedSignal")
   end
+  pilotAcademy.editData = {}
   menu.refreshInfoFrame()
 end
 
@@ -1784,17 +1812,9 @@ function pilotAcademy.loadCommonData()
     pilotAcademy.commonData.autoHire = false
   end
 
-  pilotAcademy.commonData.fleets = {}
-  if pilotAcademy.commonData.fleetObjects == nil then
-    pilotAcademy.commonData.fleetObjects = {}
-  end
-  for i = 1, #pilotAcademy.commonData.fleetObjects do
-    local fleetObject = pilotAcademy.commonData.fleetObjects[i]
-    if fleetObject ~= nil then
-      local fleetId = ConvertStringTo64Bit(tostring(fleetObject))
-      pilotAcademy.commonData.fleets[fleetId] = true
-    end
-  end
+  pilotAcademy.factionsLoad(pilotAcademy.commonData)
+
+  pilotAcademy.fleetsLoad()
 
   if pilotAcademy.commonData.autoFireLessSkilledCrewMember == 1 then
     pilotAcademy.commonData.autoFireLessSkilledCrewMember = true
@@ -2722,6 +2742,8 @@ function pilotAcademy.buttonSaveWing()
     wings[wingId] = wingData
     pilotAcademy.selectedTab = wingId
   end
+
+  pilotAcademy.factionsSave(wingData, editData)
   pilotAcademy.saveWings()
   pilotAcademy.setOrderForWingLeader(wingData.wingLeaderId, pilotAcademy.selectedTab, existingWing)
   pilotAcademy.editData = {}
@@ -2839,6 +2861,7 @@ function pilotAcademy.loadWings()
   for wingId, wing in pairs(pilotAcademy.wings) do
     wingsIds = wingsIds .. (wingsIds ~= "" and ", " or "") .. "'" .. tostring(wingId) .. "'"
     wing.wingLeaderId = ConvertStringTo64Bit(tostring(wing.wingLeaderObject))
+    pilotAcademy.factionsLoad(wing)
   end
   debug("loadWings: loaded " .. (wingsIds ~= "" and ("wings: " .. wingsIds) or "no wings") .. " from saved data")
 end
