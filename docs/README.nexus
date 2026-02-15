@@ -122,11 +122,14 @@ When auto-assign is active, [b]Trained Pilots[/b] will replace existing pilots o
 
 Pilot will be assigned based on the selected priority:
 [list]
-[*] [b]By ship purpose[/b]: The Player can prioritize ships based on their role, such as combat, trading, or mining.
+[*] [b]By ship purpose[/b]: The Player can prioritize ships based on their role, such as combat, trading, mining, or by presence in selected fleets.
 [/list]  [img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/auto_assign_options_priority_by_ship_purpose.png[/img]
 [list]
 [*] [b]By ship size[/b]: The Player can prioritize ships based on their size, from small to large or vice versa.
 [/list]  [img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/auto_assign_options_priority_by_size.png[/img]
+
+In case of selecting the [b]To Selected Fleets[/b] option, the Player can select specific fleets for pilot assignment. Only ships that are part of the selected fleets will be considered for auto-assignment.
+[img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/auto_assign_options_select_fleets.png[/img]
 
 In addition, please be aware about situation when the target ship's crew is full. By default, in this case, the pilot swapping will not be performed and the Player will get a warning notification.
 
@@ -221,9 +224,9 @@ Note: It takes several seconds for an added [b]Wingman[/b] to appear in the [b]W
 
 [img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/wing_alpha_with_wingman.png[/img]
 
-[size=2][u][i]Wing Leader and Wingman Context Menus and Hotkey[/i][/u][/size]
+[size=3][u][i]Fleets, Wing Leader and Wingman Context Menus, Hotkey and Mouse Double-click[/i][/u][/size]
 
-The Player can use the standard [b]I[/b] key (or another, depending on key binding settings) to open the [b]Information[/b] window if a [b]Wing Leader[/b] or [b]Wingman[/b] is selected on the [b]Wing[/b] tab.
+The Player can use the standard [b]I[/b] key (or another, depending on key binding settings) to open the [b]Information[/b] window if a [b]Fleet[/b], [b]Wing Leader[/b] or [b]Wingman[/b] item is selected.
 
 The same action is available via the [b]Context Menu[/b].
 
@@ -233,6 +236,11 @@ For a [b]Wingman[/b], the [b]Remove Assignment[/b] action is also available.
 
 [img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/wingman_context_menu.png[/img]
 
+In addition, please be aware:
+[list]
+[*] If a [b]Fleet[/b], [b]Wing Leader[/b] or [b]Wingman[/b] item is selected (by one or two mouse clicks), it will be selected as a map object too.
+[*] Double-clicking on a [b]Fleet[/b], [b]Wing Leader[/b] or [b]Wingman[/b] item will shift a map focus to the corresponding ship.
+[/list]
 [size=3][u][i]Research[/i][/u][/size]
 
 The previously mentioned researchable upgrades are available in the standard [b]Research[/b] interface under the [b]Pilot Academy RnR[/b] group:
@@ -321,7 +329,7 @@ There are examples of texts and notifications screenshots:
 [/list]
 [size=3][u][b]Changelog[/b][/u][/size]
 
-[size=3][u][i][1.04] - 2026-02-??[/i][/u][/size]
+[size=3][u][i][1.04] - 2026-02-15[/i][/u][/size]
 [list]
 [*] [b]Added[/b]
 [list]
@@ -332,6 +340,7 @@ There are examples of texts and notifications screenshots:
 [*] Factions and Wingmans scrolling in the Academy window
 [*] Wing Leander an Wingmans selections
 [*] Title for pilot moving notifications
+[*] Other small visual issues in the Academy window
 [/list]
 [/list]
 [size=3][u][i][1.03] - 2026-02-14[/i][/u][/size]
