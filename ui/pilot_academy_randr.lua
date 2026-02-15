@@ -625,7 +625,7 @@ function pilotAcademy.setButtonsColumnWidths(tableHandle, menu, config)
 end
 
 function pilotAcademy.createTable(frame, numCols, id, reserveScrollBar, menu, config)
-  local tableHandle = frame:addTable(numCols, { tabOrder = 2, reserveScrollBar = reserveScrollBar })
+  local tableHandle = frame:addTable(numCols, { tabOrder = 1, reserveScrollBar = reserveScrollBar })
   tableHandle.name = id
   tableHandle:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
   tableHandle:setDefaultCellProperties("button", { height = config.mapRowHeight })
