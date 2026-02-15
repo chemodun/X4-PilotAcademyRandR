@@ -321,6 +321,18 @@ There are examples of texts and notifications screenshots:
 [/list]
 [size=130][u]Changelog[/u][/size]
 
+[size=125][u][1.04] - 2026-02-??[/u][/size]
+[list]
+[*] [b]Added[/b]
+[list]
+[*] New target selection for [b]Trained Pilots[/b] assignment: [b]Per Fleet[/b]. With this option, the Player can select a specific fleet for the pilot assignment.
+[/list]
+[*] [b]Fixed[/b]
+[list]
+[*] Factions and Wingmans scrolling in the Academy window
+[*] Wing Leander an Wingmans selections
+[/list]
+[/list]
 [size=125][u][1.03] - 2026-02-14[/u][/size]
 [list]
 [*] [b]Added[/b]
