@@ -2341,6 +2341,7 @@ function pilotAcademy.resetTableSelection(currentTableName)
     pilotAcademy.selectedTable = {}
   end
 end
+
 function pilotAcademy.onRowChanged(row, rowData, uiTable, modified, input, source)
   -- trace("pilotAcademy.onRowChanged called for row " .. tostring(row) .. " with modified: " .. tostring(modified) .. " and source: " .. tostring(source))
 
