@@ -2329,7 +2329,6 @@ function pilotAcademy.getTableFromByName(tableName)
   return tableHandle
 end
 
-
 function pilotAcademy.resetTableSelection(currentTableName)
   local tableName = pilotAcademy.selectedTable and next(pilotAcademy.selectedTable) and next(pilotAcademy.selectedTable) or nil
   if tableName ~= nil and (currentTableName == nil or tableName ~= currentTableName) then
