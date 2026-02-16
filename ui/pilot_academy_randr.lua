@@ -201,8 +201,7 @@ local pilotAcademy = {
   infoContentColumnWidths = nil,
   relationNameMaxLen = 8, -- will be calculated on init based on actual relation names
   selectedShips = {},
-  selectedRows = {},
-  selectedTable = {}
+  selectedRow = {}
 }
 
 local config = {}
@@ -925,27 +924,19 @@ function pilotAcademy.createFleetAssignmentTable(frame, menu, config, displayDat
     end
   end
   local fleetsEdit = displayData.editData.fleets or {}
-  local selectedRow = 0
   local selectedShip = pilotAcademy.selectedShips[tableName] or nil
-  local staticRows = #tableFleets.rows
-  local selectedRow = pilotAcademy.selectedRows[tableName] or 0
   for i = 1, #fleets do
     local fleet = fleets[i]
     if fleet ~= nil then
       local bgColor = nil
       if selectedShip and fleet.commanderId == selectedShip then
         bgColor = Color["row_background_selected"]
-        selectedRow = i
-      end
-      local font = Helper.standardFont
-      if selectedRow - staticRows == i then
-        font = Helper.standardFontBold
       end
       local row = tableFleets:addRow({ tableName = tableFleets.name, rowData = fleet }, { fixed = false, bgColor = bgColor })
       row[2]:createCheckBox(fleetsEdit[fleet.commanderId] == true or fleetsEdit[fleet.commanderId] ~= false and fleetsSaved[fleet.commanderId] == true, { scaling = false })
       row[2].handlers.onClick = function(_, checked) return pilotAcademy.onSelectFleet(fleet.commanderId, checked) end
-      row[3]:setColSpan(7):createText(string.format("\027G%s\027X: %s", fleet.fleetName, fleet.commander), { halign = "left", color = Color["text_normal"], font = font })
-      row[10]:setColSpan(2):createText(fleet.sector, { halign = "right", color = Color["text_normal"], font = font })
+      row[3]:setColSpan(7):createText(string.format("\027G%s\027X: %s", fleet.fleetName, fleet.commander), { halign = "left", color = Color["text_normal"] })
+      row[10]:setColSpan(2):createText(fleet.sector, { halign = "right", color = Color["text_normal"]})
       if i == 10 then
         tableFleetsMaxHeight = tableFleets:getFullHeight()
       end
@@ -963,15 +954,7 @@ function pilotAcademy.createFleetAssignmentTable(frame, menu, config, displayDat
   else
     -- Restore scroll position if available
     pilotAcademy.setTopRow(tableFleets, tableName)
-    -- if selectedRow > 0 then
-    --   tableFleets:setSelectedRow(selectedRow + staticRows)
-    -- end
   end
-  if pilotAcademy.selectedRows[tableName] then
-    tableFleets:setSelectedRow(pilotAcademy.selectedRows[tableName])
-  end
-  -- tableFleets:setSelectedRow(selectedRow + staticRows)
-  trace(string.format("Fleet table has set Selected Row: %s. %s. Static: %s. Selected ship: %s", tableFleets.selectedrow, selectedRow, staticRows, pilotAcademy.selectedShips[tableName]))
 
   return
   {
@@ -2014,21 +1997,16 @@ function pilotAcademy.createWingLeaderTable(frame, menu, config, wingDisplayData
   if wingDisplayData.existingWing then
     -- Display existing wing leader
     local leaderInfo = wingLeaderOptions[1] or {}
-    local selectedRow = 0
     local bgColor = nil
     local selectedShip = pilotAcademy.selectedShips[tableWingLeader.name] or nil
     if selectedShip and leaderInfo.id == selectedShip then
       bgColor = Color["row_background_selected"]
-      selectedRow = 2
     end
     row = tableWingLeader:addRow({ tableName = tableWingLeader.name, rowData = leaderInfo }, { fixed = false, bgColor = bgColor })
     row[1]:createText("", { halign = "left" })
     local icon = row[2]:setColSpan(10):createIcon("order_pilotacademywing", { height = config.mapRowHeight, width = config.mapRowHeight })
     icon:setText(leaderInfo.text, { x = config.mapRowHeight, halign = "left", color = Color["text_normal"] })
     icon:setText2(leaderInfo.text2, { halign = "right", color = Color["text_skills"] })
-    if selectedRow > 0 then
-      tableWingLeader:setSelectedRow(selectedRow)
-    end
   else
     -- Dropdown for selecting new wing leader
     row = tableWingLeader:addRow("wing_leader", { fixed = true })
@@ -2061,9 +2039,6 @@ function pilotAcademy.createWingmansTable(frame, menu, config, wingDisplayData)
   local wingmans = {}
   local mimicGroupId = nil
 
-  local selectedRow = 0
-  local staticRows = 0
-
   if wingDisplayData.existingWing then
     -- Add wingman dropdown
     local row = tableWingmans:addRow(nil, { fixed = true })
@@ -2093,14 +2068,12 @@ function pilotAcademy.createWingmansTable(frame, menu, config, wingDisplayData)
     row = tableWingmans:addRow(nil, { fixed = true })
     row[2]:setColSpan(10):createText(texts.wingmans, { halign = "left", titleColor = Color["row_title"] })
     local selectedShip = pilotAcademy.selectedShips[tableName] or nil
-    staticRows = #tableWingmans.rows
     for i = 1, #wingmans do
       local wingman = wingmans[i]
       if wingman ~= nil then
         local bgColor = nil
         if selectedShip and wingman.id == selectedShip then
           bgColor = Color["row_background_selected"]
-          selectedRow = i
         end
         row = tableWingmans:addRow({ tableName = tableWingmans.name, rowData = wingman }, { fixed = false, bgColor = bgColor })
         local icon = row[2]:setColSpan(10):createIcon("order_assist", { height = config.mapRowHeight, width = config.mapRowHeight })
@@ -2128,9 +2101,6 @@ function pilotAcademy.createWingmansTable(frame, menu, config, wingDisplayData)
   local wingKey = tostring(pilotAcademy.selectedTab)
   if #wingmans > 0 then
     pilotAcademy.setTopRow(tableWingmans, tableName)
-    if selectedRow > 0 then
-      tableWingmans:setSelectedRow(selectedRow + staticRows)
-    end
   end
 
   return { table = tableWingmans, height = tableWingmans.properties.maxVisibleHeight }
@@ -2330,14 +2300,14 @@ function pilotAcademy.getTableFromByName(tableName)
 end
 
 function pilotAcademy.resetTableSelection(currentTableName)
-  local tableName = pilotAcademy.selectedTable and next(pilotAcademy.selectedTable) and next(pilotAcademy.selectedTable) or nil
+  local tableName = pilotAcademy.selectedRow and next(pilotAcademy.selectedRow) and next(pilotAcademy.selectedRow) or nil
   if tableName ~= nil and (currentTableName == nil or tableName ~= currentTableName) then
     local tableToClear = pilotAcademy.getTableFromByName(tableName)
     if tableToClear ~= nil then
-      SelectRow(tableToClear.id, pilotAcademy.selectedTable[tableName])
+      SelectRow(tableToClear.id, pilotAcademy.selectedRow[tableName])
       tableToClear.selectedrow = 0
     end
-    pilotAcademy.selectedTable = {}
+    pilotAcademy.selectedRow = {}
   end
 end
 
@@ -2365,20 +2335,18 @@ function pilotAcademy.onRowChanged(row, rowData, uiTable, modified, input, sourc
 
 
   if source == "auto" then
-    trace("Row change source is auto; attempting to restore previous selection for table " .. tostring(uiTable) .. " stored :" .. tostring(next(pilotAcademy.selectedTable)))
-    if pilotAcademy.selectedTable[table.name] ~= nil then
-      SelectRow(uiTable, pilotAcademy.selectedTable[table.name], nil, nil, nil, true)
-      trace("Auto-selecting previously selected row " .. tostring(pilotAcademy.selectedTable[table.name]) .. " for table " .. tostring(uiTable)  .. " name: " .. tostring(table.name))
+    trace("Row change source is auto; attempting to restore previous selection for table " .. tostring(uiTable) .. " stored :" .. tostring(next(pilotAcademy.selectedRow)))
+    if pilotAcademy.selectedRow[table.name] ~= nil then
+      SelectRow(uiTable, pilotAcademy.selectedRow[table.name], nil, nil, nil, true)
+      trace("Auto-selecting previously selected row " .. tostring(pilotAcademy.selectedRow[table.name]) .. " for table " .. tostring(uiTable)  .. " name: " .. tostring(table.name))
     end
     return
   end
 
   pilotAcademy.resetTableSelection(table and table.name or nil)
-  pilotAcademy.selectedTable = {}
+  pilotAcademy.selectedRow = {}
   trace("Updating selected row for table " .. tostring(uiTable) .. " name: " .. tostring(table.name) .. " to row " .. tostring(row))
-  -- pilotAcademy.selectedRows[rowData.tableName] = row
-  pilotAcademy.selectedTable[table.name] = row
-  -- pilotAcademy.menuMap.refreshInfoFrame()
+  pilotAcademy.selectedRow[table.name] = row
 end
 
 function pilotAcademy.onSelectElement(uiTable, modified, row, isDoubleClick, input)
