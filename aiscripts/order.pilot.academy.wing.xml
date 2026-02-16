@@ -519,7 +519,7 @@
               [this.assignedcontrolled.debugname, @$factionNames.count, @$faction.id, @$factionNames.indexof.{$faction.id}, @$faction.relationto.{faction.player}]"
             chance="$debugchance" />
 
-          <do_if value="$factionNames.count == 0">
+          <do_if value="@$factionNames.count == 0">
             <append_to_list name="$filteredFactions" exact="$faction" />
           </do_if>
           <do_elseif value="$factionNames.indexof.{$faction.id} gt 0">
