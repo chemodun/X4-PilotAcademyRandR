@@ -201,7 +201,8 @@ local pilotAcademy = {
   infoContentColumnWidths = nil,
   relationNameMaxLen = 8, -- will be calculated on init based on actual relation names
   selectedShips = {},
-  selectedRows = {}
+  selectedRows = {},
+  selectedTable = {}
 }
 
 local config = {}
@@ -628,7 +629,7 @@ function pilotAcademy.setButtonsColumnWidths(tableHandle, menu, config)
 end
 
 function pilotAcademy.createTable(frame, numCols, id, reserveScrollBar, menu, config)
-  local tableHandle = frame:addTable(numCols, { tabOrder = 1, reserveScrollBar = reserveScrollBar, multiSelect = true })
+  local tableHandle = frame:addTable(numCols, { tabOrder = 2, reserveScrollBar = reserveScrollBar })
   tableHandle.name = id
   tableHandle:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
   tableHandle:setDefaultCellProperties("button", { height = config.mapRowHeight })
@@ -2298,10 +2299,39 @@ function pilotAcademy.wingLeaderToOption(wingLeaderId)
   })
 end
 
+function pilotAcademy.getTableFromUI(uiTable)
+  local tableHandle = nil
+  if pilotAcademy.frame == nil or type(pilotAcademy.frame.content) ~= "table" or #pilotAcademy.frame.content == 0 then
+    return tableHandle
+  end
+  for i = 1, #pilotAcademy.frame.content do
+    if pilotAcademy.frame.content[i].id == uiTable then
+      tableHandle = pilotAcademy.frame.content[i]
+      -- trace("Found matching table in frame content at index " .. tostring(i))
+      break
+    end
+  end
+  return tableHandle
+end
 
+function pilotAcademy.getTableFromByName(tableName)
+  local tableHandle = nil
+  if pilotAcademy.frame == nil or type(pilotAcademy.frame.content) ~= "table" or #pilotAcademy.frame.content == 0 then
+    return tableHandle
+  end
+  for i = 1, #pilotAcademy.frame.content do
+    if pilotAcademy.frame.content[i].name == tableName then
+      tableHandle = pilotAcademy.frame.content[i]
+      -- trace("Found matching table in frame content at index " .. tostring(i))
+      break
+    end
+  end
+  return tableHandle
+end
 
 function pilotAcademy.onRowChanged(row, rowData, uiTable, modified, input, source)
   -- trace("pilotAcademy.onRowChanged called for row " .. tostring(row) .. " with modified: " .. tostring(modified) .. " and source: " .. tostring(source))
+
   local menu = pilotAcademy.menuMap
   if menu == nil then
     return
@@ -2309,16 +2339,45 @@ function pilotAcademy.onRowChanged(row, rowData, uiTable, modified, input, sourc
   if menu.infoTableMode ~= pilotAcademy.academySideBarInfo.mode then
     return
   end
-  if rowData == nil or type(rowData) ~= "table" or rowData.tableName == nil or rowData.rowData == nil then
+  if pilotAcademy.frame == nil or type(pilotAcademy.frame.content) ~= "table" or #pilotAcademy.frame.content == 0 then
     return
   end
-  if source ~= "auto" then
-    trace("Row changed for table " .. tostring(rowData.tableName) .. " at row " .. tostring(row) .. " with input " .. tostring(input))
+
+  trace("Looking for matching table in frame content for uiTable " .. tostring(uiTable))
+  local table = pilotAcademy.getTableFromUI(uiTable)
+
+  if source == "user" then
+    local tableName = pilotAcademy.selectedTable and next(pilotAcademy.selectedTable) and next(pilotAcademy.selectedTable) or nil
+    if tableName ~= nil and (table == nil or tableName ~= table.name) then
+      local tableToClear = pilotAcademy.getTableFromByName(tableName)
+      if tableToClear ~= nil then
+        SelectRow(tableToClear.id, pilotAcademy.selectedTable[tableName])
+        tableToClear.selectedrow = 0
+      end
+    end
     pilotAcademy.selectedRows = {}
-    pilotAcademy.selectedRows[rowData.tableName] = row
-    SelectRow(uiTable, row)
-      -- pilotAcademy.menuMap.refreshInfoFrame()
+    pilotAcademy.selectedTable = {}
   end
+
+  if table == nil or table.name == nil then
+    trace("No matching table found in frame content for uiTable " .. tostring(uiTable))
+    return
+  end
+
+
+  if source == "auto" then
+    trace("Row change source is auto; attempting to restore previous selection for table " .. tostring(uiTable) .. " stored :" .. tostring(next(pilotAcademy.selectedTable)))
+    if pilotAcademy.selectedTable[table.name] ~= nil then
+      SelectRow(uiTable, pilotAcademy.selectedTable[table.name], nil, nil, nil, true)
+      trace("Auto-selecting previously selected row " .. tostring(pilotAcademy.selectedTable[table.name]) .. " for table " .. tostring(uiTable)  .. " name: " .. tostring(table.name))
+    end
+    return
+  end
+
+  trace("Updating selected row for table " .. tostring(uiTable) .. " name: " .. tostring(table.name) .. " to row " .. tostring(row))
+  -- pilotAcademy.selectedRows[rowData.tableName] = row
+  pilotAcademy.selectedTable[table.name] = row
+  -- pilotAcademy.menuMap.refreshInfoFrame()
 end
 
 function pilotAcademy.onSelectElement(uiTable, modified, row, isDoubleClick, input)
@@ -2333,12 +2392,30 @@ function pilotAcademy.onSelectElement(uiTable, modified, row, isDoubleClick, inp
     trace("Selected data is nil; cannot process onSelectElement")
     return
   end
-  local tableName = selectedData.tableName
+  local table = pilotAcademy.getTableFromUI(uiTable)
+  if table == nil then
+    trace("No matching table found in frame content for uiTable " .. tostring(uiTable))
+    return
+  end
+
+  local tableName = table.name
   local rowData = selectedData.rowData
   if tableName == nil then
     trace("Table name is nil; cannot process onSelectElement")
     return
   end
+
+  local tableToClearName = pilotAcademy.selectedTable and next(pilotAcademy.selectedTable) and next(pilotAcademy.selectedTable) or nil
+  if tableToClearName ~= nil and tableToClearName ~= tableName then
+    local tableToClear = pilotAcademy.getTableFromByName(tableToClearName)
+    if tableToClear ~= nil then
+      SelectRow(tableToClear.id, pilotAcademy.selectedTable[tableToClearName])
+      tableToClear.selectedrow = 0
+    end
+    pilotAcademy.selectedRows = {}
+    pilotAcademy.selectedTable = {}
+  end
+
   if rowData == nil then
     trace("Row data is nil; cannot process onSelectElement")
     return
