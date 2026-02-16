@@ -2329,6 +2329,18 @@ function pilotAcademy.getTableFromByName(tableName)
   return tableHandle
 end
 
+
+function pilotAcademy.resetTableSelection(currentTableName)
+  local tableName = pilotAcademy.selectedTable and next(pilotAcademy.selectedTable) and next(pilotAcademy.selectedTable) or nil
+  if tableName ~= nil and (currentTableName == nil or tableName ~= currentTableName) then
+    local tableToClear = pilotAcademy.getTableFromByName(tableName)
+    if tableToClear ~= nil then
+      SelectRow(tableToClear.id, pilotAcademy.selectedTable[tableName])
+      tableToClear.selectedrow = 0
+    end
+    pilotAcademy.selectedTable = {}
+  end
+end
 function pilotAcademy.onRowChanged(row, rowData, uiTable, modified, input, source)
   -- trace("pilotAcademy.onRowChanged called for row " .. tostring(row) .. " with modified: " .. tostring(modified) .. " and source: " .. tostring(source))
 
@@ -2346,19 +2358,6 @@ function pilotAcademy.onRowChanged(row, rowData, uiTable, modified, input, sourc
   trace("Looking for matching table in frame content for uiTable " .. tostring(uiTable))
   local table = pilotAcademy.getTableFromUI(uiTable)
 
-  if source == "user" then
-    local tableName = pilotAcademy.selectedTable and next(pilotAcademy.selectedTable) and next(pilotAcademy.selectedTable) or nil
-    if tableName ~= nil and (table == nil or tableName ~= table.name) then
-      local tableToClear = pilotAcademy.getTableFromByName(tableName)
-      if tableToClear ~= nil then
-        SelectRow(tableToClear.id, pilotAcademy.selectedTable[tableName])
-        tableToClear.selectedrow = 0
-      end
-    end
-    pilotAcademy.selectedRows = {}
-    pilotAcademy.selectedTable = {}
-  end
-
   if table == nil or table.name == nil then
     trace("No matching table found in frame content for uiTable " .. tostring(uiTable))
     return
@@ -2374,6 +2373,8 @@ function pilotAcademy.onRowChanged(row, rowData, uiTable, modified, input, sourc
     return
   end
 
+  pilotAcademy.resetTableSelection(table and table.name or nil)
+  pilotAcademy.selectedTable = {}
   trace("Updating selected row for table " .. tostring(uiTable) .. " name: " .. tostring(table.name) .. " to row " .. tostring(row))
   -- pilotAcademy.selectedRows[rowData.tableName] = row
   pilotAcademy.selectedTable[table.name] = row
@@ -2405,16 +2406,7 @@ function pilotAcademy.onSelectElement(uiTable, modified, row, isDoubleClick, inp
     return
   end
 
-  local tableToClearName = pilotAcademy.selectedTable and next(pilotAcademy.selectedTable) and next(pilotAcademy.selectedTable) or nil
-  if tableToClearName ~= nil and tableToClearName ~= tableName then
-    local tableToClear = pilotAcademy.getTableFromByName(tableToClearName)
-    if tableToClear ~= nil then
-      SelectRow(tableToClear.id, pilotAcademy.selectedTable[tableToClearName])
-      tableToClear.selectedrow = 0
-    end
-    pilotAcademy.selectedRows = {}
-    pilotAcademy.selectedTable = {}
-  end
+  pilotAcademy.resetTableSelection(tableName)
 
   if rowData == nil then
     trace("Row data is nil; cannot process onSelectElement")
