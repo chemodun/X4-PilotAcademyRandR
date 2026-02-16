@@ -200,7 +200,8 @@ local pilotAcademy = {
   buttonsColumnWidths = nil,
   infoContentColumnWidths = nil,
   relationNameMaxLen = 8, -- will be calculated on init based on actual relation names
-  selectedShips = {}
+  selectedShips = {},
+  selectedRows = {}
 }
 
 local config = {}
@@ -277,6 +278,7 @@ function pilotAcademy.Init(menuMap, menuPlayerInfo)
     menuMap.registerCallback("refreshContextFrame_on_end", function(contextFrame, contextMenuData, contextMenuMode)
       return pilotAcademy.addAppointAsCadetRowToContextMenu(contextFrame, contextMenuData, contextMenuMode, menuMap)
     end)
+    menuMap.registerCallback("ic_onRowChanged", pilotAcademy.onRowChanged)
   end
   if menuPlayerInfo ~= nil and type(menuPlayerInfo.registerCallback) == "function" then
     menuPlayerInfo.registerCallback("createContextFrame_on_end", function(contextFrame, contextMenuData, contextMenuMode)
@@ -290,6 +292,7 @@ function pilotAcademy.Init(menuMap, menuPlayerInfo)
   RegisterEvent("PilotAcademyRAndR.PilotReturned", pilotAcademy.onPilotReturned)
   RegisterEvent("PilotAcademyRAndR.RefreshPilots", pilotAcademy.onRefreshPilots)
   RegisterEvent("PilotAcademyRAndR.DebugLevelChanged", pilotAcademy.onDebugLevelChanged)
+
   pilotAcademy.resetData()
   pilotAcademy.loadWings()
   local changed = pilotAcademy.loadCommonData()
@@ -318,7 +321,18 @@ function pilotAcademy.Init(menuMap, menuPlayerInfo)
     pilotAcademy.relationNameMaxLen = relationNameMaxLen
   end
 end
-
+function pilotAcademy.onRowChanged(row, rowdata, uitable, modified, input, source)
+  -- trace("pilotAcademy.onRowChanged called for row " .. tostring(row) .. " with modified: " .. tostring(modified) .. " and source: " .. tostring(source))
+  if source == "user" then
+    trace("Row changed by user interaction, refreshing info frame")
+    if rowdata and type(rowdata) == "table" and rowdata.tableName then
+      pilotAcademy.selectedRows = {}
+      pilotAcademy.selectedRows[rowdata.tableName] = row
+      trace("Set selected row for table " .. rowdata.tableName .. ": " .. tostring(row))
+      -- pilotAcademy.menuMap.refreshInfoFrame()
+    end
+  end
+end
 function pilotAcademy.resetData()
   pilotAcademy.editData = {}
   pilotAcademy.selectedTab = "settings"
@@ -625,7 +639,7 @@ function pilotAcademy.setButtonsColumnWidths(tableHandle, menu, config)
 end
 
 function pilotAcademy.createTable(frame, numCols, id, reserveScrollBar, menu, config)
-  local tableHandle = frame:addTable(numCols, { tabOrder = 1, reserveScrollBar = reserveScrollBar })
+  local tableHandle = frame:addTable(numCols, { tabOrder = 1, reserveScrollBar = reserveScrollBar, multiSelect = true })
   tableHandle.name = id
   tableHandle:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
   tableHandle:setDefaultCellProperties("button", { height = config.mapRowHeight })
@@ -924,6 +938,7 @@ function pilotAcademy.createFleetAssignmentTable(frame, menu, config, displayDat
   local selectedRow = 0
   local selectedShip = pilotAcademy.selectedShips[tableName] or nil
   local staticRows = #tableFleets.rows
+  local selectedRow = pilotAcademy.selectedRows[tableName] or 0
   for i = 1, #fleets do
     local fleet = fleets[i]
     if fleet ~= nil then
@@ -932,11 +947,15 @@ function pilotAcademy.createFleetAssignmentTable(frame, menu, config, displayDat
         bgColor = Color["row_background_selected"]
         selectedRow = i
       end
+      local font = Helper.standardFont
+      if selectedRow - staticRows == i then
+        font = Helper.standardFontBold
+      end
       local row = tableFleets:addRow({ tableName = tableFleets.name, rowData = fleet }, { fixed = false, bgColor = bgColor })
       row[2]:createCheckBox(fleetsEdit[fleet.commanderId] == true or fleetsEdit[fleet.commanderId] ~= false and fleetsSaved[fleet.commanderId] == true, { scaling = false })
       row[2].handlers.onClick = function(_, checked) return pilotAcademy.onSelectFleet(fleet.commanderId, checked) end
-      row[3]:setColSpan(7):createText(string.format("\027G%s\027X: %s", fleet.fleetName, fleet.commander), { halign = "left", color = Color["text_normal"] })
-      row[10]:setColSpan(2):createText(fleet.sector, { halign = "right", color = Color["text_normal"]})
+      row[3]:setColSpan(7):createText(string.format("\027G%s\027X: %s", fleet.fleetName, fleet.commander), { halign = "left", color = Color["text_normal"], font = font })
+      row[10]:setColSpan(2):createText(fleet.sector, { halign = "right", color = Color["text_normal"], font = font })
       if i == 10 then
         tableFleetsMaxHeight = tableFleets:getFullHeight()
       end
@@ -954,10 +973,15 @@ function pilotAcademy.createFleetAssignmentTable(frame, menu, config, displayDat
   else
     -- Restore scroll position if available
     pilotAcademy.setTopRow(tableFleets, tableName)
-    if selectedRow > 0 then
-      tableFleets:setSelectedRow(selectedRow + staticRows)
-    end
+    -- if selectedRow > 0 then
+    --   tableFleets:setSelectedRow(selectedRow + staticRows)
+    -- end
   end
+  if pilotAcademy.selectedRows[tableName] then
+    tableFleets:setSelectedRow(pilotAcademy.selectedRows[tableName])
+  end
+  -- tableFleets:setSelectedRow(selectedRow + staticRows)
+  trace(string.format("Fleet table has set Selected Row: %s. %s. Static: %s. Selected ship: %s", tableFleets.selectedrow, selectedRow, staticRows, pilotAcademy.selectedShips[tableName]))
 
   return
   {
