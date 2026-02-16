@@ -41,7 +41,10 @@
           text="'Pilot Academy [%s]: loaded wingData: %s for wingId: %s from wingsData: %s' . [this.assignedcontrolled.debugname, @$wingData, @$wingId, @$wingsData]"
           chance="$debugchance" />
         <do_if value="@$wingData != null">
-          <set_value name="$factionNames" exact="if @$wingData.$factions != null then @$wingData.$factions else []" />
+          <set_value name="$factionNames" exact="[]" />
+          <do_if value="@$wingData.$factionNames? and @$wingData.$factionNames != null">
+            <set_value name="$factionNames" exact="@$wingData.$factionNames" />
+          </do_if>
           <set_value name="$primaryGoal" exact="if @$wingData.$primaryGoal != null then @$wingData.$primaryGoal else 'rank'" />
           <set_value name="$tradeInfoRefreshInterval"
             exact="if @$wingData.$refreshInterval != null then (@$wingData.$refreshInterval * 60)s else 1800s" />
