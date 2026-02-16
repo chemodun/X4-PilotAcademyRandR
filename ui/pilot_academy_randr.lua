@@ -321,18 +321,7 @@ function pilotAcademy.Init(menuMap, menuPlayerInfo)
     pilotAcademy.relationNameMaxLen = relationNameMaxLen
   end
 end
-function pilotAcademy.onRowChanged(row, rowdata, uitable, modified, input, source)
-  -- trace("pilotAcademy.onRowChanged called for row " .. tostring(row) .. " with modified: " .. tostring(modified) .. " and source: " .. tostring(source))
-  if source == "user" then
-    trace("Row changed by user interaction, refreshing info frame")
-    if rowdata and type(rowdata) == "table" and rowdata.tableName then
-      pilotAcademy.selectedRows = {}
-      pilotAcademy.selectedRows[rowdata.tableName] = row
-      trace("Set selected row for table " .. rowdata.tableName .. ": " .. tostring(row))
-      -- pilotAcademy.menuMap.refreshInfoFrame()
-    end
-  end
-end
+
 function pilotAcademy.resetData()
   pilotAcademy.editData = {}
   pilotAcademy.selectedTab = "settings"
@@ -2307,6 +2296,29 @@ function pilotAcademy.wingLeaderToOption(wingLeaderId)
     pilotSkill = pilotSkill,
     shipIcon = shipIcon,
   })
+end
+
+
+
+function pilotAcademy.onRowChanged(row, rowData, uiTable, modified, input, source)
+  -- trace("pilotAcademy.onRowChanged called for row " .. tostring(row) .. " with modified: " .. tostring(modified) .. " and source: " .. tostring(source))
+  local menu = pilotAcademy.menuMap
+  if menu == nil then
+    return
+  end
+  if menu.infoTableMode ~= pilotAcademy.academySideBarInfo.mode then
+    return
+  end
+  if rowData == nil or type(rowData) ~= "table" or rowData.tableName == nil or rowData.rowData == nil then
+    return
+  end
+  if source ~= "auto" then
+    trace("Row changed for table " .. tostring(rowData.tableName) .. " at row " .. tostring(row) .. " with input " .. tostring(input))
+    pilotAcademy.selectedRows = {}
+    pilotAcademy.selectedRows[rowData.tableName] = row
+    SelectRow(uiTable, row)
+      -- pilotAcademy.menuMap.refreshInfoFrame()
+  end
 end
 
 function pilotAcademy.onSelectElement(uiTable, modified, row, isDoubleClick, input)
