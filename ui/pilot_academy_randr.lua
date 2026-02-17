@@ -655,7 +655,7 @@ function pilotAcademy.createFactionsTable(frame, menu, config, tableName, stored
     local row = tableHandler:addRow(nil, { fixed = true })
     row[2]:setColSpan(10):createText(subTitleText, { halign = "left", titleColor = Color["row_title"] })
   end
-  
+
   for i = 1, #factions do
     local faction = factions[i]
     if faction ~= nil then
@@ -677,6 +677,8 @@ function pilotAcademy.createFactionsTable(frame, menu, config, tableName, stored
     tableMaxHeight = tableHandler:getFullHeight()
   end
   tableHandler.properties.maxVisibleHeight = math.min(tableHandler:getFullHeight(), tableMaxHeight)
+
+  return { table = tableHandler, height = tableHandler:getFullHeight() }
 end
 
 -- Helper: Extract and prepare academy display data
@@ -1050,7 +1052,7 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
 
   -- Conditionally add factions table if auto-hire is enabled
   if #factions > 0 and autoHireResult.autoHire == true then
-    tables[#tables + 1] = pilotAcademy.createFactionsTable(frame, menu, config, "table_academy_factions", displayData.storedData, displayData.editData, factions)
+    tables[#tables + 1] = pilotAcademy.createFactionsTable(frame, menu, config, "table_academy_factions", displayData.academyData, displayData.editData, factions)
   end
 
 
@@ -2111,34 +2113,34 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   local tables = {}
 
   -- Prepare display data
-  local wingDisplayData = getWingDisplayData()
-  wingDisplayData.primaryGoal = wingDisplayData.editData.primaryGoal or wingDisplayData.wingData.primaryGoal or "rank"
-  wingDisplayData.refreshInterval = wingDisplayData.editData.refreshInterval or wingDisplayData.wingData.refreshInterval or 30
-  wingDisplayData.wingLeaderId = wingDisplayData.editData.wingLeaderId or wingDisplayData.wingData.wingLeaderId or nil
+  local displayData = getWingDisplayData()
+  displayData.primaryGoal = displayData.editData.primaryGoal or displayData.wingData.primaryGoal or "rank"
+  displayData.refreshInterval = displayData.editData.refreshInterval or displayData.wingData.refreshInterval or 30
+  displayData.wingLeaderId = displayData.editData.wingLeaderId or displayData.wingData.wingLeaderId or nil
 
 
   -- Get factions data
   local factions = pilotAcademy.getFactions(config, true)
 
-  local suffix = string.format(wingDisplayData.wingId ~= nil and texts.wing or texts.addNewWing,
-    wingDisplayData.existingWing and texts.wingNames[wingDisplayData.wingId] or "")
+  local suffix = string.format(displayData.wingId ~= nil and texts.wing or texts.addNewWing,
+    displayData.existingWing and texts.wingNames[displayData.wingId] or "")
   local titleText = string.format("%s: %s", texts.pilotAcademy, suffix)
   -- Create all UI sections
   tables[#tables + 1] = pilotAcademy.createAcademyHeaderTable(frame, menu, config, "table_wing_header", titleText)
-  tables[#tables + 1] = pilotAcademy.createWingPrimaryGoalTable(frame, menu, config, "table_wing_primary_goal", wingDisplayData)
-  
-  local factionsTableName = string.format("table_wing_%s_factions", tostring(wingDisplayData.wingId or "new"))
-  tables[#tables + 1] = pilotAcademy.createFactionsTable(frame, menu, config, factionsTableName, wingDisplayData.wingData, wingDisplayData.editData, factions, texts.factions)
+  tables[#tables + 1] = pilotAcademy.createWingPrimaryGoalTable(frame, menu, config, "table_wing_primary_goal", displayData)
 
-  tables[#tables + 1] = pilotAcademy.createWingRefreshIntervalTable(frame, menu, config, "table_refresh_interval", wingDisplayData)
-  local wingLeaderTableName = string.format("table_wing_%s_leader", tostring(wingDisplayData.wingId or "new"))
+  local factionsTableName = string.format("table_wing_%s_factions", tostring(displayData.wingId or "new"))
+  tables[#tables + 1] = pilotAcademy.createFactionsTable(frame, menu, config, factionsTableName, displayData.wingData, displayData.editData, factions, texts.factions)
 
-  tables[#tables + 1] = pilotAcademy.createWingLeaderTable(frame, menu, config, wingLeaderTableName, wingDisplayData)
-  
-  local wingmansTableName = string.format("table_wing_%s_wingmans", tostring(wingDisplayData.wingId or "new"))
-  tables[#tables + 1] = pilotAcademy.createWingmansTable(frame, menu, config, wingmansTableName, wingDisplayData)
+  tables[#tables + 1] = pilotAcademy.createWingRefreshIntervalTable(frame, menu, config, "table_refresh_interval", displayData)
+  local wingLeaderTableName = string.format("table_wing_%s_leader", tostring(displayData.wingId or "new"))
 
-  tables[#tables + 1] = pilotAcademy.createWingButtonsTable(frame, menu, config, "table_wing_bottom", wingDisplayData)
+  tables[#tables + 1] = pilotAcademy.createWingLeaderTable(frame, menu, config, wingLeaderTableName, displayData)
+
+  local wingmansTableName = string.format("table_wing_%s_wingmans", tostring(displayData.wingId or "new"))
+  tables[#tables + 1] = pilotAcademy.createWingmansTable(frame, menu, config, wingmansTableName, displayData)
+
+  tables[#tables + 1] = pilotAcademy.createWingButtonsTable(frame, menu, config, "table_wing_bottom", displayData)
 
   return tables
 end
