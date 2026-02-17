@@ -644,14 +644,21 @@ function pilotAcademy.createTable(frame, numCols, tableName, isSelectable, reser
   return tableHandler
 end
 
-function pilotAcademy.displayFactions(tableFactions, factions, editData, storedData, config)
-  local tableFactionsMaxHeight = 0
+-- Helper: Create factions selection table (conditional)
+function pilotAcademy.createFactionsTable(frame, menu, config, tableName, storedData, editData, factions, subTitleText)
+  local tableHandler = pilotAcademy.createTable(frame, 12, tableName, true, false, menu, config)
+  local tableMaxHeight = 0
   local factionsEdit = editData.factionsTable or {}
   local factionsSaved = storedData.factionsTable or {}
+  if subTitleText then
+    local row = tableHandler:addRow(nil, { fixed = true })
+    row[2]:setColSpan(10):createText(subTitleText, { halign = "left", titleColor = Color["row_title"] })
+  end
+  
   for i = 1, #factions do
     local faction = factions[i]
     if faction ~= nil then
-      local row = tableFactions:addRow(faction.id, { fixed = false })
+      local row = tableHandler:addRow(faction.id, { fixed = false })
       row[2]:createCheckBox(factionsEdit[faction.id] == true or factionsEdit[faction.id] ~= false and factionsSaved[faction.id] == true, { scaling = false })
       row[2].handlers.onClick = function(_, checked) return pilotAcademy.onSelectFaction(faction.id, checked, storedData) end
       row[3]:createIcon(faction.icon, { height = config.mapRowHeight, width = config.mapRowHeight, color = Color[faction.colorId] or Color["text_normal"] })
@@ -661,14 +668,14 @@ function pilotAcademy.displayFactions(tableFactions, factions, editData, storedD
       row[10]:createText(faction.relationName, { halign = "left", color = Color[faction.colorId] or Color["text_normal"] })
       row[11]:createText(string.format("(%+2d)", faction.uiRelation), { halign = "right", color = Color[faction.colorId] or Color["text_normal"] })
       if i == 10 then
-        tableFactionsMaxHeight = tableFactions:getFullHeight()
+        tableMaxHeight = tableHandler:getFullHeight()
       end
     end
   end
-  if tableFactionsMaxHeight == 0 then
-    tableFactionsMaxHeight = tableFactions:getFullHeight()
+  if tableMaxHeight == 0 then
+    tableMaxHeight = tableHandler:getFullHeight()
   end
-  tableFactions.properties.maxVisibleHeight = math.min(tableFactions:getFullHeight(), tableFactionsMaxHeight)
+  tableHandler.properties.maxVisibleHeight = math.min(tableHandler:getFullHeight(), tableMaxHeight)
 end
 
 -- Helper: Extract and prepare academy display data
@@ -815,19 +822,6 @@ function pilotAcademy.createAutoHireTable(frame, menu, config, tableName, displa
   tableHandler:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
 
   return { table = tableHandler, height = tableHandler:getFullHeight(), autoHire = autoHire }
-end
-
--- Helper: Create factions selection table (conditional)
-function pilotAcademy.createAcademyFactionsTable(frame, menu, config, tableName, displayData, factions)
-  local tableHandler = pilotAcademy.createTable(frame, 12, tableName, true, false, menu, config)
-
-  pilotAcademy.displayFactions(tableHandler, factions, displayData.editData, displayData.academyData, config)
-
-  -- Restore scroll position if available
-  pilotAcademy.setTopRow(tableHandler, tableName)
-
-
-  return { table = tableHandler, height = tableHandler.properties.maxVisibleHeight }
 end
 
 -- Helper: Create assignment settings table
@@ -1055,7 +1049,7 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
 
   -- Conditionally add factions table if auto-hire is enabled
   if #factions > 0 and autoHireResult.autoHire == true then
-    tables[#tables + 1] = pilotAcademy.createAcademyFactionsTable(frame, menu, config, "table_academy_factions", displayData, factions)
+    tables[#tables + 1] = pilotAcademy.createFactionsTable(frame, menu, config, "table_academy_factions", displayData.storedData, displayData.editData, factions)
   end
 
 
@@ -1932,21 +1926,6 @@ function pilotAcademy.createWingPrimaryGoalTable(frame, menu, config, tableName,
   return { table = tableHandler, height = tableHandler:getFullHeight() }
 end
 
--- Helper: Create factions table with restore capability
-function pilotAcademy.createWingFactionsSection(frame, menu, config, tableName, wingDisplayData, factions)
-  local tableHandler = pilotAcademy.createTable(frame, 12, tableName, true, false, menu, config)
-
-  local row = tableHandler:addRow(nil, { fixed = true })
-  row[2]:setColSpan(10):createText(texts.factions, { halign = "left", titleColor = Color["row_title"] })
-
-  pilotAcademy.displayFactions(tableHandler, factions, wingDisplayData.editData, wingDisplayData.wingData, config)
-
-  -- Restore scroll position if available
-  pilotAcademy.setTopRow(tableHandler, tableName)
-
-  return { table = tableHandler, height = tableHandler.properties.maxVisibleHeight }
-end
-
 -- Helper: Create refresh interval table
 function pilotAcademy.createWingRefreshIntervalTable(frame, menu, config, tableName, wingDisplayData)
   local tableRefreshInterval = pilotAcademy.createTable(frame, 12, tableName, false, false, menu, config)
@@ -2148,7 +2127,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
   tables[#tables + 1] = pilotAcademy.createWingPrimaryGoalTable(frame, menu, config, "table_wing_primary_goal", wingDisplayData)
   
   local factionsTableName = string.format("table_wing_%s_factions", tostring(wingDisplayData.wingId or "new"))
-  tables[#tables + 1] = pilotAcademy.createWingFactionsSection(frame, menu, config, factionsTableName, wingDisplayData, factions)
+  tables[#tables + 1] = pilotAcademy.createFactionsTable(frame, menu, config, factionsTableName, wingDisplayData.wingData, wingDisplayData.editData, factions, texts.factions)
 
   tables[#tables + 1] = pilotAcademy.createWingRefreshIntervalTable(frame, menu, config, "table_refresh_interval", wingDisplayData)
   local wingLeaderTableName = string.format("table_wing_%s_leader", tostring(wingDisplayData.wingId or "new"))
