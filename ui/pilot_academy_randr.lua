@@ -627,9 +627,10 @@ function pilotAcademy.setButtonsColumnWidths(tableHandle, menu, config)
   end
 end
 
-function pilotAcademy.createTable(frame, numCols, id, reserveScrollBar, menu, config)
+function pilotAcademy.createTable(frame, numCols, tableName, isSelectable, reserveScrollBar, menu, config)
   local tableHandle = frame:addTable(numCols, { tabOrder = 2, reserveScrollBar = reserveScrollBar })
-  tableHandle.name = id
+  tableHandle.name = tableName
+  tableHandle.isSelectable = isSelectable
   tableHandle:setDefaultCellProperties("text", { minRowHeight = config.mapRowHeight, fontsize = config.mapFontSize })
   tableHandle:setDefaultCellProperties("button", { height = config.mapRowHeight })
   tableHandle:setDefaultComplexCellProperties("button", "text", { fontsize = config.mapFontSize })
@@ -701,7 +702,7 @@ end
 
 -- Helper: Create academy header with location selection
 function pilotAcademy.createAcademyHeaderTable(frame, menu, config)
-  local tableHeader = pilotAcademy.createTable(frame, 4, "table_academy_header", false, menu, config)
+  local tableHeader = pilotAcademy.createTable(frame, 4, "table_academy_header", false, false, menu, config)
 
   local row = tableHeader:addRow(nil, { fixed = true })
   row[1]:setColSpan(4):createText(texts.pilotAcademyFull, Helper.headerRowCenteredProperties)
@@ -712,7 +713,7 @@ end
 
 -- Helper: Create academy location table
 function pilotAcademy.createAcademyLocationTable(frame, menu, config, displayData, locationOptions, emptyText)
-  local tableLocation = pilotAcademy.createTable(frame, 4, "table_academy_location", false, menu, config)
+  local tableLocation = pilotAcademy.createTable(frame, 4, "table_academy_location", false, false, menu, config)
 
   -- Location selection
   local row = tableLocation:addRow(nil, { fixed = true })
@@ -760,7 +761,7 @@ end
 
 -- Helper: Create target rank level slider table
 function pilotAcademy.createTargetRankTable(frame, menu, config, displayData)
-  local tableRank = pilotAcademy.createTable(frame, 4, "table_academy_rank", false, menu, config)
+  local tableRank = pilotAcademy.createTable(frame, 4, "table_academy_rank", false, false, menu, config)
 
   local targetRankLevel = displayData.editData.targetRankLevel or displayData.academyData.targetRankLevel or 2
   local maxRankLevel = getMaxRankLevel()
@@ -791,7 +792,7 @@ end
 
 -- Helper: Create auto hire checkbox table
 function pilotAcademy.createAutoHireTable(frame, menu, config, displayData, factions)
-  local tableAutoHire = pilotAcademy.createTable(frame, 4, "table_academy_autohire", false, menu, config)
+  local tableAutoHire = pilotAcademy.createTable(frame, 4, "table_academy_autohire", false, false, menu, config)
 
   local autoHire = displayData.editData.autoHire
   if autoHire == nil then
@@ -819,7 +820,7 @@ end
 -- Helper: Create factions selection table (conditional)
 function pilotAcademy.createAcademyFactionsTable(frame, menu, config, displayData, factions)
   local tableName = "table_academy_factions"
-  local tableFactions = pilotAcademy.createTable(frame, 12, tableName, false, menu, config)
+  local tableFactions = pilotAcademy.createTable(frame, 12, tableName, true, false, menu, config)
 
   pilotAcademy.displayFactions(tableFactions, factions, displayData.editData, displayData.academyData, config)
 
@@ -832,7 +833,7 @@ end
 
 -- Helper: Create assignment settings table
 function pilotAcademy.createAssignmentTable(frame, menu, config, displayData, locationOptions)
-  local tableAssign = pilotAcademy.createTable(frame, 4, "table_academy_assign", false, menu, config)
+  local tableAssign = pilotAcademy.createTable(frame, 4, "table_academy_assign", false, false, menu, config)
 
   tableAssign:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
 
@@ -861,7 +862,7 @@ function pilotAcademy.createAssignmentTable(frame, menu, config, displayData, lo
 end
 
 function pilotAcademy.createAssignOptionsTable(frame, menu, config, displayData)
-  local tableAssignOptions = pilotAcademy.createTable(frame, 4, "table_academy_assign", false, menu, config)
+  local tableAssignOptions = pilotAcademy.createTable(frame, 4, "table_academy_assign", false, false, menu, config)
 
   -- Priority dropdown (conditional on non-manual assignment)
   local assignPriority = displayData.editData.assignPriority or displayData.academyData.assignPriority or "priority_small_to_large"
@@ -907,7 +908,7 @@ end
 -- Helper: Create fleet assignment table (conditional on assignment type)
 function pilotAcademy.createFleetAssignmentTable(frame, menu, config, displayData)
   local tableName = "table_academy_fleets"
-  local tableFleets = pilotAcademy.createTable(frame, 12, tableName, false, menu, config)
+  local tableFleets = pilotAcademy.createTable(frame, 12, tableName, true, false, menu, config)
 
   tableFleets:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
 
@@ -1000,7 +1001,7 @@ end
 
 -- Helper: Create bottom buttons table
 function pilotAcademy.createAcademyButtonsTable(frame, canSave, menu, config, displayData)
-  local tableBottom = pilotAcademy.createTable(frame, 7, "table_academy_bottom", false, menu, config)
+  local tableBottom = pilotAcademy.createTable(frame, 7, "table_academy_bottom", false, false, menu, config)
 
   tableBottom:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local row = tableBottom:addRow("buttons", { fixed = true })
@@ -1584,7 +1585,7 @@ end
 
 -- Helper: Create personnel header table
 function pilotAcademy.createPersonnelHeaderTable(frame, menu, config)
-  local tableTop = pilotAcademy.createTable(frame, 4, "table_personnel_top", false, menu, config)
+  local tableTop = pilotAcademy.createTable(frame, 4, "table_personnel_top", false, false, menu, config)
 
   local row = tableTop:addRow(nil, { fixed = true })
   row[1]:setColSpan(4):createText(texts.cadetsAndPilotsTitle, Helper.headerRowCenteredProperties)
@@ -1594,7 +1595,7 @@ end
 
 -- Helper: Create personnel list table (cadets or pilots)
 function pilotAcademy.createPersonnelListTable(frame, menu, config, personnel, title, tableName)
-  local tablePersonnel = pilotAcademy.createTable(frame, 4, tableName, false, menu, config)
+  local tablePersonnel = pilotAcademy.createTable(frame, 4, tableName, true, false, menu, config)
 
   tablePersonnel:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local row = tablePersonnel:addRow(nil, { fixed = true })
@@ -1648,7 +1649,7 @@ end
 
 -- Helper: Create personnel bottom spacing table
 function pilotAcademy.createPersonnelBottomTable(frame, menu, config)
-  local tableBottom = pilotAcademy.createTable(frame, 4, "table_personnel_bottom", false, menu, config)
+  local tableBottom = pilotAcademy.createTable(frame, 4, "table_personnel_bottom", false, false, menu, config)
 
   tableBottom:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
 
@@ -1919,7 +1920,7 @@ end
 
 -- Helper: Create wing header table with primary goal dropdown
 function pilotAcademy.createWingPrimaryGoalTable(frame, menu, config, wingDisplayData)
-  local tableGoal = pilotAcademy.createTable(frame, 12, "table_wing_primary_goal", false, menu, config)
+  local tableGoal = pilotAcademy.createTable(frame, 12, "table_wing_primary_goal", false, false, menu, config)
 
   local row = tableGoal:addRow("wing_primary_goal", { fixed = true })
   local primaryGoalOptions = {
@@ -1946,7 +1947,7 @@ end
 -- Helper: Create factions table with restore capability
 function pilotAcademy.createWingFactionsSection(frame, menu, config, wingDisplayData, factions)
   local tableName = string.format("table_wing_%s_factions", tostring(pilotAcademy.selectedTab or "new"))
-  local tableFactions = pilotAcademy.createTable(frame, 12, tableName, false, menu, config)
+  local tableFactions = pilotAcademy.createTable(frame, 12, tableName, true, false, menu, config)
 
   local row = tableFactions:addRow(nil, { fixed = true })
   row[2]:setColSpan(10):createText(texts.factions, { halign = "left", titleColor = Color["row_title"] })
@@ -1961,7 +1962,7 @@ end
 
 -- Helper: Create refresh interval table
 function pilotAcademy.createWingRefreshIntervalTable(frame, menu, config, wingDisplayData)
-  local tableRefreshInterval = pilotAcademy.createTable(frame, 12, "table_refresh_interval", false, menu, config)
+  local tableRefreshInterval = pilotAcademy.createTable(frame, 12, "table_refresh_interval", false, false, menu, config)
 
   tableRefreshInterval:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local row = tableRefreshInterval:addRow(nil, { fixed = true })
@@ -1988,7 +1989,7 @@ end
 
 -- Helper: Create wing leader table
 function pilotAcademy.createWingLeaderTable(frame, menu, config, wingDisplayData)
-  local tableWingLeader = pilotAcademy.createTable(frame, 12, "table_wing_leader", false, menu, config)
+  local tableWingLeader = pilotAcademy.createTable(frame, 12, "table_wing_leader", wingDisplayData.existingWing, false, menu, config)
 
   local row = tableWingLeader:addRow(nil, { fixed = true })
   local wingLeaderOptions = pilotAcademy.fetchPotentialWingmans(wingDisplayData.existingWing, wingDisplayData.wingLeaderId)
@@ -2032,7 +2033,7 @@ end
 function pilotAcademy.createWingmansTable(frame, menu, config, wingDisplayData)
 
   local tableName = string.format("table_wing_%s_wingmans", tostring(pilotAcademy.selectedTab or "new"))
-  local tableWingmans = pilotAcademy.createTable(frame, 12, tableName, false, menu, config)
+  local tableWingmans = pilotAcademy.createTable(frame, 12, tableName, true, false, menu, config)
 
   tableWingmans:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local tableWingmansMaxHeight = 0
@@ -2108,7 +2109,7 @@ end
 
 -- Helper: Create bottom buttons table
 function pilotAcademy.createWingButtonsTable(frame, menu, config, wingDisplayData)
-  local tableBottom = pilotAcademy.createTable(frame, 7, "table_wing_bottom", false, menu, config)
+  local tableBottom = pilotAcademy.createTable(frame, 7, "table_wing_bottom", false, false, menu, config)
 
   tableBottom:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local row = tableBottom:addRow("buttons", { fixed = true })
@@ -2345,6 +2346,10 @@ function pilotAcademy.onRowChanged(row, rowData, uiTable, modified, input, sourc
 
   pilotAcademy.resetTableSelection(table and table.name or nil)
   pilotAcademy.selectedRow = {}
+  if table.isSelectable == false then
+    trace("Table " .. tostring(uiTable) .. " name: " .. tostring(table.name) .. " is not selectable; skipping selection update")
+    return
+  end
   trace("Updating selected row for table " .. tostring(uiTable) .. " name: " .. tostring(table.name) .. " to row " .. tostring(row))
   pilotAcademy.selectedRow[table.name] = row
 end
