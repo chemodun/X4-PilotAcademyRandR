@@ -331,6 +331,10 @@ There are examples of texts and notifications screenshots:
 
 [size=3][u][i][1.05] - 2026-02-??[/i][/u][/size]
 [list]
+[*] [b]Added[/b]
+[list]
+[*] The [b]To Selected Fleets[/b] assignment option now allows you to manually transfer any of your skilled pilots to the [b]Academy[/b]. The Academy can then act as a [b]Pilot Dispatch center[/b], automatically assigning these experienced pilots to fill open roles in your selected fleets.
+[/list]
 [*] [b]Fixed[/b]
 [list]
 [*] [b]Academy[/b] tabs titles
