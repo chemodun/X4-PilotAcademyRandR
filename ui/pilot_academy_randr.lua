@@ -64,6 +64,7 @@ ffi.cdef [[
   int32_t GetPersonCombinedSkill(UniverseID controllableid, NPCSeed person, const char* role, const char* postid);
 	const char* GetPersonName(NPCSeed person, UniverseID controllableid);
 	const char* GetPersonRole(NPCSeed person, UniverseID controllableid);
+	const char* GetPersonName(NPCSeed person, UniverseID controllableid);
 	const char* GetPersonRoleName(NPCSeed person, UniverseID controllableid);
 	UniverseID GetInstantiatedPerson(NPCSeed person, UniverseID controllableid);
 	bool HasPersonArrived(UniverseID controllableid, NPCSeed person);
@@ -2442,7 +2443,7 @@ function pilotAcademy.onTableRightMouseClick(uiTable, row, posX, posY)
     local isPlayerOwned = GetComponentData(pilotAcademy.commonData.locationId, "isplayerowned")
     if isPlayerOwned ~= true and rowData.hasArrived ~= true then
       trace("Location is not player owned and person has not arrived; no context menu")
-      return
+      -- return
     end
     config = pilotAcademy.menuMapConfig
     menu.contextMenuMode = "info_context"
@@ -3070,7 +3071,7 @@ function pilotAcademy.addAcademyRowToPersonnelContextMenu(contextFrame, contextM
   end
 
   -- Extract entity, person, and controllable based on context mode
-  local entity, person, controllable, transferScheduled, hasArrived, personrole
+  local entity, person, controllable, transferScheduled, hasArrived, personrole, personName
 
   local isPlayerOwned = true
   if isMapContext then
@@ -3109,6 +3110,7 @@ function pilotAcademy.addAcademyRowToPersonnelContextMenu(contextFrame, contextM
     transferScheduled = C.IsPersonTransferScheduled(controllable, person)
     hasArrived = C.HasPersonArrived(controllable, person)
     personrole = ffi.string(C.GetPersonRole(person, controllable))
+    personName = ffi.string(C.GetPersonName(person, controllable))
   end
 
 
@@ -3128,14 +3130,16 @@ function pilotAcademy.addAcademyRowToPersonnelContextMenu(contextFrame, contextM
 
   local skillBase = pilotAcademy.skillBase(skill)
 
-  if pilotAcademy.commonData == nil or pilotAcademy.commonData.targetRankLevel == nil then
-    trace("No academy target rank level set, returning")
-    return result
-  end
+  if isPlayerOwned then
+    if pilotAcademy.commonData == nil or pilotAcademy.commonData.targetRankLevel == nil then
+      trace("No academy target rank level set, returning")
+      return result
+    end
 
-  if (skillBase - pilotAcademy.commonData.targetRankLevel > 0) and (pilotAcademy.commonData.fleets == nil or next(pilotAcademy.commonData.fleets) == nil) then
-    trace("Person or entity has too high skill for training assignment and no fleets available for redistribution, returning")
-    return result
+    if (skillBase - pilotAcademy.commonData.targetRankLevel > 0) and (pilotAcademy.commonData.fleets == nil or next(pilotAcademy.commonData.fleets) == nil) then
+      trace("Person or entity has too high skill for training assignment and no fleets available for redistribution, returning")
+      return result
+    end
   end
 
   -- Check additional conditions based on context mode
@@ -3182,6 +3186,11 @@ function pilotAcademy.addAcademyRowToPersonnelContextMenu(contextFrame, contextM
         menu.closeContextMenu()
       end
     elseif contextMenuData and contextMenuData.isAcademyPersonnel then
+      local headerCell = menuTable.rows[1] and menuTable.rows[1][1] or nil
+      local headerCellProperties = headerCell and headerCell.properties or nil
+      if headerCellProperties and headerCellProperties.text == "???" and personName ~= nil then
+        headerCellProperties.text = personName
+      end
       if hasArrived then
         -- if entity == nil then
         --   entity = C.CreateNPCFromPerson(person, controllable)
@@ -3190,6 +3199,7 @@ function pilotAcademy.addAcademyRowToPersonnelContextMenu(contextFrame, contextM
         -- person = nil
         -- controllable = nil
         -- work somewhere else
+
         local row = mt.__index.addRow(menuTable, "info_person_worksomewhere", { fixed = true })
         row[1]:createButton({ bgColor = Color["button_background_hidden"], height = Helper.standardTextHeight }):setText(ReadText(1002, 3008))
         if entity then
@@ -3201,11 +3211,11 @@ function pilotAcademy.addAcademyRowToPersonnelContextMenu(contextFrame, contextM
             Helper.closeMenuAndOpenNewMenu(menu, "MapMenu", { 0, 0, true, controllable, nil, "hire", { "signal", controllable, 0, person } }); menu.cleanup()
           end
         end
-
-        local row = mt.__index.addRow(menuTable, "info_person_fire", { fixed = true })
-        row[1]:createButton({ bgColor = Color["button_background_hidden"], height = Helper.standardTextHeight }):setText(ReadText(1002, 15800))
-        row[1].handlers.onClick = function() return menu.infoSubmenuFireNPCConfirm(controllable, entity, person, menu.contextMenuData.instance) end
       end
+
+      local row = mt.__index.addRow(menuTable, "info_person_fire", { fixed = true })
+      row[1]:createButton({ bgColor = Color["button_background_hidden"], height = Helper.standardTextHeight }):setText(ReadText(1002, 15800))
+      row[1].handlers.onClick = function() return menu.infoSubmenuFireNPCConfirm(controllable, entity, person, menu.contextMenuData.instance) end
     end
     result = { contextFrame = contextFrame }
   end
