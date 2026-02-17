@@ -324,6 +324,12 @@ There are examples of texts and notifications screenshots:
 
 ## Changelog
 
+### [1.05] - 2026-02-??
+
+- **Fixed**
+  - `Academy` tabs titles
+  - Selection of some UI items
+
 ### [1.04] - 2026-02-15
 
 - **Added**
