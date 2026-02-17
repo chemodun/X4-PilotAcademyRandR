@@ -1438,7 +1438,12 @@ function pilotAcademy.buttonSaveAcademy()
     academyData.assign = "manual"
   end
 
-  pilotAcademy.fleetsSave(academyData, editData, false)
+  if academyData.assign == "perFleet" then
+    pilotAcademy.fleetsSave(academyData, editData, false)
+  else
+    academyData.fleets = nil
+    academyData.fleetObjects = nil
+  end
 
   if editData.assignPriority ~= nil then
     academyData.assignPriority = editData.assignPriority
