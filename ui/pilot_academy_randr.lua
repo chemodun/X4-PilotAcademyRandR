@@ -3129,7 +3129,7 @@ function pilotAcademy.addAcademyRowToPersonnelContextMenu(contextFrame, contextM
     return result
   end
 
-  if (skillBase - pilotAcademy.commonData.targetRankLevel > 0) and (pilotAcademy.commonData.fleets == nil or #pilotAcademy.commonData.fleets == 0) then
+  if (skillBase - pilotAcademy.commonData.targetRankLevel > 0) and (pilotAcademy.commonData.fleets == nil or next(pilotAcademy.commonData.fleets) == nil) then
     trace("Person or entity has too high skill for training assignment and no fleets available for redistribution, returning")
     return result
   end
