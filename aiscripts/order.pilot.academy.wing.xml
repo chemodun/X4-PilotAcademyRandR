@@ -42,7 +42,7 @@
           chance="$debugchance" />
         <do_if value="@$wingData != null">
           <set_value name="$factionNames" exact="[]" />
-          <do_if value="$wingData.$factions? and @$wingData.$factions != null">
+          <do_if value="$wingData.$factions? and @$wingData.$factions != null and typeof $wingData.$factions == datatype.list">
             <set_value name="$factionNames" exact="$wingData.$factions" />
           </do_if>
           <set_value name="$primaryGoal" exact="'rank'" />
