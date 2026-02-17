@@ -42,12 +42,17 @@
           chance="$debugchance" />
         <do_if value="@$wingData != null">
           <set_value name="$factionNames" exact="[]" />
-          <do_if value="@$wingData.$factionNames? and @$wingData.$factionNames != null">
-            <set_value name="$factionNames" exact="@$wingData.$factionNames" />
+          <do_if value="$wingData.$factions? and @$wingData.$factions != null">
+            <set_value name="$factionNames" exact="$wingData.$factions" />
           </do_if>
-          <set_value name="$primaryGoal" exact="if @$wingData.$primaryGoal != null then @$wingData.$primaryGoal else 'rank'" />
-          <set_value name="$tradeInfoRefreshInterval"
-            exact="if @$wingData.$refreshInterval != null then (@$wingData.$refreshInterval * 60)s else 1800s" />
+          <set_value name="$primaryGoal" exact="'rank'" />
+          <do_if value="$wingData.$primaryGoal? and @$wingData.$primaryGoal != null">
+            <set_value name="$primaryGoal" exact="$wingData.$primaryGoal" />
+          </do_if>
+          <set_value name="$tradeInfoRefreshInterval" exact="1800s" />
+          <do_if value="$wingData.$refreshInterval? and @$wingData.$refreshInterval != null">
+            <set_value name="$tradeInfoRefreshInterval" exact="(@$wingData.$refreshInterval * 60)s" />
+          </do_if>
           <debug_text
             text="'Pilot Academy [%s]: extracted from wingData: factionNames count: %s, primaryGoal: %s, tradeInfoRefreshInterval: %s' .
               [this.assignedcontrolled.debugname, $factionNames.count, $primaryGoal, $tradeInfoRefreshInterval]"
