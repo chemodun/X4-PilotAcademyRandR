@@ -822,7 +822,6 @@ function pilotAcademy.createAutoHireTable(frame, menu, config, tableName, displa
   })
   row[2].handlers.onClick = function(_, checked) return pilotAcademy.onToggleAutoHire(checked) end
   row[3]:createText(texts.autoHire, { halign = "left", titleColor = Color["row_title"], x = Helper.scaleX(Helper.borderSize * 2) })
-  tableHandler:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
 
   return { table = tableHandler, height = tableHandler:getFullHeight(), autoHire = autoHire }
 end
