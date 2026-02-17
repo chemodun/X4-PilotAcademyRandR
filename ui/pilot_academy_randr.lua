@@ -134,6 +134,7 @@ local texts = {
   update = ReadText(1972092412, 10903),                       -- "Update"
   create = ReadText(1972092412, 10904),                       -- "Create"
   appointAsCadet = ReadText(1972092412, 20001),               -- "Appoint as a cadet"
+  recallForReassignment = ReadText(1972092412, 20002),        -- "Recall to Academy for Reassignment"
   wingNames = { a = ReadText(1972092412, 100001), b = ReadText(1972092412, 100002), c = ReadText(1972092412, 100003), d = ReadText(1972092412, 100004), e = ReadText(1972092412, 100005), f = ReadText(1972092412, 100006), g = ReadText(1972092412, 100007), h = ReadText(1972092412, 100008), i = ReadText(1972092412, 100009) },
 }
 
@@ -273,19 +274,19 @@ function pilotAcademy.Init(menuMap, menuPlayerInfo)
     menuMap.registerCallback("createContextFrame_on_end", pilotAcademy.createInfoFrameContext)
     AddUITriggeredEvent("PilotAcademyRAndR", "Reloaded")
     menuMap.registerCallback("createContextFrame_on_end", function(contextFrame, contextMenuData, contextMenuMode)
-      return pilotAcademy.addAppointAsCadetRowToContextMenu(contextFrame, contextMenuData, contextMenuMode, menuMap)
+      return pilotAcademy.addAcademyRowToPersonnelContextMenu(contextFrame, contextMenuData, contextMenuMode, menuMap)
     end)
     menuMap.registerCallback("refreshContextFrame_on_end", function(contextFrame, contextMenuData, contextMenuMode)
-      return pilotAcademy.addAppointAsCadetRowToContextMenu(contextFrame, contextMenuData, contextMenuMode, menuMap)
+      return pilotAcademy.addAcademyRowToPersonnelContextMenu(contextFrame, contextMenuData, contextMenuMode, menuMap)
     end)
     menuMap.registerCallback("ic_onRowChanged", pilotAcademy.onRowChanged)
   end
   if menuPlayerInfo ~= nil and type(menuPlayerInfo.registerCallback) == "function" then
     menuPlayerInfo.registerCallback("createContextFrame_on_end", function(contextFrame, contextMenuData, contextMenuMode)
-      return pilotAcademy.addAppointAsCadetRowToContextMenu(contextFrame, contextMenuData, contextMenuMode, menuPlayerInfo)
+      return pilotAcademy.addAcademyRowToPersonnelContextMenu(contextFrame, contextMenuData, contextMenuMode, menuPlayerInfo)
     end)
     menuPlayerInfo.registerCallback("refreshContextFrame_on_end", function(contextFrame, contextMenuData, contextMenuMode)
-      return pilotAcademy.addAppointAsCadetRowToContextMenu(contextFrame, contextMenuData, contextMenuMode, menuPlayerInfo)
+      return pilotAcademy.addAcademyRowToPersonnelContextMenu(contextFrame, contextMenuData, contextMenuMode, menuPlayerInfo)
     end)
   end
   RegisterEvent("PilotAcademyRAndR.RankLevelReached", pilotAcademy.onRankLevelReached)
@@ -1533,7 +1534,7 @@ function pilotAcademy.transferPersonnel(oldLocationId, newLocationId)
         local entity = pilotAcademy.getOrCreateEntity(person.id, oldLocationId)
         actor = { entity = entity, personcontrollable = nil, personseed = nil }
       end
-      pilotAcademy.appointAsCadet(actor, newLocationId)
+      pilotAcademy.transferToAcademy(actor, newLocationId)
     end
   end
 end
@@ -3002,9 +3003,9 @@ function pilotAcademy.saveWings()
   -- Save wings data to persistent storage
 end
 
-function pilotAcademy.addAppointAsCadetRowToContextMenu(contextFrame, contextMenuData, contextMenuMode, menu)
+function pilotAcademy.addAcademyRowToPersonnelContextMenu(contextFrame, contextMenuData, contextMenuMode, menu)
   local result = nil
-  trace("pilotAcademy.addAppointAsCadetRowToContextMenu called with mode: " .. tostring(contextMenuMode))
+  trace("pilotAcademy.addAAcademyRowToPersonnelContextMenu called with mode: " .. tostring(contextMenuMode))
 
   if menu == nil then
     trace("menu is nil, returning")
@@ -3121,8 +3122,13 @@ function pilotAcademy.addAppointAsCadetRowToContextMenu(contextFrame, contextMen
 
   local skillBase = pilotAcademy.skillBase(skill)
 
-  if pilotAcademy.commonData == nil or pilotAcademy.commonData.targetRankLevel == nil or skillBase - pilotAcademy.commonData.targetRankLevel > 0 then
-    trace("Person or entity has pilot skill at or above cadet max rank, returning")
+  if pilotAcademy.commonData == nil or pilotAcademy.commonData.targetRankLevel == nil then
+    trace("No academy target rank level set, returning")
+    return result
+  end
+
+  if (skillBase - pilotAcademy.commonData.targetRankLevel > 0) and (pilotAcademy.commonData.fleets == nil or #pilotAcademy.commonData.fleets == 0) then
+    trace("Person or entity has too high skill for training assignment and no fleets available for redistribution, returning")
     return result
   end
 
@@ -3159,10 +3165,14 @@ function pilotAcademy.addAppointAsCadetRowToContextMenu(contextFrame, contextMen
     trace("Adding Pilot Academy R&R row to context menu with actor: " .. tostring(actor))
     local mt = getmetatable(menuTable)
     if isPlayerOwned then
+      local itemText = texts.appointAsCadet  -- "Appoint as a cadet"
+      if skillBase - pilotAcademy.commonData.targetRankLevel > 0 then
+        itemText = texts.recallForReassignment  -- "Recall for reassignment"
+      end
       local row = mt.__index.addRow(menuTable, "info_move_to_academy", { fixed = true })
-      row[1]:createButton({ bgColor = Color["button_background_hidden"], height = Helper.standardTextHeight }):setText(texts.appointAsCadet) -- "Appoint as a cadet"
+      row[1]:createButton({ bgColor = Color["button_background_hidden"], height = Helper.standardTextHeight }):setText(itemText)
       row[1].handlers.onClick = function()
-        pilotAcademy.appointAsCadet(actor)
+        pilotAcademy.transferToAcademy(actor)
         menu.closeContextMenu()
       end
     elseif contextMenuData and contextMenuData.isAcademyPersonnel then
@@ -3197,12 +3207,12 @@ function pilotAcademy.addAppointAsCadetRowToContextMenu(contextFrame, contextMen
   return result
 end
 
-function pilotAcademy.appointAsCadet(actor, controllable)
-  trace("assignAsCadet called: actor.entity=" .. tostring(actor.entity) .. ", actor.personcontrollable=" .. tostring(actor.personcontrollable) ..
+function pilotAcademy.transferToAcademy(actor, controllable)
+  trace("transferToAcademy called: actor.entity=" .. tostring(actor.entity) .. ", actor.personcontrollable=" .. tostring(actor.personcontrollable) ..
     ", actor.personseed=" .. tostring(actor.personseed) .. ", controllable=" .. tostring(controllable))
   local target = controllable or pilotAcademy.commonData.locationId
   local result = ffi.string(C.AssignHiredActor(actor, target, nil, pilotAcademy.role, false))
-  debug("assignAsCadet result: " .. tostring(result))
+  debug("transferToAcademy result: " .. tostring(result))
 end
 
 function pilotAcademy.calculateHiringFee(combinedskill)
