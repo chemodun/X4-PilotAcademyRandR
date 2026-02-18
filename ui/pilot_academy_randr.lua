@@ -490,6 +490,11 @@ function pilotAcademy.createInfoFrame()
     tables[i].table.properties.y = topY
     topY = topY + tables[i].height
   end
+  
+  menu.setrow = nil
+  menu.settoprow = nil
+  menu.setcol = nil
+  menu.sethighlightborderrow = nil
 end
 
 function pilotAcademy.sortFactionsAscending(a, b)
