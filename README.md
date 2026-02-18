@@ -331,6 +331,7 @@ There are examples of texts and notifications screenshots:
 
 - **Fixed**
   - `Academy` tabs titles
+  - Managing `Cadets` and `Trained Pilots` when Academy is situated on non-Player station
   - Selection of some UI items
 
 ### [1.04] - 2026-02-15
