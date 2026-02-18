@@ -3192,30 +3192,21 @@ function pilotAcademy.addAcademyRowToPersonnelContextMenu(contextFrame, contextM
         headerCellProperties.text = personName
       end
       if hasArrived then
-        -- if entity == nil then
-        --   entity = C.CreateNPCFromPerson(person, controllable)
-        -- end
-        -- pilotAcademy.setNPCOwnedByPlayer(entity)
-        -- person = nil
-        -- controllable = nil
-        -- work somewhere else
+        if entity == nil then
+          entity = C.CreateNPCFromPerson(person, controllable)
+        end
+        pilotAcademy.setNPCOwnedByPlayer(entity)
 
         local row = mt.__index.addRow(menuTable, "info_person_worksomewhere", { fixed = true })
         row[1]:createButton({ bgColor = Color["button_background_hidden"], height = Helper.standardTextHeight }):setText(ReadText(1002, 3008))
-        if entity then
-          row[1].handlers.onClick = function()
-            Helper.closeMenuAndOpenNewMenu(menu, "MapMenu", { 0, 0, true, controllable, nil, "hire", { "signal", entity, 0 } }); menu.cleanup()
-          end
-        else
-          row[1].handlers.onClick = function()
-            Helper.closeMenuAndOpenNewMenu(menu, "MapMenu", { 0, 0, true, controllable, nil, "hire", { "signal", controllable, 0, person } }); menu.cleanup()
-          end
+        row[1].handlers.onClick = function()
+          Helper.closeMenuAndOpenNewMenu(menu, "MapMenu", { 0, 0, true, controllable, nil, "hire", { "signal", entity, 0 } }); menu.cleanup()
         end
-      end
 
-      local row = mt.__index.addRow(menuTable, "info_person_fire", { fixed = true })
-      row[1]:createButton({ bgColor = Color["button_background_hidden"], height = Helper.standardTextHeight }):setText(ReadText(1002, 15800))
-      row[1].handlers.onClick = function() return menu.infoSubmenuFireNPCConfirm(controllable, entity, person, menu.contextMenuData.instance) end
+        local row = mt.__index.addRow(menuTable, "info_person_fire", { fixed = true })
+        row[1]:createButton({ bgColor = Color["button_background_hidden"], height = Helper.standardTextHeight }):setText(ReadText(1002, 15800))
+        row[1].handlers.onClick = function() return menu.infoSubmenuFireNPCConfirm(controllable, entity, nil, menu.contextMenuData.instance) end
+      end
     end
     result = { contextFrame = contextFrame }
   end
