@@ -3071,7 +3071,7 @@ function pilotAcademy.addAcademyRowToPersonnelContextMenu(contextFrame, contextM
   end
 
   -- Extract entity, person, and controllable based on context mode
-  local entity, person, controllable, transferScheduled, hasArrived, personrole, personName
+  local entity, person, controllable, transferScheduled, hasArrived, personRole, personName
 
   local isPlayerOwned = true
   if isMapContext then
@@ -3081,7 +3081,7 @@ function pilotAcademy.addAcademyRowToPersonnelContextMenu(contextFrame, contextM
     controllable = contextMenuData.component
     transferScheduled = false -- Not relevant for map context
     hasArrived = true         -- Not relevant for map context
-    personrole = ""
+    personRole = ""
     isPlayerOwned = GetComponentData(controllable, "isplayerowned")
     if contextMenuData.isAcademyPersonnel then
       if isPlayerOwned then
@@ -3099,7 +3099,7 @@ function pilotAcademy.addAcademyRowToPersonnelContextMenu(contextFrame, contextM
     end
     transferScheduled = false
     hasArrived = true
-    personrole = ""
+    personRole = ""
     isPlayerOwned = true
   end
 
@@ -3109,7 +3109,7 @@ function pilotAcademy.addAcademyRowToPersonnelContextMenu(contextFrame, contextM
     entity = (instance ~= 0 and instance or nil)
     transferScheduled = C.IsPersonTransferScheduled(controllable, person)
     hasArrived = C.HasPersonArrived(controllable, person)
-    personrole = ffi.string(C.GetPersonRole(person, controllable))
+    personRole = ffi.string(C.GetPersonRole(person, controllable))
     personName = ffi.string(C.GetPersonName(person, controllable))
   end
 
@@ -3149,7 +3149,7 @@ function pilotAcademy.addAcademyRowToPersonnelContextMenu(contextFrame, contextM
     local player = C.GetPlayerID()
     if person or (entity and (entity ~= player)) then
       if isPlayerOwned then
-        if (person and ((personrole == "service") or (personrole == "marine") or (personrole == "trainee_group") or (personrole == "unassigned"))) or
+        if (person and ((personRole == "service") or (personRole == "marine") or (personRole == "trainee_group") or (personRole == "unassigned"))) or
             (entity and GetComponentData(entity, "isplayerowned") and GetComponentData(entity, "caninitiatecomm")) then
           canAdd = transferScheduled == false and hasArrived
         end
