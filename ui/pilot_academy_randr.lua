@@ -679,10 +679,15 @@ function pilotAcademy.createFactionsTable(frame, menu, config, tableName, stored
       end
     end
   end
+  if #factions > 0 then
+    pilotAcademy.setTopRow(tableHandler, tableName)
+  end
+
   if tableMaxHeight == 0 then
     tableMaxHeight = tableHandler:getFullHeight()
   end
   tableHandler.properties.maxVisibleHeight = math.min(tableHandler:getFullHeight(), tableMaxHeight)
+  
 
   return { table = tableHandler, height = tableHandler:getFullHeight() }
 end
@@ -1079,7 +1084,7 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
   return tables
 end
 
-function pilotAcademy.setTopRow(tableHandle, tableName)
+function pilotAcademy.setTopRow(tableHandler, tableName)
   if pilotAcademy.frame ~= nil then
     for i = 1, #pilotAcademy.frame.content do
       local item = pilotAcademy.frame.content[i]
@@ -1087,7 +1092,11 @@ function pilotAcademy.setTopRow(tableHandle, tableName)
         local topRow = GetTopRow(item.id)
         if topRow ~= nil then
           trace(string.format("Set top row %d for table name %s", topRow, tableName))
-          tableHandle:setTopRow(topRow)
+          tableHandler:setTopRow(topRow)
+        end
+        local result = GetShiftStartEndRow(item.id)
+        if result then
+          tableHandler:setShiftStartEnd(table.unpack(result))
         end
         break
       end
