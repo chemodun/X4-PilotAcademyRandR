@@ -585,9 +585,9 @@
                       <continue />
                     </do_if>
 
-                    <do_if value="@$demandOffer.owner.dockingenabled != true or @$demandOffer.owner.dockingenabled.{this.assignedcontrolled} != true">
-                      <debug_text text="'Pilot Academy [%s]: no docking possible to: %s, skipping.'.
-                        [@this.assignedcontrolled.debugname, @$demandOffer.owner.debugname]"
+                    <do_if value="@$demandOffer.owner.dockingenabled != true or @$demandOffer.owner.dockingallowed.{this.assignedcontrolled} != true">
+                      <debug_text text="'Pilot Academy [%s]: no docking possible to: %s (enabled: %s, allowed: %s), skipping.'.
+                        [@this.assignedcontrolled.debugname, @$demandOffer.owner.debugname, @$demandOffer.owner.dockingenabled, @$demandOffer.owner.dockingallowed.{this.assignedcontrolled}]"
                         chance="$debugchance" />
                       <continue />
                     </do_if>
@@ -634,9 +634,9 @@
                         <continue />
                       </do_if>
 
-                      <do_if value="@$supplyOffer.owner.dockingenabled != true or @$supplyOffer.owner.dockingenabled.{this.assignedcontrolled} != true">
-                        <debug_text text="'Pilot Academy [%s]: no docking possible to: %s, skipping.'.
-                        [@this.assignedcontrolled.debugname, @$supplyOffer.owner.debugname]"
+                      <do_if value="@$supplyOffer.owner.dockingenabled != true or @$supplyOffer.owner.dockingallowed.{this.assignedcontrolled} != true">
+                        <debug_text text="'Pilot Academy [%s]: no docking possible to: %s (enabled: %s, allowed: %s), skipping.'.
+                        [@this.assignedcontrolled.debugname, @$supplyOffer.owner.debugname, @$supplyOffer.owner.dockingenabled, @$supplyOffer.owner.dockingallowed.{this.assignedcontrolled}]"
                           chance="$debugchance" />
                         <continue />
                       </do_if>
@@ -818,9 +818,9 @@
                       <continue />
                     </do_if>
 
-                    <do_if value="@$demandOffer.owner.dockingenabled != true or @$demandOffer.owner.dockingenabled.{this.assignedcontrolled} != true">
-                      <debug_text text="'Pilot Academy [%s]: no docking possible to: %s, skipping.'.
-                        [@this.assignedcontrolled.debugname, @$demandOffer.owner.debugname]"
+                    <do_if value="@$demandOffer.owner.dockingenabled != true or @$demandOffer.owner.dockingallowed.{this.assignedcontrolled} != true">
+                      <debug_text text="'Pilot Academy [%s]: no docking possible to: %s (enabled: %s, allowed: %s), skipping.'.
+                        [@this.assignedcontrolled.debugname, @$demandOffer.owner.debugname, @$demandOffer.owner.dockingenabled, @$demandOffer.owner.dockingallowed.{this.assignedcontrolled}]"
                         chance="$debugchance" />
                       <continue />
                     </do_if>
@@ -867,9 +867,9 @@
                         <continue />
                       </do_if>
 
-                      <do_if value="@$supplyOffer.owner.dockingenabled != true or @$supplyOffer.owner.dockingenabled.{this.assignedcontrolled} != true">
-                        <debug_text text="'Pilot Academy [%s]: no docking possible to: %s, skipping.'.
-                        [@this.assignedcontrolled.debugname, @$supplyOffer.owner.debugname]"
+                      <do_if value="@$supplyOffer.owner.dockingenabled != true or @$supplyOffer.owner.dockingallowed.{this.assignedcontrolled} != true">
+                        <debug_text text="'Pilot Academy [%s]: no docking possible to: %s (enabled: %s, allowed: %s), skipping.'.
+                        [@this.assignedcontrolled.debugname, @$supplyOffer.owner.debugname, @$supplyOffer.owner.dockingenabled, @$supplyOffer.owner.dockingallowed.{this.assignedcontrolled}]"
                           chance="$debugchance" />
                         <continue />
                       </do_if>
@@ -1114,9 +1114,9 @@
           <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
           <resume label="prepareTrade" />
         </do_if>
-        <do_if value="@$tradeTarget.dockingenabled != true or @$tradeTarget.dockingenabled.{this.assignedcontrolled} != true">
-          <debug_text text="'Pilot Academy [%s]: no docking possible to trade target: %s, skipping.'.
-          [@this.assignedcontrolled.debugname, @$tradeTarget.debugname]"
+        <do_if value="@$tradeTarget.dockingenabled != true or @$tradeTarget.dockingallowed.{this.assignedcontrolled} != true">
+          <debug_text text="'Pilot Academy [%s]: no docking possible to trade target: %s (enabled: %s, allowed: %s), skipping.'.
+          [@this.assignedcontrolled.debugname, @$tradeTarget.debugname, @$tradeTarget.dockingenabled, @$tradeTarget.dockingallowed.{this.assignedcontrolled}]"
             chance="$debugchance" />
           <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
           <resume label="prepareTrade" />
