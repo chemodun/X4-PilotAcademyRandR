@@ -125,6 +125,8 @@ Pilot will be assigned based on the selected priority:
 In case of selecting the `To Selected Fleets` option, the Player can select specific fleets for pilot assignment. Only ships that are part of the selected fleets will be considered for auto-assignment.
 ![Auto-assign options by selected fleets.](docs/images/auto_assign_options_select_fleets.png)
 
+From version 1.05, the Player can also manually transfer any of `Skilled pilots` to the `Academy` when the `To Selected Fleets` option is enabled. The Academy can then act as a **Pilot Dispatch center**, automatically assigning these experienced pilots to replace less skilled pilots in the Player's selected fleets.
+
 In addition, please be aware about situation when the target ship's crew is full. By default, in this case, the pilot swapping will not be performed and the Player will get a warning notification.
 
 But if the option `Auto fire less skilled crew member if crew is full` is enabled, the less qualified crew member will be automatically dismissed to free up space for the new pilot transfer.
@@ -156,6 +158,16 @@ It will take some time to transfer `Cadets` from their original location, and th
 The Player can also use the context menu to manage them like any other employee.
 
 ![Personnel context menu.](docs/images/personnel_context_menu.png)
+
+#### Recall to Academy for Reassignment
+
+The Player can recall `Trained Pilots` to the `Academy` for reassignment.
+
+This option is available in the context menu for any person with a pilot skill level equal to or higher current academy target rank. But only if they are `To Selected Fleets` assignment option is enabled.
+
+![Context menu option to recall a trained pilot to the Academy.](docs/images/recall_to_academy_context_menu.png)
+
+After recalling a `Trained Pilot` to the `Academy`, they will be listed as a `Pilots` and will be automatically considered for assignment to any ship in the Player's selected fleets that has a pilot with a lower rank than the target.
 
 #### Managing Trained Pilots
 
