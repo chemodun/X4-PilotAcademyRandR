@@ -131,6 +131,8 @@ Pilot will be assigned based on the selected priority:
 In case of selecting the [b]To Selected Fleets[/b] option, the Player can select specific fleets for pilot assignment. Only ships that are part of the selected fleets will be considered for auto-assignment.
 [img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/auto_assign_options_select_fleets.png[/img]
 
+From version 1.05, the Player can also manually transfer any of [b]Skilled pilots[/b] to the [b]Academy[/b] when the [b]To Selected Fleets[/b] option is enabled. The Academy can then act as a [b]Pilot Dispatch center[/b], automatically assigning these experienced pilots to replace less skilled pilots in the Player's selected fleets.
+
 In addition, please be aware about situation when the target ship's crew is full. By default, in this case, the pilot swapping will not be performed and the Player will get a warning notification.
 
 But if the option [b]Auto fire less skilled crew member if crew is full[/b] is enabled, the less qualified crew member will be automatically dismissed to free up space for the new pilot transfer.
@@ -162,6 +164,16 @@ It will take some time to transfer [b]Cadets[/b] from their original location, a
 The Player can also use the context menu to manage them like any other employee.
 
 [img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/personnel_context_menu.png[/img]
+
+[h3][b]Recall to Academy for Reassignment[/b][/h3]
+
+The Player can recall [b]Trained Pilots[/b] to the [b]Academy[/b] for reassignment.
+
+This option is available in the context menu for any person with a pilot skill level equal to or higher current academy target rank. But only if they are [b]To Selected Fleets[/b] assignment option is enabled.
+
+[img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/recall_to_academy_context_menu.png[/img]
+
+After recalling a [b]Trained Pilot[/b] to the [b]Academy[/b], they will be listed as a [b]Pilots[/b] and will be automatically considered for assignment to any ship in the Player's selected fleets that has a pilot with a lower rank than the target.
 
 [h3][b]Managing Trained Pilots[/b][/h3]
 
