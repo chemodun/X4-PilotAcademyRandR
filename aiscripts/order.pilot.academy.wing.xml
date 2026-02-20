@@ -592,9 +592,12 @@
                       <continue />
                     </do_if>
 
-                    <do_if value="@$demandOffer.owner.dock.{'dock_s'} == null and @$demandOffer.owner.dock.{'dock_m'} == null">
-                      <debug_text text="'Pilot Academy [%s]: no docks of right sizes is available at: %s, skipping.'.
-                        [@this.assignedcontrolled.debugname, @$demandOffer.owner.debugname]"
+                    <!-- <debug_text text="'Pilot Academy [%s]: dock sizes (S: %s, isdockingallowed: %s, dockstate: %s, todockpos: %s, M: %s, isdockingallowed: %s, dockstate: %s, todockpos: %s) available at: %s.'.
+                        [@this.assignedcontrolled.debugname, @$demandOffer.owner.dock.{tag.dock_s}, @$demandOffer.owner.dock.{tag.dock_s}.isdockingallowed, @$demandOffer.owner.dock.{tag.dock_s}.dockstate, @$demandOffer.owner.dock.{tag.dock_s}.todockpos, @$demandOffer.owner.dock.{tag.dock_m}, @$demandOffer.owner.dock.{tag.dock_m}.isdockingallowed, @$demandOffer.owner.dock.{tag.dock_m}.dockstate, @$demandOffer.owner.dock.{tag.dock_m}.todockpos, @$demandOffer.owner.debugname]"
+                      chance="$debugchance" /> -->
+                    <do_if value="@$demandOffer.owner.dock.{tag.dock_s} == null and @$demandOffer.owner.dock.{tag.dock_m} == null">
+                      <debug_text text="'Pilot Academy [%s]: no docks of right sizes (S: %s, M: %s) available at: %s, skipping.'.
+                        [@this.assignedcontrolled.debugname, @$demandOffer.owner.dock.{tag.dock_s}, @$demandOffer.owner.dock.{tag.dock_m}, @$demandOffer.owner.debugname]"
                         chance="$debugchance" />
                       <continue />
                     </do_if>
@@ -641,9 +644,9 @@
                         <continue />
                       </do_if>
 
-                      <do_if value="@$supplyOffer.owner.dock.{'dock_s'} == null and @$supplyOffer.owner.dock.{'dock_m'} == null">
-                        <debug_text text="'Pilot Academy [%s]: no docks of right sizes is available at: %s, skipping.'.
-                        [@this.assignedcontrolled.debugname, @$supplyOffer.owner.debugname]"
+                      <do_if value="@$supplyOffer.owner.dock.{tag.dock_s} == null and @$supplyOffer.owner.dock.{tag.dock_m} == null">
+                        <debug_text text="'Pilot Academy [%s]: no docks of right sizes (S: %s, M: %s) available at: %s, skipping.'.
+                        [@this.assignedcontrolled.debugname, @$supplyOffer.owner.dock.{tag.dock_s}, @$supplyOffer.owner.dock.{tag.dock_m}, @$supplyOffer.owner.debugname]"
                           chance="$debugchance" />
                         <continue />
                       </do_if>
@@ -825,9 +828,9 @@
                       <continue />
                     </do_if>
 
-                    <do_if value="@$demandOffer.owner.dock.{'dock_s'} == null and @$demandOffer.owner.dock.{'dock_m'} == null">
-                      <debug_text text="'Pilot Academy [%s]: no docks of right sizes is available at: %s, skipping.'.
-                        [@this.assignedcontrolled.debugname, @$demandOffer.owner.debugname]"
+                    <do_if value="@$demandOffer.owner.dock.{tag.dock_s} == null and @$demandOffer.owner.dock.{tag.dock_m} == null">
+                      <debug_text text="'Pilot Academy [%s]: no docks of right sizes (S: %s, M: %s) available at: %s, skipping.'.
+                        [@this.assignedcontrolled.debugname, @$demandOffer.owner.dock.{tag.dock_s}, @$demandOffer.owner.dock.{tag.dock_m}, @$demandOffer.owner.debugname]"
                         chance="$debugchance" />
                       <continue />
                     </do_if>
@@ -874,9 +877,9 @@
                         <continue />
                       </do_if>
 
-                      <do_if value="@$supplyOffer.owner.dock.{'dock_s'} == null and @$supplyOffer.owner.dock.{'dock_m'} == null">
-                        <debug_text text="'Pilot Academy [%s]: no docks of right sizes is available at: %s, skipping.'.
-                        [@this.assignedcontrolled.debugname, @$supplyOffer.owner.debugname]"
+                      <do_if value="@$supplyOffer.owner.dock.{tag.dock_s} == null and @$supplyOffer.owner.dock.{tag.dock_m} == null">
+                        <debug_text text="'Pilot Academy [%s]: no docks of right sizes (S: %s, M: %s) available at: %s, skipping.'.
+                        [@this.assignedcontrolled.debugname, @$supplyOffer.owner.dock.{tag.dock_s}, @$supplyOffer.owner.dock.{tag.dock_m}, @$supplyOffer.owner.debugname]"
                           chance="$debugchance" />
                         <continue />
                       </do_if>
@@ -1122,9 +1125,9 @@
           <resume label="prepareTrade" />
         </do_if>
 
-        <do_if value="@$tradeTarget.dock.{'dock_s'} == null and @$tradeTarget.dock.{'dock_m'} == null">
-          <debug_text text="'Pilot Academy [%s]: no docks of right sizes is available at trade target: %s, skipping.'.
-          [@this.assignedcontrolled.debugname, @$tradeTarget.debugname]"
+        <do_if value="@$tradeTarget.dock.{tag.dock_s} == null and @$tradeTarget.dock.{tag.dock_m} == null">
+          <debug_text text="'Pilot Academy [%s]: no docks of right sizes (S: %s, M: %s) available at trade target: %s, skipping.'.
+          [@this.assignedcontrolled.debugname, @$tradeTarget.dock.{tag.dock_s}, @$tradeTarget.dock.{tag.dock_m}, @$tradeTarget.debugname]"
             chance="$debugchance" />
           <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
           <resume label="prepareTrade" />
