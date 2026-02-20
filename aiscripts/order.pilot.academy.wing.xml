@@ -585,6 +585,20 @@
                       <continue />
                     </do_if>
 
+                    <do_if value="@$demandOffer.owner.dockingenabled != true or @$demandOffer.owner.dockingenabled.{this.assignedcontrolled} != true">
+                      <debug_text text="'Pilot Academy [%s]: no docking possible to: %s, skipping.'.
+                        [@this.assignedcontrolled.debugname, @$demandOffer.owner.debugname]"
+                        chance="$debugchance" />
+                      <continue />
+                    </do_if>
+
+                    <do_if value="@$demandOffer.owner.dock.{'dock_s'} == null and @$demandOffer.owner.dock.{'dock_m'} == null">
+                      <debug_text text="'Pilot Academy [%s]: no docks of right sizes is available at: %s, skipping.'.
+                        [@this.assignedcontrolled.debugname, @$demandOffer.owner.debugname]"
+                        chance="$debugchance" />
+                      <continue />
+                    </do_if>
+
                     <do_if value="$illegalWares.indexof.{$demandOffer.ware} gt 0">
                       <debug_text
                         text="'Pilot Academy [%s]: skipping %s offer for %s of %s as ware is illegal for faction %s' .
@@ -616,6 +630,20 @@
                       <do_if value="this.assignedcontrolled.gatedistance.{$supplyOffer.owner}.{$blacklistGroup}.{this.assignedcontrolled} lt 0">
                         <debug_text text="'Pilot Academy [%s]: no path possible to: %s, skipping.'.
                           [@this.assignedcontrolled.debugname, @$supplyOffer.owner.debugname]"
+                          chance="$debugchance" />
+                        <continue />
+                      </do_if>
+
+                      <do_if value="@$supplyOffer.owner.dockingenabled != true or @$supplyOffer.owner.dockingenabled.{this.assignedcontrolled} != true">
+                        <debug_text text="'Pilot Academy [%s]: no docking possible to: %s, skipping.'.
+                        [@this.assignedcontrolled.debugname, @$supplyOffer.owner.debugname]"
+                          chance="$debugchance" />
+                        <continue />
+                      </do_if>
+
+                      <do_if value="@$supplyOffer.owner.dock.{'dock_s'} == null and @$supplyOffer.owner.dock.{'dock_m'} == null">
+                        <debug_text text="'Pilot Academy [%s]: no docks of right sizes is available at: %s, skipping.'.
+                        [@this.assignedcontrolled.debugname, @$supplyOffer.owner.debugname]"
                           chance="$debugchance" />
                         <continue />
                       </do_if>
@@ -790,6 +818,20 @@
                       <continue />
                     </do_if>
 
+                    <do_if value="@$demandOffer.owner.dockingenabled != true or @$demandOffer.owner.dockingenabled.{this.assignedcontrolled} != true">
+                      <debug_text text="'Pilot Academy [%s]: no docking possible to: %s, skipping.'.
+                        [@this.assignedcontrolled.debugname, @$demandOffer.owner.debugname]"
+                        chance="$debugchance" />
+                      <continue />
+                    </do_if>
+
+                    <do_if value="@$demandOffer.owner.dock.{'dock_s'} == null and @$demandOffer.owner.dock.{'dock_m'} == null">
+                      <debug_text text="'Pilot Academy [%s]: no docks of right sizes is available at: %s, skipping.'.
+                        [@this.assignedcontrolled.debugname, @$demandOffer.owner.debugname]"
+                        chance="$debugchance" />
+                      <continue />
+                    </do_if>
+
                     <do_if value="$illegalWares.indexof.{$demandOffer.ware} gt 0">
                       <debug_text
                         text="'Pilot Academy [%s]: skipping %s offer for %s of %s as ware is illegal for faction %s' .
@@ -820,6 +862,20 @@
 
                       <do_if value="this.assignedcontrolled.gatedistance.{$supplyOffer.owner}.{$blacklistGroup}.{this.assignedcontrolled} lt 0">
                         <debug_text text="'Pilot Academy [%s]: no path possible to: %s, skipping.'.
+                        [@this.assignedcontrolled.debugname, @$supplyOffer.owner.debugname]"
+                          chance="$debugchance" />
+                        <continue />
+                      </do_if>
+
+                      <do_if value="@$supplyOffer.owner.dockingenabled != true or @$supplyOffer.owner.dockingenabled.{this.assignedcontrolled} != true">
+                        <debug_text text="'Pilot Academy [%s]: no docking possible to: %s, skipping.'.
+                        [@this.assignedcontrolled.debugname, @$supplyOffer.owner.debugname]"
+                          chance="$debugchance" />
+                        <continue />
+                      </do_if>
+
+                      <do_if value="@$supplyOffer.owner.dock.{'dock_s'} == null and @$supplyOffer.owner.dock.{'dock_m'} == null">
+                        <debug_text text="'Pilot Academy [%s]: no docks of right sizes is available at: %s, skipping.'.
                         [@this.assignedcontrolled.debugname, @$supplyOffer.owner.debugname]"
                           chance="$debugchance" />
                         <continue />
@@ -1054,6 +1110,21 @@
         <do_if value="this.assignedcontrolled.gatedistance.{$tradeTarget}.{$blacklistGroup}.{this.assignedcontrolled} lt 0">
           <debug_text text="'Pilot Academy [%s]: no path possible to Trade Target: %s. Going to find alternative.'.
             [@this.assignedcontrolled.debugname, @$tradeTarget.debugname]"
+            chance="$debugchance" />
+          <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
+          <resume label="prepareTrade" />
+        </do_if>
+        <do_if value="@$tradeTarget.dockingenabled != true or @$tradeTarget.dockingenabled.{this.assignedcontrolled} != true">
+          <debug_text text="'Pilot Academy [%s]: no docking possible to trade target: %s, skipping.'.
+          [@this.assignedcontrolled.debugname, @$tradeTarget.debugname]"
+            chance="$debugchance" />
+          <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
+          <resume label="prepareTrade" />
+        </do_if>
+
+        <do_if value="@$tradeTarget.dock.{'dock_s'} == null and @$tradeTarget.dock.{'dock_m'} == null">
+          <debug_text text="'Pilot Academy [%s]: no docks of right sizes is available at trade target: %s, skipping.'.
+          [@this.assignedcontrolled.debugname, @$tradeTarget.debugname]"
             chance="$debugchance" />
           <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
           <resume label="prepareTrade" />
