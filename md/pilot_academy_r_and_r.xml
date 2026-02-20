@@ -36,7 +36,7 @@
           </actions>
         </cue>
 
-        <cue name="Process_Pilot_Swapping" instantiate="true" version="1">
+        <cue name="Process_Pilot_Swapping" instantiate="true" version="2">
           <conditions>
             <event_object_signalled object="player.entity" param="'PilotAcademyRAndR.PilotSwapRequest'" />
             <check_value value="@event.param2 != null" />
@@ -117,6 +117,7 @@
                   <param name="text" value="{1972092412,2000003}.[ $shipName ]" />
                   <param name="isWarning" value="true" />
                   <param name="object" value="$ship" />
+                  <param name="debugchance" value="$debugchance" />
                 </run_actions>
               </do_else>
             </do_else>
@@ -134,7 +135,7 @@
           </actions>
         </cue>
 
-        <cue name="Process_Old_Pilot_Return" instantiate="true" version="1">
+        <cue name="Process_Old_Pilot_Return" instantiate="true" version="2">
           <conditions>
             <event_object_signalled object="player.entity" param="'PilotAcademyRAndR.OldPilotReturnRequest'" />
             <check_value value="@event.param2 != null" />
@@ -175,6 +176,7 @@
                     <param name="title" value="{1972092412,1}" />
                     <param name="text" value="{1972092412,1000003}.[$oldPilotName]" />
                     <param name="object" value="$academyObject" />
+                    <param name="debugchance" value="$debugchance" />
                   </run_actions>
                 </do_if>
                 <do_else>
@@ -182,6 +184,7 @@
                     <param name="title" value="{1972092412,1}" />
                     <param name="text" value="{1972092412,1000006}.[$oldPilotName]" />
                     <param name="object" value="$academyObject" />
+                    <param name="debugchance" value="$debugchance" />
                   </run_actions>
                 </do_else>
                 <raise_lua_event name="'PilotAcademyRAndR.PilotReturned'" param="'%s'.[$personTransferred.{1}]" />
@@ -212,6 +215,7 @@
                     <param name="text" value="{1972092412,2000004}.[$oldPilotName]" />
                     <param name="isWarning" value="true" />
                     <param name="object" value="$ship" />
+                    <param name="debugchance" value="$debugchance" />
                   </run_actions>
                 </do_else>
               </do_else>
@@ -226,6 +230,7 @@
                 <param name="text" value="{1972092412,2000005}.[$oldPilotName]" />
                 <param name="isWarning" value="true" />
                 <param name="object" value="$ship" />
+                <param name="debugchance" value="$debugchance" />
               </run_actions>
             </do_else>
             <remove_value name="$iteration" />
@@ -241,7 +246,7 @@
           </actions>
         </cue>
 
-        <cue name="Process_Move_New_Pilot" instantiate="true" version="2">
+        <cue name="Process_Move_New_Pilot" instantiate="true" version="3">
           <conditions>
             <event_object_signalled object="player.entity" param="'PilotAcademyRAndR.MoveNewPilotRequest'" />
             <check_value value="@event.param2 != null" />
@@ -280,6 +285,7 @@
                   <param name="title" value="{1972092412,1}" />
                   <param name="text" value="{1972092412,1000005}.[$newPilotName, $shipName]" />
                   <param name="object" value="$ship" />
+                  <param name="debugchance" value="$debugchance" />
                 </run_actions>
                 <signal_objects object="player.entity" param="'PilotAcademyRAndR.PilotSwapRequest'"
                   param2="table[
@@ -316,6 +322,7 @@
                     <param name="text" value="{1972092412,2000006}.[$shipName, $newPilotName]" />
                     <param name="isWarning" value="true" />
                     <param name="object" value="$ship" />
+                    <param name="debugchance" value="$debugchance" />
                   </run_actions>
                 </do_else>
               </do_else>
@@ -330,6 +337,7 @@
                 <param name="text" value="{1972092412,2000002}.[$shipName]" />
                 <param name="isWarning" value="true" />
                 <param name="object" value="$ship" />
+                <param name="debugchance" value="$debugchance" />
               </run_actions>
             </do_else>
             <remove_value name="$iteration" />
@@ -343,7 +351,7 @@
         </cue>
 
 
-        <cue name="Process_No_Cadets_Available" instantiate="true" version="1">
+        <cue name="Process_No_Cadets_Available" instantiate="true" version="2">
           <conditions>
             <event_object_signalled object="player.entity" param="'PilotAcademyRAndR.NoCadetsAvailableInfo'" />
           </conditions>
@@ -356,11 +364,12 @@
               <param name="text" value="{1972092412,2000001}" />
               <param name="isWarning" value="true" />
               <param name="object" value="@player.entity.$pilotAcademyRAndRData.$academyObject" />
+              <param name="debugchance" value="$debugchance" />
             </run_actions>
           </actions>
         </cue>
 
-        <cue name="Process_Wing_Is_Broken" instantiate="true" version="1">
+        <cue name="Process_Wing_Is_Broken" instantiate="true" version="2">
           <conditions>
             <event_object_signalled object="player.entity" param="'PilotAcademyRAndR.WingIsBrokenInfo'" />
             <check_value value="@event.param2 != null" />
@@ -377,11 +386,12 @@
               <param name="text" value="{1972092412,2000007}.[@event.param2, $shipName]" />
               <param name="isWarning" value="true" />
               <param name="object" value="$ship" />
+              <param name="debugchance" value="$debugchance" />
             </run_actions>
           </actions>
         </cue>
 
-        <cue name="Process_Pilot_Auto_Hire" instantiate="true" version="1">
+        <cue name="Process_Pilot_Auto_Hire" instantiate="true" version="2">
           <conditions>
             <event_object_signalled object="player.entity" param="'PilotAcademyRAndR.CadetAutoHireRequest'" />
           </conditions>
@@ -391,7 +401,10 @@
                 [@event.param2.debugname, @event.param2, @event.param3]"
               chance="$debugchance" filter="scripts" />
             <set_value name="$ship" exact="@event.param2" />
-            <set_value name="$factionNames" exact="@event.param3" />
+            <set_value name="$factionNames" exact="[]" />
+            <do_if value="event.param3? and @event.param3 != null and typeof event.param3 == datatype.list">
+              <set_value name="$factionNames" exact="event.param3" />
+            </do_if>
             <debug_text
               text="'Pilot Academy: Process_Pilot_Auto_Hire: Ship is %s. Faction names filter: %s.' .
                 [$ship.debugname, $factionNames]"
@@ -452,6 +465,7 @@
               <param name="text" value="{1972092412,1000004}.[@$ship.availablepeople.{$cadetTemplate}.name, @$cadetHiringFee.formatted.default]" />
               <param name="object" value="$ship" />
               <param name="money" value="-$cadetHiringFee" />
+              <param name="debugchance" value="$debugchance" />
             </run_actions>
             <set_value name="$commonData" exact="@player.entity.$pilotAcademyRAndRData" />
             <set_value name="$academyObject" exact="$commonData.$locationObject" />
@@ -535,13 +549,14 @@
           </actions>
         </library>
 
-        <library name="Notify_Player" purpose="run_actions" version="1">
+        <library name="Notify_Player" purpose="run_actions" version="2">
           <params>
             <param name="title" />
             <param name="text" />
             <param name="isWarning" default="false" />
             <param name="object" />
             <param name="money" default="null" />
+            <param name="debugchance" default="0" />
           </params>
           <actions>
             <debug_text
