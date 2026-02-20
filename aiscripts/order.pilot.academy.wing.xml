@@ -427,7 +427,11 @@
     <set_value name="$rankUpReported" exact="false" />
     <set_value name="$lastTradeInfoRefresh" exact="0s" />
     <remove_value name="$isInit" />
+    <set_value name="$shipDockSize" exact="this.assignedcontrolled.docksize" />
   </init>
+  <patch sinceversion="2">
+    <set_value name="$shipDockSize" exact="this.assignedcontrolled.docksize" />
+  </patch>
   <attention min="unknown">
     <actions>
 
@@ -593,11 +597,11 @@
                     </do_if>
 
                     <!-- <debug_text text="'Pilot Academy [%s]: dock sizes (S: %s, isdockingallowed: %s, dockstate: %s, todockpos: %s, M: %s, isdockingallowed: %s, dockstate: %s, todockpos: %s) available at: %s.'.
-                        [@this.assignedcontrolled.debugname, @$demandOffer.owner.dock.{tag.dock_s}, @$demandOffer.owner.dock.{tag.dock_s}.isdockingallowed, @$demandOffer.owner.dock.{tag.dock_s}.dockstate, @$demandOffer.owner.dock.{tag.dock_s}.todockpos, @$demandOffer.owner.dock.{tag.dock_m}, @$demandOffer.owner.dock.{tag.dock_m}.isdockingallowed, @$demandOffer.owner.dock.{tag.dock_m}.dockstate, @$demandOffer.owner.dock.{tag.dock_m}.todockpos, @$demandOffer.owner.debugname]"
+                        [@this.assignedcontrolled.debugname, @$demandOffer.owner.dock.{$shipDockSize}, @$demandOffer.owner.dock.{$shipDockSize}.isdockingallowed, @$demandOffer.owner.dock.{$shipDockSize}.dockstate, @$demandOffer.owner.dock.{$shipDockSize}.todockpos, @$demandOffer.owner.dock.{tag.dock_m}, @$demandOffer.owner.dock.{tag.dock_m}.isdockingallowed, @$demandOffer.owner.dock.{tag.dock_m}.dockstate, @$demandOffer.owner.dock.{tag.dock_m}.todockpos, @$demandOffer.owner.debugname]"
                       chance="$debugchance" /> -->
-                    <do_if value="@$demandOffer.owner.dock.{tag.dock_s} == null or @$demandOffer.owner.dock.{tag.dock_s}.isdockingallowed != true or @$demandOffer.owner.dock.{tag.dock_s}.todockpos == null">
+                    <do_if value="@$demandOffer.owner.dock.{$shipDockSize} == null or @$demandOffer.owner.dock.{$shipDockSize}.isdockingallowed != true or @$demandOffer.owner.dock.{$shipDockSize}.todockpos == null">
                       <debug_text text="'Pilot Academy [%s]: no docks of right size %s, or no docking allowed: %s, or no dock position %s at: %s, skipping.'.
-                        [@this.assignedcontrolled.debugname, @$demandOffer.owner.dock.{tag.dock_s}, @$demandOffer.owner.dock.{tag.dock_s}.isdockingallowed, @$demandOffer.owner.dock.{tag.dock_s}.todockpos, @$demandOffer.owner.debugname]"
+                        [@this.assignedcontrolled.debugname, @$demandOffer.owner.dock.{$shipDockSize}, @$demandOffer.owner.dock.{$shipDockSize}.isdockingallowed, @$demandOffer.owner.dock.{$shipDockSize}.todockpos, @$demandOffer.owner.debugname]"
                         chance="$debugchance" />
                       <continue />
                     </do_if>
@@ -644,9 +648,9 @@
                         <continue />
                       </do_if>
 
-                      <do_if value="@$supplyOffer.owner.dock.{tag.dock_s} == null or @$supplyOffer.owner.dock.{tag.dock_s}.isdockingallowed != true or @$supplyOffer.owner.dock.{tag.dock_s}.todockpos == null">
+                      <do_if value="@$supplyOffer.owner.dock.{$shipDockSize} == null or @$supplyOffer.owner.dock.{$shipDockSize}.isdockingallowed != true or @$supplyOffer.owner.dock.{$shipDockSize}.todockpos == null">
                         <debug_text text="'Pilot Academy [%s]: no docks of right size %s, or no docking allowed: %s, or no dock position %s at: %s, skipping.'.
-                        [@this.assignedcontrolled.debugname, @$supplyOffer.owner.dock.{tag.dock_s}, @$supplyOffer.owner.dock.{tag.dock_s}.isdockingallowed, @$supplyOffer.owner.dock.{tag.dock_s}.todockpos, @$supplyOffer.owner.debugname]"
+                        [@this.assignedcontrolled.debugname, @$supplyOffer.owner.dock.{$shipDockSize}, @$supplyOffer.owner.dock.{$shipDockSize}.isdockingallowed, @$supplyOffer.owner.dock.{$shipDockSize}.todockpos, @$supplyOffer.owner.debugname]"
                           chance="$debugchance" />
                         <continue />
                       </do_if>
@@ -828,9 +832,9 @@
                       <continue />
                     </do_if>
 
-                    <do_if value="@$demandOffer.owner.dock.{tag.dock_s} == null or @$demandOffer.owner.dock.{tag.dock_s}.isdockingallowed != true or @$demandOffer.owner.dock.{tag.dock_s}.todockpos == null">
+                    <do_if value="@$demandOffer.owner.dock.{$shipDockSize} == null or @$demandOffer.owner.dock.{$shipDockSize}.isdockingallowed != true or @$demandOffer.owner.dock.{$shipDockSize}.todockpos == null">
                       <debug_text text="'Pilot Academy [%s]: no docks of right size %s, or no docking allowed: %s, or no dock position %s at: %s, skipping.'.
-                        [@this.assignedcontrolled.debugname, @$demandOffer.owner.dock.{tag.dock_s}, @$demandOffer.owner.dock.{tag.dock_s}.isdockingallowed, @$demandOffer.owner.dock.{tag.dock_s}.todockpos, @$demandOffer.owner.debugname]"
+                        [@this.assignedcontrolled.debugname, @$demandOffer.owner.dock.{$shipDockSize}, @$demandOffer.owner.dock.{$shipDockSize}.isdockingallowed, @$demandOffer.owner.dock.{$shipDockSize}.todockpos, @$demandOffer.owner.debugname]"
                         chance="$debugchance" />
                       <continue />
                     </do_if>
@@ -877,9 +881,9 @@
                         <continue />
                       </do_if>
 
-                      <do_if value="@$supplyOffer.owner.dock.{tag.dock_s} == null or @$supplyOffer.owner.dock.{tag.dock_s}.isdockingallowed != true or @$supplyOffer.owner.dock.{tag.dock_s}.todockpos == null">
+                      <do_if value="@$supplyOffer.owner.dock.{$shipDockSize} == null or @$supplyOffer.owner.dock.{$shipDockSize}.isdockingallowed != true or @$supplyOffer.owner.dock.{$shipDockSize}.todockpos == null">
                         <debug_text text="'Pilot Academy [%s]: no docks of right size %s, or no docking allowed: %s, or no dock position %s at: %s, skipping.'.
-                        [@this.assignedcontrolled.debugname, @$supplyOffer.owner.dock.{tag.dock_s}, @$supplyOffer.owner.dock.{tag.dock_s}.isdockingallowed, @$supplyOffer.owner.dock.{tag.dock_s}.todockpos, @$supplyOffer.owner.debugname]"
+                        [@this.assignedcontrolled.debugname, @$supplyOffer.owner.dock.{$shipDockSize}, @$supplyOffer.owner.dock.{$shipDockSize}.isdockingallowed, @$supplyOffer.owner.dock.{$shipDockSize}.todockpos, @$supplyOffer.owner.debugname]"
                           chance="$debugchance" />
                         <continue />
                       </do_if>
@@ -1125,9 +1129,9 @@
           <resume label="prepareTrade" />
         </do_if>
 
-        <do_if value="@$tradeTarget.dock.{tag.dock_s} == null or @$tradeTarget.dock.{tag.dock_s}.isdockingallowed != true or @$tradeTarget.dock.{tag.dock_s}.todockpos == null">
+        <do_if value="@$tradeTarget.dock.{$shipDockSize} == null or @$tradeTarget.dock.{$shipDockSize}.isdockingallowed != true or @$tradeTarget.dock.{$shipDockSize}.todockpos == null">
           <debug_text text="'Pilot Academy [%s]: no docks of right size %s, or no docking allowed: %s, or no dock position %s at: %s, skipping.'.
-          [@this.assignedcontrolled.debugname, @$tradeTarget.dock.{tag.dock_s}, @$tradeTarget.dock.{tag.dock_s}.isdockingallowed, @$tradeTarget.dock.{tag.dock_s}.todockpos, @$tradeTarget.debugname]"
+          [@this.assignedcontrolled.debugname, @$tradeTarget.dock.{$shipDockSize}, @$tradeTarget.dock.{$shipDockSize}.isdockingallowed, @$tradeTarget.dock.{$shipDockSize}.todockpos, @$tradeTarget.debugname]"
             chance="$debugchance" />
           <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
           <resume label="prepareTrade" />
