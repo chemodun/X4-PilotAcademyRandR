@@ -1051,6 +1051,13 @@
         <set_value name="$tradeOperation" exact="'sell'" />
         <set_value name="$tradeOffer" exact="$selectedBuyOffer" />
         <wait min="50ms" max="100ms" />
+        <do_if value="this.assignedcontrolled.gatedistance.{$tradeTarget}.{$blacklistGroup}.{this.assignedcontrolled} lt 0">
+          <debug_text text="'Pilot Academy [%s]: no path possible to Trade Target: %s. Going to find alternative.'.
+            [@this.assignedcontrolled.debugname, @$tradeTarget.debugname]"
+            chance="$debugchance" />
+          <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
+          <resume label="prepareTrade" />
+        </do_if>
         <clamp_trade_amount trade="$selectedBuyOffer" amount="$tradeAmountDefault" buyer="$selectedBuyOffer.owner"
           seller="this.assignedcontrolled" result="$tradeAmount" />
       </do_if>
@@ -1085,6 +1092,13 @@
         <set_value name="$targetType" exact="'seller'" />
         <set_value name="$tradeOperation" exact="'buy'" />
         <set_value name="$tradeOffer" exact="$selectedSellOffer" />
+        <do_if value="this.assignedcontrolled.gatedistance.{$tradeTarget}.{$blacklistGroup}.{this.assignedcontrolled} lt 0">
+          <debug_text text="'Pilot Academy [%s]: no path possible to Trade Target: %s. Going to find alternative.'.
+            [@this.assignedcontrolled.debugname, @$tradeTarget.debugname]"
+            chance="$debugchance" />
+          <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
+          <resume label="prepareTrade" />
+        </do_if>
         <clamp_trade_amount trade="$selectedSellOffer" amount="$tradeAmountDefault" buyer="this.assignedcontrolled"
           seller="$selectedSellOffer.owner" result="$tradeAmount" />
       </do_else>
