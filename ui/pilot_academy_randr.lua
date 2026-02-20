@@ -490,7 +490,7 @@ function pilotAcademy.createInfoFrame()
     tables[i].table.properties.y = topY
     topY = topY + tables[i].height
   end
-  
+
   menu.setrow = nil
   menu.settoprow = nil
   menu.setcol = nil
@@ -687,9 +687,9 @@ function pilotAcademy.createFactionsTable(frame, menu, config, tableName, stored
     tableMaxHeight = tableHandler:getFullHeight()
   end
   tableHandler.properties.maxVisibleHeight = math.min(tableHandler:getFullHeight(), tableMaxHeight)
-  
 
-  return { table = tableHandler, height = tableHandler:getFullHeight() }
+
+  return { table = tableHandler, height = tableHandler.properties.maxVisibleHeight }
 end
 
 -- Helper: Extract and prepare academy display data
@@ -1062,6 +1062,7 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
 
   -- Conditionally add factions table if auto-hire is enabled
   if #factions > 0 and autoHireResult.autoHire == true then
+    tables[#tables].height = tables[#tables].height + Helper.borderSize -- Add spacing before factions table
     tables[#tables + 1] = pilotAcademy.createFactionsTable(frame, menu, config, "table_academy_factions", displayData.academyData, displayData.editData, factions)
   end
 
