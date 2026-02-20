@@ -578,6 +578,13 @@
                       <continue />
                     </do_if>
 
+                    <do_if value="this.assignedcontrolled.gatedistance.{$demandOffer.owner}.{$blacklistGroup}.{this.assignedcontrolled} lt 0">
+                      <debug_text text="'Pilot Academy [%s]: no path possible to: %s, skipping.'.
+                        [@this.assignedcontrolled.debugname, @$demandOffer.owner.debugname]"
+                        chance="$debugchance" />
+                      <continue />
+                    </do_if>
+
                     <do_if value="$illegalWares.indexof.{$demandOffer.ware} gt 0">
                       <debug_text
                         text="'Pilot Academy [%s]: skipping %s offer for %s of %s as ware is illegal for faction %s' .
@@ -606,6 +613,12 @@
 
                     <do_for_each name="$supplyOffer" in="$supplyOffers" counter="$k">
 
+                      <do_if value="this.assignedcontrolled.gatedistance.{$supplyOffer.owner}.{$blacklistGroup}.{this.assignedcontrolled} lt 0">
+                        <debug_text text="'Pilot Academy [%s]: no path possible to: %s, skipping.'.
+                          [@this.assignedcontrolled.debugname, @$supplyOffer.owner.debugname]"
+                          chance="$debugchance" />
+                        <continue />
+                      </do_if>
 
                       <get_wares_illegal_to result="$illegalWaresSupply" faction="$supplyOffer.owner.trueowner" />
                       <do_if value="$illegalWaresSupply.indexof.{$supplyOffer.ware} gt 0">
@@ -770,6 +783,13 @@
                       <continue />
                     </do_if>
 
+                    <do_if value="this.assignedcontrolled.gatedistance.{$demandOffer.owner}.{$blacklistGroup}.{this.assignedcontrolled} lt 0">
+                      <debug_text text="'Pilot Academy [%s]: no path possible to: %s, skipping.'.
+                        [@this.assignedcontrolled.debugname, @$demandOffer.owner.debugname]"
+                        chance="$debugchance" />
+                      <continue />
+                    </do_if>
+
                     <do_if value="$illegalWares.indexof.{$demandOffer.ware} gt 0">
                       <debug_text
                         text="'Pilot Academy [%s]: skipping %s offer for %s of %s as ware is illegal for faction %s' .
@@ -797,6 +817,13 @@
                       sortdescending="false" />
 
                     <do_for_each name="$supplyOffer" in="$supplyOffers" counter="$k">
+
+                      <do_if value="this.assignedcontrolled.gatedistance.{$supplyOffer.owner}.{$blacklistGroup}.{this.assignedcontrolled} lt 0">
+                        <debug_text text="'Pilot Academy [%s]: no path possible to: %s, skipping.'.
+                        [@this.assignedcontrolled.debugname, @$supplyOffer.owner.debugname]"
+                          chance="$debugchance" />
+                        <continue />
+                      </do_if>
 
                       <get_wares_illegal_to result="$illegalWaresSupply" faction="$supplyOffer.owner.trueowner" />
                       <do_if value="$illegalWaresSupply.indexof.{$supplyOffer.ware} gt 0">
