@@ -333,6 +333,7 @@ There are examples of texts and notifications screenshots:
   - `Academy` tabs titles
   - Managing `Cadets` and `Trained Pilots` when Academy is situated on non-Player station
   - Selection of some UI items
+  - Increased reachability check accuracy for trade offers evaluation
 
 ### [1.04] - 2026-02-15
 
