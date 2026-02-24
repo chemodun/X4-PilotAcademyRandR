@@ -341,6 +341,13 @@ There are examples of texts and notifications screenshots:
 [/list]
 [h2][b]Changelog[/b][/h2]
 
+[h2][1.06] - 2026-02-24[/h2]
+[list]
+[*] [b]Improved[/b]
+[list]
+[*] Illegal ware check for trade offers evaluation to prevent possible issues with police interference during training process
+[/list]
+[/list]
 [h2][1.05] - 2026-02-20[/h2]
 [list]
 [*] [b]Added[/b]
