@@ -336,6 +336,11 @@ There are examples of texts and notifications screenshots:
 
 ## Changelog
 
+### [1.06] - 2026-02-24
+
+- **Improved**
+  - Illegal ware check for trade offers evaluation to prevent possible issues with police interference during training process
+
 ### [1.05] - 2026-02-20
 
 - **Added**
