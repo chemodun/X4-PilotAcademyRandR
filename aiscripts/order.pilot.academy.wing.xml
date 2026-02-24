@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<aiscript name="order.pilot.academy.wing" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="2">
+<aiscript name="order.pilot.academy.wing" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="3">
   <order id="PilotAcademyWing" name="{1972092412,101}" description="{1972092412,102}" category="trade" infinite="true" allowinloop="false">
     <params>
       <param name="wingId" type="internal" text="Wing ID" comment="Wing ID" default="''" />
@@ -274,6 +274,34 @@
         <remove_value name="$messageMoney" />
         <remove_value name="$isMessageWarning" />
       </actions>
+      <actions name="GetIllegalWaresForStation">
+        <get_wares_illegal_to result="$illegalWaresForStation" faction="@$stationForTrade.owner" />
+        <set_value name="$stationForTradeSector" exact="@$stationForTrade.sector" />
+        <debug_text text="'Pilot Academy [%s]: found illegal wares count: %s for faction: %s, owner of station: %s in sector %s with owner: %s' .
+            [this.assignedcontrolled.debugname, @$illegalWaresForStation.count, @$stationForTrade.owner, @$stationForTrade.debugname, @$stationForTradeSector.debugname, @$stationForTradeSector.owner]"
+          chance="$debugchance" />
+        <do_if value="@$stationForTrade.owner != @$stationForTrade.trueowner">
+          <get_wares_illegal_to result="$illegalWaresForStation" faction="@$stationForTrade.trueowner" />
+          <debug_text text="'Pilot Academy [%s]: found illegal wares count: %s for faction - true owner: %s of station: %s in sector %s with owner: %s' .
+            [this.assignedcontrolled.debugname, @$illegalWaresForStation.count, @$stationForTrade.trueowner, @$stationForTrade.debugname, @$stationForTradeSector.debugname, @$stationForTradeSector.owner]"
+            chance="$debugchance" />
+        </do_if>
+        <do_if value="@$stationForTradeSector.owner != null and @$stationForTradeSector.owner != @$stationForTrade.owner">
+          <get_wares_illegal_to result="$illegalWaresSectorOwner" faction="@$stationForTradeSector.owner" />
+          <debug_text text="'Pilot Academy [%s]: found illegal wares count: %s for sector %s owner: %s' .
+            [this.assignedcontrolled.debugname, @$illegalWaresSectorOwner.count, @$stationForTradeSector.debugname, @$stationForTradeSector.owner]"
+            chance="$debugchance" />
+          <append_list_elements name="$illegalWaresForStation" other="$illegalWaresSectorOwner" />
+          <do_if value="@$stationForTradeSector.owner != @$stationForTradeSector.trueowner">
+            <get_wares_illegal_to result="$illegalWaresSectorOwner" faction="@$stationForTradeSector.trueowner" />
+            <debug_text text="'Pilot Academy [%s]: found illegal wares count: %s for sector %s true owner: %s' .
+              [this.assignedcontrolled.debugname, @$illegalWaresSectorOwner.count, @$stationForTradeSector.debugname, @$stationForTradeSector.trueowner]"
+              chance="$debugchance" />
+            <append_list_elements name="$illegalWaresForStation" other="$illegalWaresSectorOwner" />
+          </do_if>
+        </do_if>
+        <remove_value name="$stationForTradeSector" />
+      </actions>
     </library>
     <handler ref="AttackHandler" />
     <handler ref="MissileLockHandler" />
@@ -428,9 +456,13 @@
     <set_value name="$lastTradeInfoRefresh" exact="0s" />
     <remove_value name="$isInit" />
     <set_value name="$shipDockSize" exact="this.assignedcontrolled.docksize" />
+    <set_value name="$waitCoefficientBase" exact="5" />
   </init>
   <patch sinceversion="2">
     <set_value name="$shipDockSize" exact="this.assignedcontrolled.docksize" />
+  </patch>
+  <patch sinceversion="2">
+    <set_value name="$waitCoefficientBase" exact="5" />
   </patch>
   <attention min="unknown">
     <actions>
@@ -535,7 +567,7 @@
             <append_to_list name="$filteredFactions" exact="$faction" />
           </do_elseif>
 
-          <do_if value="$i % 10 == 0">
+          <do_if value="$i % $waitCoefficientBase == 0">
             <wait min="1ms" max="3ms" />
           </do_if>
 
@@ -614,6 +646,16 @@
                       <continue />
                     </do_if>
 
+                    <set_value name="$stationForTrade" exact="$demandOffer.owner" />
+                    <include_interrupt_actions ref="GetIllegalWaresForStation" />
+                    <do_if value="$illegalWaresForStation.indexof.{$demandOffer.ware} gt 0">
+                      <debug_text
+                        text="'Pilot Academy [%s]: skipping %s offer for %s of %s as ware is illegal for station %s and sector %s' .
+                        [this.assignedcontrolled.debugname, $offerType, $demandOffer.amount, $demandOffer.ware.id, $stationForTrade.debugname, $stationForTrade.sector.debugname]"
+                        chance="$debugchance" />
+                      <continue />
+                    </do_if>
+
                     <set_value name="$demandAmount" exact="$demandOffer.amount" />
 
                     <set_value name="$demandOwner" exact="$demandOffer.owner" />
@@ -655,11 +697,12 @@
                         <continue />
                       </do_if>
 
-                      <get_wares_illegal_to result="$illegalWaresSupply" faction="$supplyOffer.owner.trueowner" />
-                      <do_if value="$illegalWaresSupply.indexof.{$supplyOffer.ware} gt 0">
+                      <set_value name="$stationForTrade" exact="$supplyOffer.owner" />
+                      <include_interrupt_actions ref="GetIllegalWaresForStation" />
+                      <do_if value="$illegalWaresForStation.indexof.{$supplyOffer.ware} gt 0">
                         <debug_text
-                          text="'Pilot Academy [%s]: skipping opposite offer for %s as ware is illegal for faction %s' .
-                          [this.assignedcontrolled.debugname, $supplyOffer.ware.id, $supplyOffer.owner.trueowner.name]"
+                          text="'Pilot Academy [%s]: skipping opposite offer for %s as ware is illegal for station %s in sector %s' .
+                          [this.assignedcontrolled.debugname, $supplyOffer.ware.id, $stationForTrade.debugname, $stationForTrade.sector.debugname]"
                           chance="$debugchance" />
                         <continue />
                       </do_if>
@@ -728,7 +771,7 @@
                           chance="$debugchance" />
                         <break />
                       </do_if>
-                      <do_if value="$k % 10 == 0">
+                      <do_if value="$k % $waitCoefficientBase == 0">
                         <wait min="1ms" max="3ms" />
                       </do_if>
                     </do_for_each>
@@ -742,7 +785,7 @@
                         chance="$debugchance" />
                       <break />
                     </do_if>
-                    <do_if value="$j % 10 == 0">
+                    <do_if value="$j % $waitCoefficientBase == 0">
                       <wait min="1ms" max="3ms" />
                     </do_if>
                   </do_for_each>
@@ -847,6 +890,16 @@
                       <continue />
                     </do_if>
 
+                    <set_value name="$stationForTrade" exact="$demandOffer.owner" />
+                    <include_interrupt_actions ref="GetIllegalWaresForStation" />
+                    <do_if value="$illegalWaresForStation.indexof.{$demandOffer.ware} gt 0">
+                      <debug_text
+                        text="'Pilot Academy [%s]: skipping %s offer for %s of %s as ware is illegal for station %s and sector %s' .
+                        [this.assignedcontrolled.debugname, $offerType, $demandOffer.amount, $demandOffer.ware.id, $stationForTrade.debugname, $stationForTrade.sector.debugname]"
+                        chance="$debugchance" />
+                      <continue />
+                    </do_if>
+
                     <set_value name="$demandAmount" exact="$demandOffer.amount" />
 
                     <set_value name="$demandOwner" exact="$demandOffer.owner" />
@@ -888,11 +941,12 @@
                         <continue />
                       </do_if>
 
-                      <get_wares_illegal_to result="$illegalWaresSupply" faction="$supplyOffer.owner.trueowner" />
-                      <do_if value="$illegalWaresSupply.indexof.{$supplyOffer.ware} gt 0">
+                      <set_value name="$stationForTrade" exact="$supplyOffer.owner" />
+                      <include_interrupt_actions ref="GetIllegalWaresForStation" />
+                      <do_if value="$illegalWaresForStation.indexof.{$supplyOffer.ware} gt 0">
                         <debug_text
-                          text="'Pilot Academy [%s]: skipping opposite offer for %s as ware is illegal for faction %s' .
-                          [this.assignedcontrolled.debugname, $supplyOffer.ware.id, $supplyOffer.owner.trueowner.name]"
+                          text="'Pilot Academy [%s]: skipping opposite offer for %s as ware is illegal for station %s in sector %s' .
+                          [this.assignedcontrolled.debugname, $supplyOffer.ware.id, $stationForTrade.debugname, $stationForTrade.sector.debugname]"
                           chance="$debugchance" />
                         <continue />
                       </do_if>
@@ -961,7 +1015,7 @@
                           chance="$debugchance" />
                         <break />
                       </do_if>
-                      <do_if value="$k % 10 == 0">
+                      <do_if value="$k % $waitCoefficientBase == 0">
                         <wait min="1ms" max="3ms" />
                       </do_if>
                     </do_for_each>
@@ -975,7 +1029,7 @@
                         chance="$debugchance" />
                       <break />
                     </do_if>
-                    <do_if value="$j % 10 == 0">
+                    <do_if value="$j % $waitCoefficientBase == 0">
                       <wait min="1ms" max="3ms" />
                     </do_if>
                   </do_for_each>
@@ -1042,14 +1096,23 @@
           <find_sell_offer tradepartner="this.assignedcontrolled" seller="$selectedSellOffer.owner" result="$localSellOffers" multiple="true">
             <amount min="$selectedSellOffer.amount / 2" />
           </find_sell_offer>
+          <set_value name="$stationForTrade" exact="$selectedSellOffer.owner" />
+          <include_interrupt_actions ref="GetIllegalWaresForStation" />
           <sort_list list="$localSellOffers" sortbyvalue="loop.element.unitprice" sortdescending="false" />
           <do_for_each name="$localSellOffer" in="$localSellOffers" counter="$i">
             <do_if value="$localSellOffer.ware.id == $selectedSellOffer.ware.id">
               <debug_text
-                text="'Pilot Academy [%s]: skipping wares %s equal and after selected sell offer due to highest prices' .
+                text="'Pilot Academy [%s]: skipping wares %s equal to existing one, and break checks as it would not improve the trade' .
                 [this.assignedcontrolled.debugname, $localSellOffer.ware.id]"
                 chance="$debugchance" />
               <break />
+            </do_if>
+            <do_if value="$illegalWaresForStation.indexof.{$localSellOffer.ware} gt 0">
+              <debug_text
+                text="'Pilot Academy [%s]: skipping local sell offer for %s of %s as ware is illegal for faction %s' .
+                [this.assignedcontrolled.debugname, $offerType, $localSellOffer.amount, $localSellOffer.ware.id, $selectedSellOffer.owner.faction.name]"
+                chance="$debugchance" />
+              <continue />
             </do_if>
             <debug_text
               text="'Pilot Academy [%s]: evaluating local sell offer for ware %s with amount %s and volume %s, price %s, quantity factor %s' .
@@ -1067,7 +1130,7 @@
                   .[this.assignedcontrolled.debugname, $selectedFaction, $selectedSellOffer.ware.id, $selectedSellOffer.owner.debugname, $selectedSellOffer.amount, $selectedSellOffer.volume, $selectedSellOffer.unitprice.formatted.default, $selectedSellOffer.quantityfactor, $selectedBuyOffer.owner.debugname, $selectedBuyOffer.amount, $selectedBuyOffer.volume, $selectedBuyOffer.unitprice.formatted.default, $selectedBuyOffer.quantityfactor, $bestDistance, $bestGateDistance]"
                 chance="$debugchance" />
             </do_if>
-            <do_if value="$i % 10 == 0">
+            <do_if value="$i % $waitCoefficientBase == 0">
               <wait min="1ms" max="3ms" />
             </do_if>
           </do_for_each>
