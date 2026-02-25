@@ -2195,6 +2195,25 @@ function pilotAcademy.getRefreshIntervalOptions()
   return options
 end
 
+function pilotAcademy.getCargoCapacity(container, transport)
+  local menu = pilotAcademy.menuMap
+  if menu == nil then
+    trace("Menu is nil; cannot refresh info frame")
+    return 0
+  end
+  local numStorages = C.GetNumCargoTransportTypes(container, true)
+  local buf = ffi.new("StorageInfo[?]", numStorages)
+  local count = C.GetCargoTransportTypes(buf, numStorages, container, true, false)
+  local capacity = 0
+  for i = 0, count - 1 do
+    local tags = menu and menu.getTransportTagsFromString(ffi.string(buf[i].transport)) or {}
+    if tags[transport] == true then
+      capacity = capacity + buf[i].capacity
+    end
+  end
+  return capacity
+end
+
 function pilotAcademy.fetchPotentialWingmans(existingWing, existingWingLeader)
   if existingWing and existingWingLeader ~= nil then
     return { pilotAcademy.wingLeaderToOption(existingWingLeader) }
@@ -2213,7 +2232,8 @@ function pilotAcademy.fetchPotentialWingmans(existingWing, existingWingLeader)
     if shipWare and (not isUnit) and (not isLasertower) and (not isDeployable) and Helper.isComponentClass(classId, "ship_s") and pilot and IsValidComponent(pilot) then
       local subordinates = GetSubordinates(shipId)
       local commander = GetCommander(shipId)
-      if #subordinates == 0 and commander == nil then
+      local containerCapacity = pilotAcademy.getCargoCapacity(shipId, "container")
+      if #subordinates == 0 and commander == nil and containerCapacity > 0 then
         if academyShips[tostring(shipId)] ~= true then
           local pilotName, pilotSkill = GetComponentData(pilot, "name", "combinedskill")
           if pilotAcademy.skillBase(pilotSkill) < pilotAcademy.commonData.targetRankLevel then
