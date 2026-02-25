@@ -1207,8 +1207,12 @@
           <debug_text
             text="'Pilot Academy [%s]: completed selling %s of %s to %s' . [this.assignedcontrolled.debugname, $tradeAmountDefault, $selectedBuyOffer.ware.id, $buyer.debugname]"
             chance="$debugchance" />
-          <apply_experience entity="this" experience="'ship_trade_good'" factor="1" />
-          <apply_experience object="this.assignedcontrolled" role="entityrole.service" experience="'ship_trade_good'" factor="1" />
+          <set_value name="$applyExperienceChance" exact="100" />
+          <do_if value="this.combinedskill gt $targetCombinedSkill">
+            <set_value name="$applyExperienceChance" exact="15" />
+          </do_if>
+          <apply_experience entity="this" experience="'ship_trade_good'" factor="1" chance="$applyExperienceChance" />
+          <apply_experience object="this.assignedcontrolled" role="entityrole.service" experience="'ship_trade_good'" factor="1" chance="$applyExperienceChance" />
           <do_if value="$shipInfo.$dataIsUpdated">
             <debug_text text="'Pilot Academy [%s]: data is updated, going to re-init trade cycle' . [this.assignedcontrolled.debugname]" chance="$debugchance" />
             <set_value name="$shipInfo.$dataIsUpdated" exact="false" />
