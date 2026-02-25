@@ -2215,14 +2215,18 @@ function pilotAcademy.fetchPotentialWingmans(existingWing, existingWingLeader)
       local commander = GetCommander(shipId)
       if #subordinates == 0 and commander == nil then
         if academyShips[tostring(shipId)] ~= true then
-          local candidate = {}
-          candidate.shipId = shipId
-          candidate.shipName = shipName
-          candidate.shipIdCode = idcode
-          candidate.shipIcon = icon
-          candidate.pilotId = pilot
-          candidate.pilotName, candidate.pilotSkill = GetComponentData(pilot, "name", "combinedskill")
-          candidateShips[#candidateShips + 1] = candidate
+          local pilotName, pilotSkill = GetComponentData(pilot, "name", "combinedskill")
+          if pilotAcademy.skillBase(pilotSkill) < pilotAcademy.commonData.targetRankLevel then
+            candidateShips[#candidateShips + 1] = {
+              shipId = shipId,
+              shipName = shipName,
+              shipIdCode = idcode,
+              shipIcon = icon,
+              pilotId = pilot,
+              pilotName = pilotName,
+              pilotSkill = pilotSkill
+            }
+          end
         end
       end
     end
