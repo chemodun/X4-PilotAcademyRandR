@@ -942,7 +942,7 @@ function pilotAcademy.createFleetAssignmentTable(frame, menu, config, tableName,
       row[2]:createCheckBox(fleetsEdit[fleet.commanderId] == true or fleetsEdit[fleet.commanderId] ~= false and fleetsSaved[fleet.commanderId] == true, { scaling = false })
       row[2].handlers.onClick = function(_, checked) return pilotAcademy.onSelectFleet(fleet.commanderId, checked) end
       row[3]:setColSpan(7):createText(string.format("\027G%s\027X: %s", fleet.fleetName, fleet.commander), { halign = "left", color = Color["text_normal"] })
-      row[10]:setColSpan(2):createText(fleet.sector, { halign = "right", color = Color["text_normal"]})
+      row[10]:setColSpan(2):createText(fleet.sector, { halign = "right", color = Color["text_normal"] })
       if i == 10 then
         tableFleetsMaxHeight = tableHandler:getFullHeight()
       end
