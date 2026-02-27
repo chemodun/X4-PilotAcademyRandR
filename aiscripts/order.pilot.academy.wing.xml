@@ -888,7 +888,7 @@
                   <set_value name="$bestDistance" exact="$bestDistance / 2" />
                 </do_if>
                 <debug_text
-                  text="'Pilot Academy [%s]: ----\ncurrent best offers pair for faction %s: sell ware %s from %s in amount %s and volume %s, price %s, quantity factor %s, buy on %s with amount %s and volume %s, price %s, quantity factor %s with distance %s and gate distance %s\n----'
+                  text="'Pilot Academy [%s]: ---- current best offers pair for faction %s: sell ware %s from %s in amount %s and volume %s, price %s, quantity factor %s, buy on %s with amount %s and volume %s, price %s, quantity factor %s with distance %s and gate distance %s\n----'
                   .[this.assignedcontrolled.debugname, $selectedFaction, $selectedSellOffer.ware.id, $selectedSellOffer.owner.debugname, $selectedSellOffer.amount, $selectedSellOffer.volume, $selectedSellOffer.unitprice.formatted.default, $selectedSellOffer.quantityfactor, $selectedBuyOffer.owner.debugname, $selectedBuyOffer.amount, $selectedBuyOffer.volume, $selectedBuyOffer.unitprice.formatted.default, $selectedBuyOffer.quantityfactor, $bestDistance, $bestGateDistance]"
                   chance="$debugchance" />
               </do_if>
@@ -1152,7 +1152,7 @@
                   <set_value name="$bestDistance" exact="$bestDistance / 2" />
                 </do_if>
                 <debug_text
-                  text="'Pilot Academy [%s]: ----\ncurrent best offers pair for faction %s: sell ware %s from %s in amount %s and volume %s, price %s, quantity factor %s, buy on %s with amount %s and volume %s, price %s, quantity factor %s with distance %s and gate distance %s\n----'
+                  text="'Pilot Academy [%s]: ---- current best offers pair for faction %s: sell ware %s from %s in amount %s and volume %s, price %s, quantity factor %s, buy on %s with amount %s and volume %s, price %s, quantity factor %s with distance %s and gate distance %s\n----'
                   .[this.assignedcontrolled.debugname, $selectedFaction, $selectedSellOffer.ware.id, $selectedSellOffer.owner.debugname, $selectedSellOffer.amount, $selectedSellOffer.volume, $selectedSellOffer.unitprice.formatted.default, $selectedSellOffer.quantityfactor, $selectedBuyOffer.owner.debugname, $selectedBuyOffer.amount, $selectedBuyOffer.volume, $selectedBuyOffer.unitprice.formatted.default, $selectedBuyOffer.quantityfactor, $bestDistance, $bestGateDistance]"
                   chance="$debugchance" />
               </do_if>
@@ -1248,7 +1248,7 @@
               <set_value name="$selectedSellOffer" exact="$localSellOffer" />
               <set_value name="$selectedBuyOffer" exact="$matchingBuyOffers.{1}" />
               <debug_text
-                text="'Pilot Academy [%s]: !!! new best offers pair for faction %s: sell ware %s from %s in amount %s and volume %s, price %s, quantity factor %s, buy on %s with amount %s and volume %s, price %s, quantity factor %s with distance %s and gate distance %s\n----'
+                text="'Pilot Academy [%s]: ---- new best offers pair for faction %s: sell ware %s from %s in amount %s and volume %s, price %s, quantity factor %s, buy on %s with amount %s and volume %s, price %s, quantity factor %s with distance %s and gate distance %s\n----'
                   .[this.assignedcontrolled.debugname, $selectedFaction, $selectedSellOffer.ware.id, $selectedSellOffer.owner.debugname, $selectedSellOffer.amount, $selectedSellOffer.volume, $selectedSellOffer.unitprice.formatted.default, $selectedSellOffer.quantityfactor, $selectedBuyOffer.owner.debugname, $selectedBuyOffer.amount, $selectedBuyOffer.volume, $selectedBuyOffer.unitprice.formatted.default, $selectedBuyOffer.quantityfactor, $bestDistance, $bestGateDistance]"
                 chance="$debugchance" />
             </do_if>
