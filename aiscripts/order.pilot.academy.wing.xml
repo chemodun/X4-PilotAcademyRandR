@@ -302,6 +302,66 @@
         </do_if>
         <remove_value name="$stationForTradeSector" />
       </actions>
+      <actions name="PilotAcademyCheckTradesBlacklist">
+        <do_if value="@$commonData.$tradesBlacklist == nul or typeof @$commonData.$tradesBlacklist != datatype.table">
+          <set_value name="$commonData.$tradesBlacklist" exact="table[]" />
+        </do_if>
+        <set_value name="$blackList" exact="@$commonData.$tradesBlacklist" />
+        <set_value name="$isBlackListed" exact="false" />
+        <do_if value="@$blackList.keys.count gt 0">
+          <set_value name="$tradeRecord" exact="$blackList.{'$%s-%s-%s'.[$blackListCheckOperation, $blackListCheckOffer.owner.idcode, $blackListCheckOffer.ware.id]}" />
+          <do_if value="@$tradeRecord != null">
+            <debug_text
+              text="'Pilot Academy [%s]: found trade record in blacklist for operation: %s, station: %s, ware: %s. Record details: %s' .
+                [this.assignedcontrolled.debugname, $blackListCheckOperation, $blackListCheckOffer.owner.debugname, $blackListCheckOffer.ware.id, $tradeRecord]"
+              chance="$debugchance" />
+            <do_if value="player.age - $tradeRecord.$timeStamp gt $tradeInfoRefreshInterval * 2">
+              <debug_text
+                text="'Pilot Academy [%s]: trade record in blacklist is expired, removing from blacklist. Record details: %s' .
+                    [this.assignedcontrolled.debugname, $tradeRecord]"
+                chance="$debugchance" />
+              <remove_value name="$blackList.{'$%s-%s-%s'.[$blackListCheckOperation, $blackListCheckOffer.owner.idcode, $blackListCheckOffer.ware.id]}" />
+            </do_if>
+            <do_elseif value="$tradeRecord.$count ge 3">
+              <set_value name="$isBlackListed" exact="true" />
+            </do_elseif>
+          </do_if>
+        </do_if>
+      </actions>
+      <actions name="PilotAcademyAddTradeToBlacklist">
+        <do_if value="@$commonData.$tradesBlacklist == nul or typeof @$commonData.$tradesBlacklist != datatype.table">
+          <set_value name="$commonData.$tradesBlacklist" exact="table[]" />
+        </do_if>
+        <set_value name="$blackList" exact="@$commonData.$tradesBlacklist" />
+        <do_if value="@$blackList.{'$%s-%s-%s'.[$blackListAddOperation, $blackListAddOffer.owner.idcode, $blackListAddOffer.ware.id]} == null">
+          <set_value name="$blackList.{'$%s-%s-%s'.[$blackListAddOperation, $blackListAddOffer.owner.idcode, $blackListAddOffer.ware.id]}" exact="table[
+            $timeStamp = player.age,
+            $count = 1
+          ]" />
+          <debug_text
+            text="'Pilot Academy [%s]: added trade record to blacklist for operation: %s, station: %s, ware: %s' .
+              [this.assignedcontrolled.debugname, $blackListAddOperation, $blackListAddOffer.owner.debugname, $blackListAddOffer.ware.id]"
+            chance="$debugchance" />
+        </do_if>
+        <do_else>
+          <set_value name="$blackListRecord" exact="$blackList.{'$%s-%s-%s'.[$blackListAddOperation, $blackListAddOffer.owner.idcode, $blackListAddOffer.ware.id]}" />
+          <do_if value="player.age - $blackListRecord.$timeStamp le $tradeInfoRefreshInterval / 2">
+            <set_value name="$blackListRecord.$count" exact="$blackListRecord.$count + 1" />
+            <debug_text
+              text="'Pilot Academy [%s]: updated trade record in blacklist for operation: %s, station: %s, ware: %s. Record details: %s' .
+                [this.assignedcontrolled.debugname, $blackListAddOperation, $blackListAddOffer.owner.debugname, $blackListAddOffer.ware.id, $blackListRecord]"
+              chance="$debugchance" />
+          </do_if>
+          <do_else>
+            <set_value name="$blackListRecord.$count" exact="1" />
+            <set_value name="$blackListRecord.$timeStamp" exact="player.age" />
+            <debug_text
+              text="'Pilot Academy [%s]: reset trade record in blacklist for operation: %s, station: %s, ware: %s. Record details: %s' .
+                [this.assignedcontrolled.debugname, $blackListAddOperation, $blackListAddOffer.owner.debugname, $blackListAddOffer.ware.id, $blackListRecord]"
+              chance="$debugchance" />
+          </do_else>
+        </do_else>
+      </actions>
     </library>
     <handler ref="AttackHandler" />
     <handler ref="MissileLockHandler" />
@@ -656,6 +716,16 @@
                       <continue />
                     </do_if>
 
+                    <set_value name="$blackListCheckOperation" exact="$offerType" />
+                    <set_value name="$blackListCheckOffer" exact="$demandOffer" />
+                    <include_interrupt_actions ref="PilotAcademyCheckTradesBlacklist" />
+                    <do_if value="$isBlackListed">
+                      <debug_text text="'Pilot Academy [%s]: skipping %s offer %s on %s as trade is blacklisted' .
+                        [this.assignedcontrolled.debugname, $blackListCheckOperation, $blackListCheckOffer.ware.id, $blackListCheckOffer.owner.debugname]"
+                        chance="$debugchance" />
+                      <continue />
+                    </do_if>
+
                     <set_value name="$demandAmount" exact="$demandOffer.amount" />
 
                     <set_value name="$demandOwner" exact="$demandOffer.owner" />
@@ -703,6 +773,16 @@
                         <debug_text
                           text="'Pilot Academy [%s]: skipping opposite offer for %s as ware is illegal for station %s in sector %s' .
                           [this.assignedcontrolled.debugname, $supplyOffer.ware.id, $stationForTrade.debugname, $stationForTrade.sector.debugname]"
+                          chance="$debugchance" />
+                        <continue />
+                      </do_if>
+
+                      <set_value name="$blackListCheckOperation" exact="if $offerType == 'sell' then 'buy' else 'sell'" />
+                      <set_value name="$blackListCheckOffer" exact="$supplyOffer" />
+                      <include_interrupt_actions ref="PilotAcademyCheckTradesBlacklist" />
+                      <do_if value="$isBlackListed">
+                        <debug_text text="'Pilot Academy [%s]: skipping %s offer %s on %s as trade is blacklisted' .
+                        [this.assignedcontrolled.debugname, $blackListCheckOperation, $blackListCheckOffer.ware.id, $blackListCheckOffer.owner.debugname]"
                           chance="$debugchance" />
                         <continue />
                       </do_if>
@@ -900,6 +980,16 @@
                       <continue />
                     </do_if>
 
+                    <set_value name="$blackListCheckOperation" exact="$offerType" />
+                    <set_value name="$blackListCheckOffer" exact="$demandOffer" />
+                    <include_interrupt_actions ref="PilotAcademyCheckTradesBlacklist" />
+                    <do_if value="$isBlackListed">
+                      <debug_text text="'Pilot Academy [%s]: skipping %s offer %s on %s as trade is blacklisted' .
+                        [this.assignedcontrolled.debugname, $blackListCheckOperation, $blackListCheckOffer.ware.id, $blackListCheckOffer.owner.debugname]"
+                        chance="$debugchance" />
+                      <continue />
+                    </do_if>
+
                     <set_value name="$demandAmount" exact="$demandOffer.amount" />
 
                     <set_value name="$demandOwner" exact="$demandOffer.owner" />
@@ -947,6 +1037,16 @@
                         <debug_text
                           text="'Pilot Academy [%s]: skipping opposite offer for %s as ware is illegal for station %s in sector %s' .
                           [this.assignedcontrolled.debugname, $supplyOffer.ware.id, $stationForTrade.debugname, $stationForTrade.sector.debugname]"
+                          chance="$debugchance" />
+                        <continue />
+                      </do_if>
+
+                      <set_value name="$blackListCheckOperation" exact="if $offerType == 'sell' then 'buy' else 'sell'" />
+                      <set_value name="$blackListCheckOffer" exact="$supplyOffer" />
+                      <include_interrupt_actions ref="PilotAcademyCheckTradesBlacklist" />
+                      <do_if value="$isBlackListed">
+                        <debug_text text="'Pilot Academy [%s]: skipping %s offer %s on %s as trade is blacklisted' .
+                        [this.assignedcontrolled.debugname, $blackListCheckOperation, $blackListCheckOffer.ware.id, $blackListCheckOffer.owner.debugname]"
                           chance="$debugchance" />
                         <continue />
                       </do_if>
@@ -1114,6 +1214,17 @@
                 chance="$debugchance" />
               <continue />
             </do_if>
+
+            <set_value name="$blackListCheckOperation" exact="'sell'" />
+            <set_value name="$blackListCheckOffer" exact="$localSellOffer" />
+            <include_interrupt_actions ref="PilotAcademyCheckTradesBlacklist" />
+            <do_if value="$isBlackListed">
+              <debug_text text="'Pilot Academy [%s]: skipping %s offer %s on %s as trade is blacklisted' .
+                        [this.assignedcontrolled.debugname, $blackListCheckOperation, $blackListCheckOffer.ware.id, $blackListCheckOffer.owner.debugname]"
+                chance="$debugchance" />
+              <continue />
+            </do_if>
+
             <debug_text
               text="'Pilot Academy [%s]: evaluating local sell offer for ware %s with amount %s and volume %s, price %s, quantity factor %s' .
                 [this.assignedcontrolled.debugname, $localSellOffer.ware.id, $localSellOffer.amount, $localSellOffer.volume, $localSellOffer.unitprice.formatted.default, $localSellOffer.quantityfactor]"
@@ -1123,6 +1234,17 @@
               <amount min="$selectedBuyOffer.amount / 2" />
             </find_buy_offer>
             <do_if value="$matchingBuyOffers.count gt 0">
+
+              <set_value name="$blackListCheckOperation" exact="'buy'" />
+              <set_value name="$blackListCheckOffer" exact="$matchingBuyOffers.{1}" />
+              <include_interrupt_actions ref="PilotAcademyCheckTradesBlacklist" />
+              <do_if value="$isBlackListed">
+                <debug_text text="'Pilot Academy [%s]: skipping %s offer %s on %s as trade is blacklisted' .
+                    [this.assignedcontrolled.debugname, $blackListCheckOperation, $blackListCheckOffer.ware.id, $blackListCheckOffer.owner.debugname]"
+                  chance="$debugchance" />
+                <continue />
+              </do_if>
+
               <set_value name="$selectedSellOffer" exact="$localSellOffer" />
               <set_value name="$selectedBuyOffer" exact="$matchingBuyOffers.{1}" />
               <debug_text
@@ -1256,6 +1378,15 @@
           text="'Pilot Academy [%s]: unable to clamp trade amount to %s on %s'.[this.assignedcontrolled.debugname, $tradeOperation, $tradeOffer.owner.debugname]"
           chance="$debugchance" />
         <wait min="500ms" max="1s" />
+        <do_if value="$targetType == 'seller'">
+          <set_value name="$blackListAddOperation" exact="'sell'" />
+          <set_value name="$blackListAddOffer" exact="$tradeOffer" />
+        </do_if>
+        <do_else>
+          <set_value name="$blackListAddOperation" exact="'buy'" />
+          <set_value name="$blackListAddOffer" exact="$tradeOffer" />
+        </do_else>
+        <include_interrupt_actions ref="PilotAcademyAddTradeToBlacklist" />
         <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
         <resume label="prepareTrade" />
       </do_if>
