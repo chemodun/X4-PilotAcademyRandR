@@ -339,7 +339,7 @@ There are examples of texts and notifications screenshots:
 ### [1.07] - 2026-02-27
 
 - **Fixed**
-  - In some cases the list of candidates for Wing Leader or Wingman selection contained ships that were not accessible for these roles.
+  - In some cases, the list of candidates for Wing Leader or Wingman selection contained ships that were not accessible for these roles.
   - Possible inefficiency of the training process by adding temporary blacklisting of trade offers that are not accessible for the Player.
   - Ranks Limitation is some cases not fully worked, allowing pilots to be trained above the target rank level. Now the training process will not be stopped but speed will be significantly reduced for pilots that have reached the target rank level.
 
