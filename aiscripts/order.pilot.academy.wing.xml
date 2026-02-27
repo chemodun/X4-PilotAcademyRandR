@@ -274,7 +274,7 @@
         <remove_value name="$messageMoney" />
         <remove_value name="$isMessageWarning" />
       </actions>
-      <actions name="GetIllegalWaresForStation">
+      <actions name="PilotAcademyGetIllegalWaresForStation">
         <get_wares_illegal_to result="$illegalWaresForStation" faction="@$stationForTrade.owner" />
         <set_value name="$stationForTradeSector" exact="@$stationForTrade.sector" />
         <debug_text text="'Pilot Academy [%s]: found illegal wares count: %s for faction: %s, owner of station: %s in sector %s with owner: %s' .
@@ -647,7 +647,7 @@
                     </do_if>
 
                     <set_value name="$stationForTrade" exact="$demandOffer.owner" />
-                    <include_interrupt_actions ref="GetIllegalWaresForStation" />
+                    <include_interrupt_actions ref="PilotAcademyGetIllegalWaresForStation" />
                     <do_if value="$illegalWaresForStation.indexof.{$demandOffer.ware} gt 0">
                       <debug_text
                         text="'Pilot Academy [%s]: skipping %s offer for %s of %s as ware is illegal for station %s and sector %s' .
@@ -698,7 +698,7 @@
                       </do_if>
 
                       <set_value name="$stationForTrade" exact="$supplyOffer.owner" />
-                      <include_interrupt_actions ref="GetIllegalWaresForStation" />
+                      <include_interrupt_actions ref="PilotAcademyGetIllegalWaresForStation" />
                       <do_if value="$illegalWaresForStation.indexof.{$supplyOffer.ware} gt 0">
                         <debug_text
                           text="'Pilot Academy [%s]: skipping opposite offer for %s as ware is illegal for station %s in sector %s' .
@@ -891,7 +891,7 @@
                     </do_if>
 
                     <set_value name="$stationForTrade" exact="$demandOffer.owner" />
-                    <include_interrupt_actions ref="GetIllegalWaresForStation" />
+                    <include_interrupt_actions ref="PilotAcademyGetIllegalWaresForStation" />
                     <do_if value="$illegalWaresForStation.indexof.{$demandOffer.ware} gt 0">
                       <debug_text
                         text="'Pilot Academy [%s]: skipping %s offer for %s of %s as ware is illegal for station %s and sector %s' .
@@ -942,7 +942,7 @@
                       </do_if>
 
                       <set_value name="$stationForTrade" exact="$supplyOffer.owner" />
-                      <include_interrupt_actions ref="GetIllegalWaresForStation" />
+                      <include_interrupt_actions ref="PilotAcademyGetIllegalWaresForStation" />
                       <do_if value="$illegalWaresForStation.indexof.{$supplyOffer.ware} gt 0">
                         <debug_text
                           text="'Pilot Academy [%s]: skipping opposite offer for %s as ware is illegal for station %s in sector %s' .
@@ -1097,7 +1097,7 @@
             <amount min="$selectedSellOffer.amount / 2" />
           </find_sell_offer>
           <set_value name="$stationForTrade" exact="$selectedSellOffer.owner" />
-          <include_interrupt_actions ref="GetIllegalWaresForStation" />
+          <include_interrupt_actions ref="PilotAcademyGetIllegalWaresForStation" />
           <sort_list list="$localSellOffers" sortbyvalue="loop.element.unitprice" sortdescending="false" />
           <do_for_each name="$localSellOffer" in="$localSellOffers" counter="$i">
             <do_if value="$localSellOffer.ware.id == $selectedSellOffer.ware.id">
