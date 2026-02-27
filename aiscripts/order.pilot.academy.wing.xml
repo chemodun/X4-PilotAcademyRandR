@@ -1255,18 +1255,8 @@
         text="'Pilot Academy [%s]: --- **Selected trade** from %s: sell ware %s from %s in amount %s and volume %s, price %s, quantity factor %s, buy on %s with amount %s and volume %s, price %s, quantity factor %s.'
           .[this.assignedcontrolled.debugname, $selectedFaction, $selectedSellOffer.ware.id, $selectedSellOffer.owner.debugname, $selectedSellOffer.amount, $selectedSellOffer.volume, $selectedSellOffer.unitprice.formatted.default, $selectedSellOffer.quantityfactor, $selectedBuyOffer.owner.debugname, $selectedBuyOffer.amount, $selectedBuyOffer.volume, $selectedBuyOffer.unitprice.formatted.default, $selectedBuyOffer.quantityfactor]"
         chance="$debugchance" />
-      <set_value name="$cargoWares" exact="this.assignedcontrolled.cargo.list" />
-      <do_if value="$cargoWares.count">
-        <debug_text
-          text="'Pilot Academy [%s]: clearing existing cargo %s before proceeding with trade operation.'. [this.assignedcontrolled.debugname, this.assignedcontrolled.cargo.table]"
-          chance="$debugchance" />
-        <do_for_each name="$cargoWare" in="$cargoWares">
-          <remove_cargo object="this.assignedcontrolled" ware="$cargoWare" />
-        </do_for_each>
-      </do_if>
-      <remove_value name="$cargoWares" />
-      <label name="proceedWithTrade" />
 
+      <label name="proceedWithTrade" />
 
       <debug_text text="'Pilot Academy [%s]: proceeding with trade operation %s'. [this.assignedcontrolled.debugname, @$tradeOperation]" chance="$debugchance" />
 
@@ -1352,6 +1342,19 @@
           <resume label="prepareTrade" />
         </do_if>
       </do_else>
+
+      <set_value name="$cargoWares" exact="this.assignedcontrolled.cargo.list" />
+      <do_if value="@$tradeOperation == 'buy' and $cargoWares.count gt 0">
+        <do_if value="$cargoWares.count">
+          <debug_text
+            text="'Pilot Academy [%s]: clearing existing cargo %s before proceeding with buy trade operation.'. [this.assignedcontrolled.debugname, this.assignedcontrolled.cargo.table]"
+            chance="$debugchance" />
+          <do_for_each name="$cargoWare" in="$cargoWares">
+            <remove_cargo object="this.assignedcontrolled" ware="$cargoWare" />
+          </do_for_each>
+        </do_if>
+        <remove_value name="$cargoWares" />
+      </do_if>
 
       <set_value name="$clampCount" exact="0" />
       <label name="clampTradeAmount" />
