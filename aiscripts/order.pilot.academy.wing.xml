@@ -72,12 +72,12 @@
           <set_value name="player.entity.$pilotAcademyRAndRWingsInfo" exact="table[]" />
         </do_if>
         <set_value name="$wingsInfo" exact="player.entity.$pilotAcademyRAndRWingsInfo" />
-        <debug_text text="'Pilot Academy [%s]: loaded wingsInfo: %s' . [this.assignedcontrolled.debugname, @$wingsInfo]" chance="$debugchance" />
+        <debug_text text="'Pilot Academy [%s]: loaded wingsInfo: %s, shipsInfo: %s' . [this.assignedcontrolled.debugname, @$wingsInfo, @$wingsInfo.{'$%s'.[$wingId]}]" chance="$debugchance" />
         <do_if value="not $wingsInfo.{'$%s'.[$wingId]}? or @$wingsInfo.{'$%s'.[$wingId]} == null">
           <set_value name="$wingsInfo.{'$%s'.[$wingId]}" exact="table[]" />
         </do_if>
         <set_value name="$shipsInfo" exact="$wingsInfo.{'$%s'.[$wingId]}" />
-        <debug_text text="'Pilot Academy [%s]: loaded shipsInfo: %s' . [this.assignedcontrolled.debugname, @$shipsInfo]" chance="$debugchance" />
+        <debug_text text="'Pilot Academy [%s]: loaded shipsInfo: %s, shipInfo: %s' . [this.assignedcontrolled.debugname, @$shipsInfo, @$shipsInfo.{'$%s'.[$idCode]}]" chance="$debugchance" />
         <do_if value="not $shipsInfo.{'$%s'.[$idCode]}? or @$shipsInfo.{'$%s'.[$idCode]} == null">
           <set_value name="$shipsInfo.{'$%s'.[$idCode]}" exact="table[]" />
         </do_if>
@@ -1267,7 +1267,7 @@
         </do_for_each>
       </do_if>
       <debug_text
-        text="'Pilot Academy [%s]: selected trade from %s: sell ware %s from %s in amount %s and volume %s, price %s, quantity factor %s, buy on %s with amount %s and volume %s, price %s, quantity factor %s.'
+        text="'Pilot Academy [%s]: --- **Selected trade** from %s: sell ware %s from %s in amount %s and volume %s, price %s, quantity factor %s, buy on %s with amount %s and volume %s, price %s, quantity factor %s.'
           .[this.assignedcontrolled.debugname, $selectedFaction, $selectedSellOffer.ware.id, $selectedSellOffer.owner.debugname, $selectedSellOffer.amount, $selectedSellOffer.volume, $selectedSellOffer.unitprice.formatted.default, $selectedSellOffer.quantityfactor, $selectedBuyOffer.owner.debugname, $selectedBuyOffer.amount, $selectedBuyOffer.volume, $selectedBuyOffer.unitprice.formatted.default, $selectedBuyOffer.quantityfactor]"
         chance="$debugchance" />
       <set_value name="$cargoWares" exact="this.assignedcontrolled.cargo.list" />
