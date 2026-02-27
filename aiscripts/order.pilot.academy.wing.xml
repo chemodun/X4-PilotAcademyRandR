@@ -327,8 +327,6 @@
             </do_else>
           </do_if>
         </do_if>
-        <remove_value name="$blackListCheckOperation" />
-        <remove_value name="$blackListCheckOffer" />
       </actions>
       <actions name="PilotAcademyAddTradeToBlacklist">
         <do_if value="@$commonData.$tradesBlacklist == null or typeof @$commonData.$tradesBlacklist != datatype.table">
