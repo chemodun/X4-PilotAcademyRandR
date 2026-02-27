@@ -303,7 +303,7 @@
         <remove_value name="$stationForTradeSector" />
       </actions>
       <actions name="PilotAcademyCheckTradesBlacklist">
-        <do_if value="@$commonData.$tradesBlacklist == nul or typeof @$commonData.$tradesBlacklist != datatype.table">
+        <do_if value="@$commonData.$tradesBlacklist == null or typeof @$commonData.$tradesBlacklist != datatype.table">
           <set_value name="$commonData.$tradesBlacklist" exact="table[]" />
         </do_if>
         <set_value name="$blackList" exact="@$commonData.$tradesBlacklist" />
@@ -331,7 +331,7 @@
         <remove_value name="$blackListCheckOffer" />
       </actions>
       <actions name="PilotAcademyAddTradeToBlacklist">
-        <do_if value="@$commonData.$tradesBlacklist == nul or typeof @$commonData.$tradesBlacklist != datatype.table">
+        <do_if value="@$commonData.$tradesBlacklist == null or typeof @$commonData.$tradesBlacklist != datatype.table">
           <set_value name="$commonData.$tradesBlacklist" exact="table[]" />
         </do_if>
         <set_value name="$blackList" exact="@$commonData.$tradesBlacklist" />
