@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<aiscript name="order.pilot.academy.wing" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="3">
+<aiscript name="order.pilot.academy.wing" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="4">
   <order id="PilotAcademyWing" name="{1972092412,101}" description="{1972092412,102}" category="trade" infinite="true" allowinloop="false">
     <params>
       <param name="wingId" type="internal" text="Wing ID" comment="Wing ID" default="''" />
@@ -1304,7 +1304,7 @@
             chance="$debugchance" />
           <set_value name="$applyExperienceChance" exact="100" />
           <do_if value="this.combinedskill gt $targetCombinedSkill">
-            <set_value name="$applyExperienceChance" exact="15" />
+            <set_value name="$applyExperienceChance" exact="5" />
           </do_if>
           <apply_experience entity="this" experience="'ship_trade_good'" factor="1" chance="$applyExperienceChance" />
           <apply_experience object="this.assignedcontrolled" role="entityrole.service" experience="'ship_trade_good'" factor="1" chance="$applyExperienceChance" />
