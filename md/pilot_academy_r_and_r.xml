@@ -363,7 +363,7 @@
               <param name="title" value="{1972092412,1}" />
               <param name="text" value="{1972092412,2000001}" />
               <param name="isWarning" value="true" />
-              <param name="object" value="@player.entity.$pilotAcademyRAndRData.$academyObject" />
+              <param name="object" value="@player.entity.$pilotAcademyRAndRData.$locationObject" />
               <param name="debugchance" value="$debugchance" />
             </run_actions>
           </actions>
