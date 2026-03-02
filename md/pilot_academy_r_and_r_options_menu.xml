@@ -27,13 +27,14 @@
             <event_cue_signalled />
           </conditions>
           <actions>
-            <debug_text text="'Pilot Academy Options: Opening Pilot Academy Options Menu'" context="false" filter="scripts" />
+            <debug_text text="'Pilot Academy Options: Opening Pilot Academy Options Menu with common data: %s' .
+              [@player.entity.$pilotAcademyRAndRData]" context="false" filter="scripts" />
             <set_value name="$commonData" exact="@player.entity.$pilotAcademyRAndRData" />
             <do_if value="@$commonData != null">
-              <do_if value="@$commonData.$notificationsEnabled == null">
+              <do_if value="$commonData.$notificationsEnabled? == false">
                 <set_value name="$commonData.$notificationsEnabled" exact="true" />
               </do_if>
-              <do_if value="@$commonData.$logbookEnabled == null">
+              <do_if value="$commonData.$logbookEnabled? == false">
                 <set_value name="$commonData.$logbookEnabled" exact="true" />
               </do_if>
               <do_if value="@$commonData.$debugLevel == null">
