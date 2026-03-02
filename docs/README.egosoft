@@ -341,6 +341,13 @@ There are examples of texts and notifications screenshots:
 [/list]
 [size=130][u]Changelog[/u][/size]
 
+[size=125][u][1.08] - 2026-03-02[/u][/size]
+[list]
+[*] [b]Fixed[/b]
+[list]
+[*] After disabling [b]Notification Ticker[/b] and [b]Logbook[/b], on next opening of the [b]Academy Options[/b] menu, the notifications were enabled again.
+[/list]
+[/list]
 [size=125][u][1.07] - 2026-02-27[/u][/size]
 [list]
 [*] [b]Fixed[/b]
