@@ -336,6 +336,11 @@ There are examples of texts and notifications screenshots:
 
 ## Changelog
 
+### [1.08] - 2026-03-02
+
+- **Fixed**
+  - After disabling `Notification Ticker` and `Logbook`, on next opening of the `Academy Options` menu, the notifications were enabled again.
+
 ### [1.07] - 2026-02-27
 
 - **Fixed**
