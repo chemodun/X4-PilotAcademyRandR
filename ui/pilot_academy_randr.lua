@@ -111,6 +111,8 @@ local texts = {
   priority_small_to_large = ReadText(1972092412, 10142),      -- "Small to Large"
   priority_large_to_small = ReadText(1972092412, 10143),      -- "Large to Small"
   noFleetsAvailable = ReadText(1972092412, 10151),           -- "No fleets available"
+  processStationManagersFirst = ReadText(1972092412, 10161),   -- "Consider first as candidate for Station Manager"
+  skipStationsWithoutStorages = ReadText(1972092412, 10162),   -- "Skip Stations without Storages"
   autoFireLessSkilledCrewMember = ReadText(1972092412, 10191), -- "Auto fire less skilled crew member if crew is full"
   fleets = string.format("%s:", ReadText(1001, 8326)),  -- "Fleets:"
   cadets = ReadText(1972092412, 10201),                       -- "Cadets:"
@@ -893,6 +895,41 @@ function pilotAcademy.createAssignOptionsTable(frame, menu, config, tableName, d
   end
 
   tableHandler:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
+  local processStationManagersFirst = displayData.editData.processStationManagersFirst
+  if processStationManagersFirst == nil then
+    processStationManagersFirst = displayData.academyData.processStationManagersFirst
+  end
+  if processStationManagersFirst == nil then
+    processStationManagersFirst = false
+  end
+  local row = tableHandler:addRow("process_station_managers_first", { fixed = true })
+  row[2]:createCheckBox(processStationManagersFirst == true, {
+    height = config.mapRowHeight,
+    width = config.mapRowHeight
+  })
+  row[2].handlers.onClick = function(_, checked) return pilotAcademy.onToggleProcessStationManagersFirst(checked) end
+  row[3]:createText(texts.processStationManagersFirst, { halign = "left", titleColor = Color["row_title"], x = Helper.scaleX(Helper.borderSize * 2) })
+
+  local skipStationsWithoutStorages = true
+  if processStationManagersFirst then
+    skipStationsWithoutStorages = displayData.editData.skipStationsWithoutStorages
+    if skipStationsWithoutStorages == nil then
+      skipStationsWithoutStorages = displayData.academyData.skipStationsWithoutStorages
+    end
+    if skipStationsWithoutStorages == nil then
+      skipStationsWithoutStorages = true
+    end
+  end
+  local row = tableHandler:addRow("skip_stations_without_storages", { fixed = true })
+  row[2]:createCheckBox(skipStationsWithoutStorages == true, {
+    height = config.mapRowHeight,
+    width = config.mapRowHeight,
+    active = processStationManagersFirst,
+  })
+  row[2].handlers.onClick = function(_, checked) return pilotAcademy.onToggleSkipStationsWithoutStorages(checked) end
+  row[3]:createText(texts.skipStationsWithoutStorages, { halign = "left", titleColor = Color["row_title"], x = Helper.scaleX(Helper.borderSize * 4) })
+
+  tableHandler:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
   local autoFireLessSkilledCrewMember = displayData.editData.autoFireLessSkilledCrewMember
   if autoFireLessSkilledCrewMember == nil then
     autoFireLessSkilledCrewMember = displayData.academyData.autoFireLessSkilledCrewMember
@@ -1313,6 +1350,24 @@ function pilotAcademy.onToggleAutoFireLessSkilledCrewMember(checked)
   end
 end
 
+function pilotAcademy.onToggleProcessStationManagersFirst(checked)
+  trace("Toggled process station managers first: " .. tostring(checked))
+  pilotAcademy.editData.processStationManagersFirst = checked
+  local menu = pilotAcademy.menuMap
+  if menu ~= nil then
+    menu.refreshInfoFrame()
+  end
+end
+
+function pilotAcademy.onToggleSkipStationsWithoutStorages(checked)
+  trace("Toggled skip stations without storages: " .. tostring(checked))
+  pilotAcademy.editData.skipStationsWithoutStorages = checked
+  local menu = pilotAcademy.menuMap
+  if menu ~= nil then
+    menu.refreshInfoFrame()
+  end
+end
+
 function pilotAcademy.buttonCancelAcademyChanges()
   trace("Cancelling academy changes")
   pilotAcademy.editData = {}
@@ -1473,6 +1528,31 @@ function pilotAcademy.buttonSaveAcademy()
   end
   if academyData.autoFireLessSkilledCrewMember == nil then
     academyData.autoFireLessSkilledCrewMember = false
+  end
+
+  if editData.processStationManagersFirst ~= nil then
+    academyData.processStationManagersFirst = editData.processStationManagersFirst
+  end
+  if academyData.processStationManagersFirst == nil then
+    academyData.processStationManagersFirst = false
+  end
+
+  if editData.skipStationsWithoutStorages ~= nil then
+    academyData.skipStationsWithoutStorages = editData.skipStationsWithoutStorages
+  end
+  if academyData.skipStationsWithoutStorages == nil then
+    academyData.skipStationsWithoutStorages = true
+  end
+
+  if academyData.processStationManagersFirst == false then
+    academyData.skipStationsWithoutStorages = true
+  end
+
+  if academyData.assign == "manual" then
+    academyData.autoFireLessSkilledCrewMember = false
+    academyData.processStationManagersFirst = false
+    academyData.skipStationsWithoutStorages = true
+    academyData.assignPriority = "priority_small_to_large"
   end
 
   pilotAcademy.editData = {}
@@ -1862,6 +1942,24 @@ function pilotAcademy.loadCommonData()
     pilotAcademy.commonData.autoFireLessSkilledCrewMember = true
   else
     pilotAcademy.commonData.autoFireLessSkilledCrewMember = false
+  end
+
+  if pilotAcademy.commonData.processStationManagersFirst == 1 then
+    pilotAcademy.commonData.processStationManagersFirst = true
+  else
+    pilotAcademy.commonData.processStationManagersFirst = false
+  end
+
+  if pilotAcademy.commonData.skipStationsWithoutStorages == 1 then
+    pilotAcademy.commonData.skipStationsWithoutStorages = true
+  elseif pilotAcademy.commonData.processStationManagersFirst == 0 then
+    pilotAcademy.commonData.skipStationsWithoutStorages = false
+  else
+    pilotAcademy.commonData.skipStationsWithoutStorages = true
+  end
+
+  if pilotAcademy.commonData.processStationManagersFirst == false then
+    pilotAcademy.commonData.skipStationsWithoutStorages = true
   end
 
   if pilotAcademy.commonData.lastAutoAssignTime == nil then
@@ -3398,8 +3496,13 @@ function pilotAcademy.autoAssignPilots()
   else
     candidateShips = pilotAcademy.fetchCandidatesForReplacement()
   end
-  if candidateShips == nil or #candidateShips == 0 then
-    trace("No candidate ships found for replacement, returning")
+
+  local stations = {}
+  if pilotAcademy.commonData.processStationManagersFirst then
+    stations = pilotAcademy.fetchStations()
+  end
+  if candidateShips == nil or #candidateShips == 0 and (pilotAcademy.commonData.processStationManagersFirst == false or #stations == 0) then
+    trace("No candidate ships found (and no stations to process), returning")
     return
   end
   trace(string.format("Auto-assigning pilots: found %d pilots and %d candidate ships", #pilots, #candidateShips))
@@ -3409,6 +3512,12 @@ function pilotAcademy.autoAssignPilots()
       trace("Pilot is nil, skipping")
     else
       local candidateShip = candidateShips[1]
+      if pilotAcademy.commonData.processStationManagersFirst and #stations > 0 then
+        if pilotAcademy.assignAsStationManager(pilot, stations) then
+          trace(string.format("Assigned pilot '%s' as station manager, skipping ship assignment", pilot.name))
+          candidateShip = nil
+        end
+      end
       if candidateShip ~= nil then
         local data = {
           ship = ConvertStringToLuaID(tostring(candidateShip.shipId)),
@@ -3417,7 +3526,7 @@ function pilotAcademy.autoAssignPilots()
           iteration = 0
         }
         SignalObject(pilotAcademy.playerId, "PilotAcademyRAndR.MoveNewPilotRequest", data)
-        trace(string.format("Assigned pilot '%s' (skill: %d) to ship '%s' (idcode: %s)",
+        trace(string.format("Move pilot '%s' (skill: %d) to ship '%s' (idcode: %s) as pilot replacement",
           pilot.name, pilot.skill, candidateShip.shipName, candidateShip.shipIdCode))
         table.remove(candidateShips, 1)
         if #candidateShips == 0 then
@@ -3427,6 +3536,31 @@ function pilotAcademy.autoAssignPilots()
       end
     end
   end
+end
+
+function pilotAcademy.assignAsStationManager(pilot, stations)
+  local pilotManagerSkill = C.GetEntityCombinedSkill(pilot.entity, nil, "manager")
+  trace(string.format("assignAsStationManager called for pilot '%s' and stations count: %d", pilot.name, #stations))
+  local result = false
+  if pilotManagerSkill < stations[1].managerSkill then
+    trace(string.format("Pilot '%s' does not meet manager skill requirement for station '%s' (pilot skill: %d, required: %d), skipping assignment",
+      pilot.name, stations[1].name, pilotManagerSkill, stations[1].managerSkill))
+  else
+    local station = stations[1]
+    local data = {
+      station = ConvertStringToLuaID(tostring(station.id)),
+      academyObject = ConvertStringToLuaID(tostring(pilotAcademy.commonData.locationId)),
+      newManager = ConvertStringToLuaID(tostring(pilot.entity)),
+      iteration = 0
+    }
+
+    SignalObject(pilotAcademy.playerId, "PilotAcademyRAndR.MoveNewManagerRequest", data)
+    trace(string.format("Move pilot '%s' to station '%s' (idcode: %s) as manager replacement", pilot.name, station.name, station.idCode))
+    table.remove(stations, 1)
+    result = true
+  end
+  return result
+
 end
 
 function pilotAcademy.processCandidateForReplacement(shipId, candidateShips, academyShips, targetRankLevel)
@@ -3524,6 +3658,39 @@ function pilotAcademy.sortCandidatesForReplacement(candidates, assign, assignPri
     return a.shipName < b.shipName
   end)
 end
+
+function pilotAcademy.fetchStations()
+  trace("fetchStations called")
+  local stations = {}
+  local numStations = C.GetNumAllFactionStations("player")
+  local allStations = ffi.new("UniverseID[?]", numStations)
+  numStations = C.GetAllFactionStations(allStations, numStations, "player")
+  local skipWithoutStorages = pilotAcademy.commonData and pilotAcademy.commonData.skipStationsWithoutStorages
+  for i = 0, numStations - 1 do
+    local stationId = ConvertStringTo64Bit(tostring(allStations[i]))
+    local numStorages = C.GetNumCargoTransportTypes(stationId, true)
+    if skipWithoutStorages == false or (numStorages ~= nil and numStorages > 0) then
+      local stationName, stationIdCode, manager = GetComponentData(stationId, "name", "idcode", "tradenpc")
+      local managerSkill = 0
+      local managerName = ""
+      if manager then
+        managerName, managerSkill = GetComponentData(manager, "name", "combinedskill")
+      end
+      stations[#stations + 1] = {
+        id = stationId,
+        name = stationName,
+        idCode = stationIdCode,
+        manager = manager,
+        managerName = managerName,
+        managerSkill = managerSkill,
+      }
+    end
+  end
+  table.sort(stations, function(a, b) return a.managerSkill < b.managerSkill end)
+  return stations
+end
+
+
 
 local function Init()
   pilotAcademy.playerId = ConvertStringTo64Bit(tostring(C.GetPlayerID()))
