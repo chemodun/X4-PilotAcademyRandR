@@ -344,6 +344,9 @@
         </do_if>
         <remove_value name="$blackListAddOperation" />
         <remove_value name="$blackListAddOffer" />
+        <do_if value="this.assignedcontrolled.commander != null">
+          <signal_objects object="this.assignedcontrolled.commander" param="'PilotAcademyRAndR.TradesBlacklistUpdatedSignal'" param2="this.assignedcontrolled" />
+        </do_if>
       </actions>
     </library>
     <handler ref="AttackHandler" />
@@ -369,6 +372,17 @@
         <set_value name="$selectedFaction" exact="event.param3.$selectedFaction" />
         <set_value name="$selectedBuyOffer" exact="event.param3.$selectedBuyOffer" />
         <set_value name="$selectedSellOffer" exact="event.param3.$selectedSellOffer" />
+        <abort_called_scripts resume="prepareTrade" />
+      </actions>
+    </handler>
+    <handler>
+      <conditions>
+        <event_object_signalled object="this.assignedcontrolled" param="'PilotAcademyRAndR.TradesBlacklistUpdatedSignal'" />
+      </conditions>
+      <actions>
+        <debug_text text="'Pilot Academy [%s]: received trade blacklist update signal from subordinate %s'.[this.assignedcontrolled.debugname, event.param2 .debugname]"
+          chance="$debugchance" />
+        <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
         <abort_called_scripts resume="prepareTrade" />
       </actions>
     </handler>
