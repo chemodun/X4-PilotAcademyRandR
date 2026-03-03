@@ -1456,8 +1456,9 @@
         chance="$debugchance" />
 
       <do_if value="$tradeResult le 0">
-        <wait min="200ms * $tradeExecutionCount" max="500ms * $tradeExecutionCount" />
-        <do_if value="$tradeExecutionCount le 5">
+        <wait min="400ms * $tradeExecutionCount" max="800ms * $tradeExecutionCount" />
+        <do_if value="$tradeExecutionCount le 10">
+          <debug_text text="'Pilot Academy [%s]: retrying trade on: %s, to %s of %s. Iteration: %s.' . [this.assignedcontrolled.debugname, @$tradeTarget.debugname, $tradeOperation, $tradeOffer.ware, $tradeExecutionCount]" chance="$debugchance" />
           <resume label="executeTrade" />
         </do_if>
       </do_if>
