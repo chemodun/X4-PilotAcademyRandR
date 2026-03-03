@@ -3520,7 +3520,7 @@ function pilotAcademy.autoAssignPilots()
       end
       if candidateShip ~= nil then
         local data = {
-          ship = ConvertStringToLuaID(tostring(candidateShip.shipId)),
+          target = ConvertStringToLuaID(tostring(candidateShip.shipId)),
           academyObject = ConvertStringToLuaID(tostring(pilotAcademy.commonData.locationId)),
           newPilot = ConvertStringToLuaID(tostring(pilot.entity)),
           iteration = 0
@@ -3548,7 +3548,7 @@ function pilotAcademy.assignAsStationManager(pilot, stations)
   else
     local station = stations[1]
     local data = {
-      station = ConvertStringToLuaID(tostring(station.id)),
+      target = ConvertStringToLuaID(tostring(station.id)),
       academyObject = ConvertStringToLuaID(tostring(pilotAcademy.commonData.locationId)),
       newManager = ConvertStringToLuaID(tostring(pilot.entity)),
       iteration = 0

@@ -36,7 +36,7 @@
           </actions>
         </cue>
 
-        <cue name="Process_Pilot_Swapping" instantiate="true" version="2">
+        <cue name="Process_Pilot_Swapping" instantiate="true" version="3">
           <conditions>
             <event_object_signalled object="player.entity" param="'PilotAcademyRAndR.PilotSwapRequest'" />
             <check_value value="@event.param2 != null" />
@@ -47,60 +47,83 @@
               text="'Pilot Academy: Process_Pilot_Swapping: Received swap request for %s pilots.' .
                 [@event.param2]"
               chance="$debugchance" filter="scripts" />
-            <set_value name="$ship" exact="@event.param2.$ship" />
-            <set_value name="$shipName" exact="{1016,6}.[$ship.knownname, $ship.idcode]" />
-            <set_value name="$replacementPilotTemplate" exact="@event.param2.$replacementPilotTemplate" />
-            <set_value name="$replacementPilotName" exact="$ship.availablepeople.{$replacementPilotTemplate}.name" />
+            <set_value name="$target" exact="@event.param2.$target" />
+            <set_value name="$targetName" exact="{1016,6}.[$target.knownname, $target.idcode]" />
+            <set_value name="$isStation" exact="$target.isclass.{class.station}" />
+            <set_value name="$newNPCTemplate" exact="@event.param2.$newNPCTemplate" />
+            <set_value name="$newNPCName" exact="$target.availablepeople.{$newNPCTemplate}.name" />
             <set_value name="$isCadet" exact="@event.param2.$isCadet" />
-            <set_value name="$oldPilot" exact="$ship.aipilot" />
-            <set_value name="$oldPilotName" exact="$oldPilot.name" />
-            <set_value name="$oldPilotTemplate" exact="$oldPilot.npctemplate" />
+            <set_value name="$controlPost" exact="controlpost.aipilot" />
+            <set_value name="$npcType" exact="if $isStation then 'Station Manager' else 'Pilot'" />
+            <do_if value="$isStation">
+              <set_value name="$controlPost" exact="controlpost.manager" />
+            </do_if>
+            <set_value name="$oldNPC" exact="$target.controlentity.{$controlPost}" />
+            <set_value name="$oldNPCName" exact="@$oldNPC.name" />
+            <set_value name="$oldNPCTemplate" exact="@$oldNPC.npctemplate" />
             <set_value name="$academyObject" exact="@event.param2.$academyObject" />
             <set_value name="$iteration" exact="@event.param2.$iteration" />
-            <assign_hired_actor actor="[$ship, $replacementPilotTemplate]" target="$ship"
-              post="controlpost.aipilot" success="$pilotsSwappingResult" failed="$pilotsSwappingMessage" check="true" />
-            <debug_text
-              text="'Pilot Academy: Process_Pilot_Swapping: Swap Pilots Check: Iteration %s, Result: %s. Message: %s'.[$iteration, $pilotsSwappingResult, $pilotsSwappingMessage ]"
-            />
-            <do_if value="$pilotsSwappingResult">
+            <do_if value="$isStation and @$oldNPC != null">
               <debug_text
-                text="'Pilot Academy: Process_Pilot_Swapping: pilot %s (%s) is can be replaced on %s by new pilot %s.' .
-                  [$oldPilotName, $oldPilot.debugname, $ship.debugname, $replacementPilotName]"
+                text="'Pilot Academy: Process_Pilot_Swapping: Station Manager swapping. Dismissing old manager %s on %s to assign new manager %s.' .
+                  [@$oldNPCName, $target.debugname, $newNPCName]"
                 chance="$debugchance" />
-              <assign_hired_actor actor="[$ship, $replacementPilotTemplate]" target="$ship"
-                post="controlpost.aipilot" success="$pilotsSwappingResult" failed="$pilotsSwappingMessage" />
+              <dismiss_control_entity object="$target" actor="$oldNPC" />
+              <create_npc_template name="$oldNPCTemplate" object="$target" entity="$oldNPC" role="entityrole.unassigned" />
+              <remove_actor_from_room actor="$oldNPC" destroy="true" />
+              <debug_text text="'Pilot Academy: Process_Pilot_Swapping: Old manager %s dismissed from %s. Template: %s. In people: %s, in available: %s' .
+                  [@$oldNPCName, $target.debugname, $oldNPCTemplate, @$target.people.{$oldNPCTemplate}.name, @$target.availablepeople.{$oldNPCTemplate}.name]"
+                chance="$debugchance" />
             </do_if>
-            <do_if value="$pilotsSwappingResult">
+            <assign_hired_actor actor="[$target, $newNPCTemplate]" target="$target"
+              post="$controlPost" success="$swappingResult" failed="$swappingMessage" check="true" />
+            <debug_text
+              text="'Pilot Academy: Process_Pilot_Swapping: Swap %s Check: Iteration %s, Result: %s. Message: %s'.[$npcType, $iteration, $swappingResult, $swappingMessage ]"
+            />
+            <do_if value="$swappingResult">
               <debug_text
-                text="'Pilot Academy: Process_Pilot_Swapping: pilot %s (%s) successfully assigned to %s, replacing %s.' .
-                  [$replacementPilotName, $replacementPilotTemplate, $ship.debugname, $oldPilotName]"
+                text="'Pilot Academy: Process_Pilot_Swapping: %s %s (%s) is can be replaced on %s by new %s %s.' .
+                  [$npcType, @$oldNPCName, @$oldNPC.debugname, $target.debugname, $npcType, $newNPCName]"
                 chance="$debugchance" />
-              <signal_objects object="player.entity" param="'PilotAcademyRAndR.OldPilotReturnRequest'"
-                param2="table[
-                    $oldPilotTemplate = $oldPilotTemplate,
-                    $ship = $ship,
+              <assign_hired_actor actor="[$target, $newNPCTemplate]" target="$target"
+                post="$controlPost" success="$swappingResult" failed="$swappingMessage" />
+            </do_if>
+            <do_if value="$swappingResult">
+              <debug_text
+                text="'Pilot Academy: Process_Pilot_Swapping: %s %s (%s) successfully assigned to %s, replacing %s.' .
+                  [$npcType, $newNPCName, $newNPCTemplate, $target.debugname, @$oldNPCName]"
+                chance="$debugchance" />
+              <do_if value="@$oldNPC != null">
+                <signal_objects object="player.entity" param="'PilotAcademyRAndR.OldPilotReturnRequest'"
+                  param2="table[
+                    $oldNPCTemplate = $oldNPCTemplate,
+                    $target = $target,
                     $academyObject = $academyObject,
                     $iteration = 0
                   ]"
-                delay="3s" />
-              <set_value name="$messageTemplate" exact="if $isCadet then {1972092412,1000002} else {1972092412,1000007} " />
-              <run_actions ref="Notify_Player">
-                <param name="title" value="{1972092412,1}" />
-                <param name="text" value="$messageTemplate.[$replacementPilotName, $shipName]" />
-                <param name="object" value="$ship" />
-              </run_actions>
-              <remove_value name="$messageTemplate" />
+                  delay="3s" />
+                <set_value name="$messageTemplate" exact="if $isCadet then {1972092412,1000002} else {1972092412,1000007} " />
+                <do_if value="$isStation">
+                  <set_value name="$messageTemplate" exact="{1972092412,1000017}" />
+                </do_if>
+                <run_actions ref="Notify_Player">
+                  <param name="title" value="{1972092412,1}" />
+                  <param name="text" value="$messageTemplate.[$newNPCName, $targetName]" />
+                  <param name="object" value="$target" />
+                </run_actions>
+                <remove_value name="$messageTemplate" />
+              </do_if>
             </do_if>
             <do_else>
               <debug_text
-                text="'Pilot Academy: Process_Pilot_Swapping: failed to replace pilot %s on %s with new pilot %s (%s). Message: %s. Going to repeat.' .
-                  [$oldPilotName, $ship.debugname, $replacementPilotName, $replacementPilotTemplate, $pilotsSwappingMessage]"
+                text="'Pilot Academy: Process_Pilot_Swapping: failed to replace %s %s on %s with new %s %s (%s). Message: %s. Going to repeat.' .
+                  [$npcType, @$oldNPCName, $target.debugname, $npcType, $newNPCName, $newNPCTemplate, $swappingMessage]"
                 chance="$debugchance" />
               <do_if value="$iteration le 5">
                 <signal_objects object="player.entity" param="'PilotAcademyRAndR.PilotSwapRequest'"
                   param2="table[
-                    $ship = $ship,
-                    $replacementPilotTemplate = $replacementPilotTemplate,
+                    $target = $target,
+                    $newNPCTemplate = $newNPCTemplate,
                     $academyObject = $academyObject,
                     $isCadet = $isCadet,
                     $iteration = $iteration + 1
@@ -109,33 +132,37 @@
               </do_if>
               <do_else>
                 <debug_text
-                  text="'Pilot Academy: Process_Pilot_Swapping: exceeded max attempts to swap pilot %s on %s. Please do it manually!' .
-                    [$oldPilotName, $ship.debugname]"
+                  text="'Pilot Academy: Process_Pilot_Swapping: exceeded max attempts to swap %s %s on %s. Please do it manually!' .
+                    [$npcType, @$oldNPCName, $target.debugname]"
                   chance="$debugchance" />
                 <run_actions ref="Notify_Player">
                   <param name="title" value="{1972092412,1}" />
-                  <param name="text" value="{1972092412,2000003}.[ $shipName ]" />
+                  <param name="text" value="if $isStation then  {1972092412,2000013}.[ $targetName ] else {1972092412,2000003}.[ $targetName ]" />
                   <param name="isWarning" value="true" />
-                  <param name="object" value="$ship" />
+                  <param name="object" value="$target" />
                   <param name="debugchance" value="$debugchance" />
                 </run_actions>
               </do_else>
             </do_else>
             <remove_value name="$iteration" />
-            <remove_value name="$replacementPilotTemplate" />
-            <remove_value name="$replacementPilotName" />
-            <remove_value name="$oldPilotName" />
-            <remove_value name="$oldPilot" />
-            <remove_value name="$oldPilotTemplate" />
+            <remove_value name="$newNPCTemplate" />
+            <remove_value name="$newNPCName" />
+            <remove_value name="$isCadet" />
+            <remove_value name="$controlPost" />
+            <remove_value name="$npcType" />
+            <remove_value name="$isStation" />
+            <remove_value name="$oldNPCName" />
+            <remove_value name="$oldNPC" />
+            <remove_value name="$oldNPCTemplate" />
             <remove_value name="$academyObject" />
-            <remove_value name="$pilotsSwappingMessage" />
-            <remove_value name="$pilotsSwappingResult" />
-            <remove_value name="$ship" />
-            <remove_value name="$shipName" />
+            <remove_value name="$swappingMessage" />
+            <remove_value name="$swappingResult" />
+            <remove_value name="$target" />
+            <remove_value name="$targetName" />
           </actions>
         </cue>
 
-        <cue name="Process_Old_Pilot_Return" instantiate="true" version="2">
+        <cue name="Process_Old_Pilot_Return" instantiate="true" version="3">
           <conditions>
             <event_object_signalled object="player.entity" param="'PilotAcademyRAndR.OldPilotReturnRequest'" />
             <check_value value="@event.param2 != null" />
@@ -146,35 +173,37 @@
               text="'Pilot Academy: Process_Old_Pilot_Return: Received old pilot return request: %s.' .
                 [@event.param2]"
               chance="$debugchance" filter="scripts" />
-            <set_value name="$ship" exact="@event.param2.$ship" />
-            <set_value name="$oldPilotTemplate" exact="@event.param2.$oldPilotTemplate" />
-            <set_value name="$oldPilotName" exact="$ship.availablepeople.{$oldPilotTemplate}.name" />
+            <set_value name="$target" exact="@event.param2.$target" />
+            <set_value name="$isStation" exact="$target.isclass.{class.station}" />
+            <set_value name="$npcType" exact="if $isStation then 'Station Manager' else 'Pilot'" />
+            <set_value name="$oldNPCTemplate" exact="@event.param2.$oldNPCTemplate" />
+            <set_value name="$oldNPCName" exact="$target.availablepeople.{$oldNPCTemplate}.name" />
             <set_value name="$academyObject" exact="@event.param2.$academyObject" />
             <set_value name="$iteration" exact="@event.param2.$iteration" />
             <set_value name="$academyFreeCapacity" exact="$academyObject.people.free" />
             <set_value name="$commonData" exact="@player.entity.$pilotAcademyRAndRData" />
             <set_value name="$targetRankLevel" exact="@$commonData.$targetRankLevel" />
             <set_value name="$targetCombinedSkill" exact="@$targetRankLevel * 20" />
-            <set_npc_template_role template="$oldPilotTemplate" object="$ship" role="entityrole.trainee_group" />
+            <set_npc_template_role template="$oldNPCTemplate" object="$target" role="entityrole.trainee_group" />
             <debug_text
-              text="'Pilot Academy: Process_Old_Pilot_Return: Iteration %s. Going to move old one %s (%s) to Academy: %s. Free capacity: %s. Target rank: %s (%s).' .
-                  [$iteration, $oldPilotName, $oldPilotTemplate, $academyObject.debugname, $academyFreeCapacity, $targetRankLevel, $targetCombinedSkill]"
+              text="'Pilot Academy: Process_Old_Pilot_Return: Iteration %s. Going to move old %s %s (%s) to Academy: %s. Free capacity: %s. Target rank: %s (%s).' .
+                  [$iteration, $npcType, $oldNPCName, $oldNPCTemplate, $academyObject.debugname, $academyFreeCapacity, $targetRankLevel, $targetCombinedSkill]"
               chance="$debugchance" />
             <do_if value="$academyFreeCapacity gt 0">
-              <set_value name="$oldPilotSkill" exact="$ship.availablepeople.{$oldPilotTemplate}.potentialskill.{controlpost.aipilot}" />
-              <transfer_people result="$personTransferred" object="$academyObject" otherobject="$ship"
+              <set_value name="$oldNPCSkill" exact="$target.availablepeople.{$oldNPCTemplate}.potentialskill.{controlpost.aipilot}" />
+              <transfer_people result="$personTransferred" object="$academyObject" otherobject="$target"
                 receiveworkforce="false">
-                <existing_people people="[$oldPilotTemplate]" />
+                <existing_people people="[$oldNPCTemplate]" />
               </transfer_people>
               <do_if value="$personTransferred.count == 1">
                 <debug_text
-                  text="'Pilot Academy: Process_Old_Pilot_Return: old pilot %s (%s) with skill %s successfully transferred to %s.' .
-                      [$oldPilotName, $oldPilotTemplate, $oldPilotSkill, $academyObject.debugname]"
+                  text="'Pilot Academy: Process_Old_Pilot_Return: old %s %s (%s) with skill %s successfully transferred to %s.' .
+                      [$npcType, $oldNPCName, $oldNPCTemplate, $oldNPCSkill, $academyObject.debugname]"
                   chance="$debugchance" />
-                <do_if value="$oldPilotSkill ge $targetCombinedSkill">
+                <do_if value="$oldNPCSkill ge $targetCombinedSkill">
                   <run_actions ref="Notify_Player">
                     <param name="title" value="{1972092412,1}" />
-                    <param name="text" value="{1972092412,1000003}.[$oldPilotName]" />
+                    <param name="text" value="if $isStation then {1972092412,1000013}.[$oldNPCName] else {1972092412,1000003}.[$oldNPCName]" />
                     <param name="object" value="$academyObject" />
                     <param name="debugchance" value="$debugchance" />
                   </run_actions>
@@ -182,24 +211,24 @@
                 <do_else>
                   <run_actions ref="Notify_Player">
                     <param name="title" value="{1972092412,1}" />
-                    <param name="text" value="{1972092412,1000006}.[$oldPilotName]" />
+                    <param name="text" value="if $isStation then {1972092412,1000016}.[$oldNPCName] else {1972092412,1000006}.[$oldNPCName]" />
                     <param name="object" value="$academyObject" />
                     <param name="debugchance" value="$debugchance" />
                   </run_actions>
                 </do_else>
                 <raise_lua_event name="'PilotAcademyRAndR.PilotReturned'" param="'%s'.[$personTransferred.{1}]" />
-                <remove_value name="$oldPilotSkill" />
+                <remove_value name="$oldNPCSkill" />
               </do_if>
               <do_else>
                 <do_if value="$iteration le 5">
                   <debug_text
-                    text="'Pilot Academy: Process_Old_Pilot_Return: failed to transfer old pilot %s (%s) to %s. Going to repeat.' .
-                      [$oldPilotName, $oldPilotTemplate, $academyObject.debugname]"
+                    text="'Pilot Academy: Process_Old_Pilot_Return: failed to transfer old %s %s (%s) to %s. Going to repeat.' .
+                      [$npcType, $oldNPCName, $oldNPCTemplate, $academyObject.debugname]"
                     chance="$debugchance" />
                   <signal_objects object="player.entity" param="'PilotAcademyRAndR.OldPilotReturnRequest'"
                     param2="table[
-                    $oldPilotTemplate = $oldPilotTemplate,
-                    $ship = $ship,
+                    $oldNPCTemplate = $oldNPCTemplate,
+                    $target = $target,
                     $academyObject = $academyObject,
                     $iteration = $iteration + 1
                   ]"
@@ -207,14 +236,14 @@
                 </do_if>
                 <do_else>
                   <debug_text
-                    text="'Pilot Academy: Process_Old_Pilot_Return: exceeded max attempts to return old pilot %s (%s) to %s. Please do it manually!' .
-                          [$oldPilotName, $oldPilotTemplate, $academyObject.debugname]"
+                    text="'Pilot Academy: Process_Old_Pilot_Return: exceeded max attempts to return old %s %s (%s) to %s. Please do it manually!' .
+                          [$npcType, $oldNPCName, $oldNPCTemplate, $academyObject.debugname]"
                     chance="$debugchance" />
                   <run_actions ref="Notify_Player">
                     <param name="title" value="{1972092412,1}" />
-                    <param name="text" value="{1972092412,2000004}.[$oldPilotName]" />
+                    <param name="text" value="if $isStation then {1972092412,2000014}.[$oldNPCName] else {1972092412,2000004}.[$oldNPCName]" />
                     <param name="isWarning" value="true" />
-                    <param name="object" value="$ship" />
+                    <param name="object" value="$target" />
                     <param name="debugchance" value="$debugchance" />
                   </run_actions>
                 </do_else>
@@ -222,21 +251,23 @@
             </do_if>
             <do_else>
               <debug_text
-                text="'Pilot Academy: Process_Old_Pilot_Return: no free capacity in Academy %s to return old pilot %s (%s).' .
-                  [$academyObject.debugname, $oldPilotName, $oldPilotTemplate]"
+                text="'Pilot Academy: Process_Old_Pilot_Return: no free capacity in Academy %s to return old %s %s (%s).' .
+                  [$academyObject.debugname, $npcType, $oldNPCName, $oldNPCTemplate]"
                 chance="$debugchance" />
               <run_actions ref="Notify_Player">
                 <param name="title" value="{1972092412,1}" />
-                <param name="text" value="{1972092412,2000005}.[$oldPilotName]" />
+                <param name="text" value="{1972092412,2000005}.[$oldNPCName]" />
                 <param name="isWarning" value="true" />
-                <param name="object" value="$ship" />
+                <param name="object" value="$target" />
                 <param name="debugchance" value="$debugchance" />
               </run_actions>
             </do_else>
             <remove_value name="$iteration" />
-            <remove_value name="$oldPilotName" />
-            <remove_value name="$oldPilotTemplate" />
-            <remove_value name="$ship" />
+            <remove_value name="$oldNPCName" />
+            <remove_value name="$oldNPCTemplate" />
+            <remove_value name="$target" />
+            <remove_value name="$isStation" />
+            <remove_value name="$npcType" />
             <remove_value name="$academyObject" />
             <remove_value name="$personTransferred" />
             <remove_value name="$academyFreeCapacity" />
@@ -246,51 +277,59 @@
           </actions>
         </cue>
 
-        <cue name="Process_Move_New_Pilot" instantiate="true" version="3">
+        <cue name="Process_Move_New_Pilot" instantiate="true" version="4">
           <conditions>
-            <event_object_signalled object="player.entity" param="'PilotAcademyRAndR.MoveNewPilotRequest'" />
+            <check_any>
+              <event_object_signalled object="player.entity" param="'PilotAcademyRAndR.MoveNewPilotRequest'" />
+              <event_object_signalled object="player.entity" param="'PilotAcademyRAndR.MoveNewManagerRequest'" />
+            </check_any>
             <check_value value="@event.param2 != null" />
             <check_value value="typeof @event.param2 == datatype.table" />
           </conditions>
           <actions>
             <debug_text
-              text="'Pilot Academy: Process_Move_New_Pilot: Received new pilot move request: %s.' .
+              text="'Pilot Academy: Process_Move_New_Pilot: Received new NPC move request: %s.' .
                 [@event.param2]"
               chance="$debugchance" filter="scripts" />
-            <set_value name="$ship" exact="@event.param2.$ship" />
-            <set_value name="$shipName" exact="{1016,6}.[$ship.knownname, $ship.idcode]" />
-            <set_value name="$newPilotTemplate" exact="@event.param2.$newPilotTemplate" />
+            <set_value name="$target" exact="@event.param2.$target" />
+            <set_value name="$targetName" exact="{1016,6}.[$target.knownname, $target.idcode]" />
+            <set_value name="$isStation" exact="$target.isclass.{class.station}" />
+            <set_value name="$npcType" exact="if $isStation then 'Station Manager' else 'Pilot'" />
+            <set_value name="$newNPCTemplate" exact="@event.param2.$newNPCTemplate" />
             <do_if value="@event.param2.$newPilot != null">
-              <set_value name="$newPilotTemplate" exact="@event.param2.$newPilot.npctemplate" />
+              <set_value name="$newNPCTemplate" exact="@event.param2.$newPilot.npctemplate" />
+            </do_if>
+            <do_if value="@event.param2.$newManager != null">
+              <set_value name="$newNPCTemplate" exact="@event.param2.$newManager.npctemplate" />
             </do_if>
             <set_value name="$academyObject" exact="@event.param2.$academyObject" />
-            <set_value name="$newPilotName" exact="$academyObject.availablepeople.{$newPilotTemplate}.name" />
+            <set_value name="$newNPCName" exact="$academyObject.availablepeople.{$newNPCTemplate}.name" />
             <set_value name="$iteration" exact="@event.param2.$iteration" />
             <debug_text
-              text="'Pilot Academy: Process_Move_New_Pilot: Iteration %s. Going to move new pilot %s (%s) to %s. Free capacity: %s.' .
-                  [$iteration, $newPilotName, $newPilotTemplate, $shipName, @$ship.people.free]"
+              text="'Pilot Academy: Process_Move_New_Pilot: Iteration %s. Going to move new %s %s (%s) to %s. Free capacity: %s.' .
+                  [$iteration, $npcType, $newNPCName, $newNPCTemplate, $targetName, @$target.people.free]"
               chance="$debugchance" />
             <include_actions ref="Fire_Least_Skilled_Crew_Member" />
-            <do_if value="@$ship.people.free gt 0">
-              <transfer_people result="$personTransferred" object="$ship" otherobject="$academyObject"
+            <do_if value="@$target.people.free gt 0">
+              <transfer_people result="$personTransferred" object="$target" otherobject="$academyObject"
                 receiveworkforce="false">
-                <existing_people people="[$newPilotTemplate]" />
+                <existing_people people="[$newNPCTemplate]" />
               </transfer_people>
               <do_if value="$personTransferred.count == 1">
                 <debug_text
-                  text="'Pilot Academy: Process_Move_New_Pilot: new pilot %s (%s) successfully transferred to %s. Initiating pilot swap.' .
-                      [$newPilotName, $newPilotTemplate, $ship.debugname]"
+                  text="'Pilot Academy: Process_Move_New_Pilot: new %s %s (%s) successfully transferred to %s. Initiating %s swap.' .
+                      [$npcType, $newNPCName, $newNPCTemplate, $target.debugname, $npcType]"
                   chance="$debugchance" />
                 <run_actions ref="Notify_Player">
                   <param name="title" value="{1972092412,1}" />
-                  <param name="text" value="{1972092412,1000005}.[$newPilotName, $shipName]" />
-                  <param name="object" value="$ship" />
+                  <param name="text" value="if $isStation then {1972092412,1000015}.[$newNPCName, $targetName] else {1972092412,1000005}.[$newNPCName, $targetName]" />
+                  <param name="object" value="$target" />
                   <param name="debugchance" value="$debugchance" />
                 </run_actions>
                 <signal_objects object="player.entity" param="'PilotAcademyRAndR.PilotSwapRequest'"
                   param2="table[
-                    $ship = $ship,
-                    $replacementPilotTemplate = $personTransferred.{1},
+                    $target = $target,
+                    $newNPCTemplate = $personTransferred.{1},
                     $academyObject = $academyObject,
                     $isCadet = false,
                     $iteration = 0
@@ -300,13 +339,13 @@
               <do_else>
                 <do_if value="$iteration le 5">
                   <debug_text
-                    text="'Pilot Academy: Process_Move_New_Pilot: failed to transfer new pilot %s (%s) to %s. Going to repeat.' .
-                      [$newPilotName, $newPilotTemplate, $shipName]"
+                    text="'Pilot Academy: Process_Move_New_Pilot: failed to transfer new %s %s (%s) to %s. Going to repeat.' .
+                      [$npcType, $newNPCName, $newNPCTemplate, $targetName]"
                     chance="$debugchance" />
                   <signal_objects object="player.entity" param="'PilotAcademyRAndR.MoveNewPilotRequest'"
                     param2="table[
-                    $newPilotTemplate = $newPilotTemplate,
-                    $ship = $ship,
+                    $newNPCTemplate = $newNPCTemplate,
+                    $target = $target,
                     $academyObject = $academyObject,
                     $iteration = $iteration + 1
                   ]"
@@ -314,14 +353,14 @@
                 </do_if>
                 <do_else>
                   <debug_text
-                    text="'Pilot Academy: Process_Move_New_Pilot: exceeded max attempts to transfer new pilot %s (%s) to %s. Please do it manually!' .
-                          [$newPilotName, $newPilotTemplate, $ship.debugname]"
+                    text="'Pilot Academy: Process_Move_New_Pilot: exceeded max attempts to transfer new %s %s (%s) to %s. Please do it manually!' .
+                          [$npcType, $newNPCName, $newNPCTemplate, $target.debugname]"
                     chance="$debugchance" />
                   <run_actions ref="Notify_Player">
                     <param name="title" value="{1972092412,1}" />
-                    <param name="text" value="{1972092412,2000006}.[$shipName, $newPilotName]" />
+                    <param name="text" value="if $isStation then {1972092412,2000016}.[$newNPCName, $targetName] else {1972092412,2000006}.[$newNPCName, $targetName]" />
                     <param name="isWarning" value="true" />
-                    <param name="object" value="$ship" />
+                    <param name="object" value="$target" />
                     <param name="debugchance" value="$debugchance" />
                   </run_actions>
                 </do_else>
@@ -329,22 +368,24 @@
             </do_if>
             <do_else>
               <debug_text
-                text="'Pilot Academy: Process_Move_New_Pilot: no free capacity on ship %s to move new pilot %s (%s).' .
-                  [$ship.debugname, $newPilotName, $newPilotTemplate]"
+                text="'Pilot Academy: Process_Move_New_Pilot: no free capacity on ship %s to move new %s %s (%s).' .
+                  [$target.debugname, $npcType, $newNPCName, $newNPCTemplate]"
                 chance="$debugchance" />
               <run_actions ref="Notify_Player">
                 <param name="title" value="{1972092412,1}" />
-                <param name="text" value="{1972092412,2000002}.[$shipName]" />
+                <param name="text" value="if $isStation then {1972092412,2000012}.[$targetName] else {1972092412,2000002}.[$targetName]" />
                 <param name="isWarning" value="true" />
-                <param name="object" value="$ship" />
+                <param name="object" value="$target" />
                 <param name="debugchance" value="$debugchance" />
               </run_actions>
             </do_else>
             <remove_value name="$iteration" />
-            <remove_value name="$newPilotName" />
-            <remove_value name="$newPilotTemplate" />
-            <remove_value name="$ship" />
-            <remove_value name="$shipName" />
+            <remove_value name="$newNPCName" />
+            <remove_value name="$newNPCTemplate" />
+            <remove_value name="$npcType" />
+            <remove_value name="$target" />
+            <remove_value name="$targetName" />
+            <remove_value name="$isStation" />
             <remove_value name="$academyObject" />
             <remove_value name="$personTransferred" />
           </actions>
@@ -502,8 +543,8 @@
           </conditions>
           <actions>
             <debug_text
-              text="'Pilot Academy: Process_Pilot_Assigned: actor: %s (%s), object: %s (%s), post or role: %s (type %s)' .
-                [@event.param, @event.param.debugname, @event.param2, @event.param2.debugname, @event.param3, typeof @event.param3]"
+              text="'Pilot Academy: Process_Pilot_Assigned: actor: %s (%s, %s), object: %s (%s), post or role: %s (type %s)' .
+                [@event.param, @event.param.debugname, @event.param.npctemplate, @event.param2, @event.param2.debugname, @event.param3, typeof @event.param3]"
               chance="$debugchance" filter="scripts" />
           </actions>
         </cue>
@@ -591,16 +632,16 @@
             <set_value name="$commonData" exact="@player.entity.$pilotAcademyRAndRData" />
             <debug_text
               text="'Pilot Academy: Fire_Least_Skilled_Crew_Member: Free crew slots: %s. Auto fire less skilled crew member setting: %s.' .
-                  [$ship.people.free, @$commonData.$autoFireLessSkilledCrewMember]"
+                  [$target.people.free, @$commonData.$autoFireLessSkilledCrewMember]"
               chance="$debugchance" />
-            <do_if value="$ship.people.free le 0 and @$commonData.$autoFireLessSkilledCrewMember == true">
+            <do_if value="$target.people.free le 0 and @$commonData.$autoFireLessSkilledCrewMember == true">
               <debug_text
                 text="'Pilot Academy: Fire_Least_Skilled_Crew_Member: no free crew slots to transfer replacement pilot. Going to fire lest skilled existing crew member'"
                 chance="$debugchance" />
               <set_value name="$leastSkilledCrewMember" exact="null" />
               <set_value name="$leastSkill" exact="9999" />
-              <do_for_each name="$crewMember" in="$ship.people.list" counter="$i">
-                <set_value name="$crewMemberSkill" exact="$ship.people.{$crewMember}.skill.boarding + $ship.people.{$crewMember}.skill.engineering + $ship.people.{$crewMember}.skill.management + $ship.people.{$crewMember}.skill.morale + $ship.people.{$crewMember}.skill.piloting" />
+              <do_for_each name="$crewMember" in="$target.people.list" counter="$i">
+                <set_value name="$crewMemberSkill" exact="$target.people.{$crewMember}.skill.boarding + $target.people.{$crewMember}.skill.engineering + $target.people.{$crewMember}.skill.management + $target.people.{$crewMember}.skill.morale + $target.people.{$crewMember}.skill.piloting" />
                 <do_if value="$crewMemberSkill lt $leastSkill">
                   <set_value name="$leastSkilledCrewMember" exact="$crewMember" />
                   <set_value name="$leastSkill" exact="$crewMemberSkill" />
@@ -609,9 +650,9 @@
               <do_if value="$leastSkilledCrewMember != null">
                 <debug_text
                   text="'Pilot Academy: Fire_Least_Skilled_Crew_Member: firing least skilled crew member %s with skill %s to free up crew slot for replacement pilot' .
-                   [$ship.people.{$leastSkilledCrewMember}.name, $leastSkill]"
+                   [$target.people.{$leastSkilledCrewMember}.name, $leastSkill]"
                   chance="$debugchance" />
-                <remove_npc_template object="$ship" template="$leastSkilledCrewMember" />
+                <remove_npc_template object="$target" template="$leastSkilledCrewMember" />
               </do_if>
               <remove_value name="$leastSkilledCrewMember" />
               <remove_value name="$leastSkill" />

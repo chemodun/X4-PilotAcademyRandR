@@ -1497,8 +1497,8 @@
             chance="$debugchance" />
           <signal_objects object="player.entity" param="'PilotAcademyRAndR.PilotSwapRequest'"
             param2="table[
-              $ship = this.assignedcontrolled,
-              $replacementPilotTemplate = $personTransferred.{1},
+              $target = this.assignedcontrolled,
+              $newNPCTemplate = $personTransferred.{1},
               $academyObject = $academyObject,
               $isCadet = true,
               $iteration =  0
