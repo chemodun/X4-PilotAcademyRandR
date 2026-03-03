@@ -910,7 +910,7 @@ function pilotAcademy.createAssignOptionsTable(frame, menu, config, tableName, d
   row[2].handlers.onClick = function(_, checked) return pilotAcademy.onToggleProcessStationManagersFirst(checked) end
   row[3]:createText(texts.processStationManagersFirst, { halign = "left", titleColor = Color["row_title"], x = Helper.scaleX(Helper.borderSize * 2) })
 
-  local skipStationsWithoutStorages = true
+  local skipStationsWithoutStorages = nil
   if processStationManagersFirst then
     skipStationsWithoutStorages = displayData.editData.skipStationsWithoutStorages
     if skipStationsWithoutStorages == nil then
@@ -1952,10 +1952,12 @@ function pilotAcademy.loadCommonData()
 
   if pilotAcademy.commonData.skipStationsWithoutStorages == 1 then
     pilotAcademy.commonData.skipStationsWithoutStorages = true
-  elseif pilotAcademy.commonData.processStationManagersFirst == 0 then
-    pilotAcademy.commonData.skipStationsWithoutStorages = false
-  else
+  elseif pilotAcademy.commonData.processStationManagersFirst == false then
     pilotAcademy.commonData.skipStationsWithoutStorages = true
+  elseif pilotAcademy.commonData.skipStationsWithoutStorages == nil then
+    pilotAcademy.commonData.skipStationsWithoutStorages = true
+  else
+    pilotAcademy.commonData.skipStationsWithoutStorages = false
   end
 
   if pilotAcademy.commonData.processStationManagersFirst == false then
