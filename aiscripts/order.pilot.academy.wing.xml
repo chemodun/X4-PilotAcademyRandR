@@ -1482,6 +1482,8 @@
         <resume label="prepareTrade" />
       </do_if>
 
+      <wait min="500ms" max="1s" />
+
       <resume label="proceedWithTrade" />
 
       <label name="waitInfoFromCommander" />
