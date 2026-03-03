@@ -1294,8 +1294,6 @@
           <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
           <resume label="prepareTrade" />
         </do_if>
-        <clamp_trade_amount trade="$selectedBuyOffer" amount="$tradeAmountDefault" buyer="$selectedBuyOffer.owner"
-          seller="this.assignedcontrolled" result="$tradeAmount" />
       </do_if>
       <do_else>
         <do_if value="$tradeOperation == 'sell'">
