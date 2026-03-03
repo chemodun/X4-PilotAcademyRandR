@@ -335,7 +335,7 @@
         <set_value name="$blackList" exact="@$commonData.$tradesBlacklist" />
         <set_value name="$isBlackListed" exact="false" />
         <do_if value="@$blackList.keys.count gt 0">
-          <set_value name="$tradeRecord" exact="$blackList.{'$%s-%s-%s'.[$blackListCheckOperation, $blackListCheckOffer.owner.idcode, $blackListCheckOffer.ware.id]}" />
+          <set_value name="$tradeRecord" exact="@$blackList.{'$%s-%s-%s'.[$blackListCheckOperation, $blackListCheckOffer.owner.idcode, $blackListCheckOffer.ware.id]}" />
           <do_if value="@$tradeRecord != null">
             <debug_text
               text="'Pilot Academy [%s]: found trade record in blacklist for operation: %s, station: %s, ware: %s. Record details: %s' .
@@ -1468,7 +1468,7 @@
           text="'Pilot Academy [%s]: unable to trade to %s on %s'.[this.assignedcontrolled.debugname, $tradeOperation, $tradeOffer.owner.debugname]"
           chance="$debugchance" />
         <wait min="500ms" max="1s" />
-        <remove_value name="$tradeOperation" />
+        <set_value name="$tradeOperation" exact="''" />
         <do_if value="$targetType == 'seller'">
           <set_value name="$blackListAddOperation" exact="'sell'" />
           <set_value name="$blackListAddOffer" exact="$tradeOffer" />
