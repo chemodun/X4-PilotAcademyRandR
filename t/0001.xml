@@ -95,7 +95,7 @@
       <t id="2000013">Can't perform manager swapping on %s! Please do it manually!</t>
       <t id="2000014">Can't return manager %s to the Academy! Please do it manually!</t>
       <t id="2000016">Can't move new manager %s to %s!</t>
-      <t id="2009001">Something wrong with this ship: %s (%s). Can not use it for Academy trainings!</t>
+      <t id="2009001">Something wrong with this ship: %s \(%s\). Can not use it for Academy trainings!</t>
       <t id="9000001">Pilot Academy: Ranks and Relations</t>
       <t id="9000002">Pilot Academy. Five wings</t>
       <t id="9000003">Pilot Academy. Nine wings</t>
