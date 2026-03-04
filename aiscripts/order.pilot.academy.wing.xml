@@ -331,49 +331,78 @@
         <remove_value name="$stationForTradeSector" />
       </actions>
       <actions name="PilotAcademyCheckTradesBlacklist">
+        <set_value name="$commonData" exact="@player.entity.$pilotAcademyRAndRData" />
         <do_if value="@$commonData.$tradesBlacklist == null or typeof @$commonData.$tradesBlacklist != datatype.table">
           <set_value name="$commonData.$tradesBlacklist" exact="table[]" />
         </do_if>
         <set_value name="$blackList" exact="@$commonData.$tradesBlacklist" />
         <set_value name="$isBlackListed" exact="false" />
         <do_if value="@$blackList.keys.count gt 0">
-          <set_value name="$tradeRecord" exact="@$blackList.{'$%s-%s-%s'.[$blackListCheckOperation, $blackListCheckOffer.owner.idcode, $blackListCheckOffer.ware.id]}" />
-          <do_if value="@$tradeRecord != null">
+          <set_value name="$tradeRecordId" exact="'$%s-%s-%s'.[$blackListCheckOperation, $blackListCheckOffer.owner.idcode, $blackListCheckOffer.ware.id]" />
+          <do_if value="@$blackList.{$tradeRecordId} != null">
+            <set_value name="$tradeRecord" exact="@$blackList.{$tradeRecordId}" />
             <debug_text
-              text="'Pilot Academy [%s]: found trade record in blacklist for operation: %s, station: %s, ware: %s. Record details: %s' .
-                [this.assignedcontrolled.debugname, $blackListCheckOperation, $blackListCheckOffer.owner.debugname, $blackListCheckOffer.ware.id, $tradeRecord]"
+              text="'Pilot Academy [%s]: found trade record in blacklist for operation: %s, station: %s, ware: %s. Record details: %s. Time delta: %s, threshold: %s' .
+                [this.assignedcontrolled.debugname, $blackListCheckOperation, $blackListCheckOffer.owner.debugname, $blackListCheckOffer.ware.id, $tradeRecord, player.age - $tradeRecord.$timeStamp, $tradeInfoRefreshInterval * 2]"
               chance="$debugchance" />
-            <do_if value="player.age - $tradeRecord.$timeStamp gt $tradeInfoRefreshInterval * 2">
+            <do_if value="(player.age - $tradeRecord.$timeStamp) gt ($tradeInfoRefreshInterval * 2)">
               <debug_text
                 text="'Pilot Academy [%s]: trade record in blacklist is expired, removing from blacklist. Record details: %s' .
                     [this.assignedcontrolled.debugname, $tradeRecord]"
                 chance="$debugchance" />
-              <remove_value name="$blackList.{'$%s-%s-%s'.[$blackListCheckOperation, $blackListCheckOffer.owner.idcode, $blackListCheckOffer.ware.id]}" />
+              <remove_value name="$blackList.{$tradeRecordId}" />
             </do_if>
             <do_else>
               <set_value name="$isBlackListed" exact="true" />
             </do_else>
+            <remove_value name="$tradeRecord" />
           </do_if>
         </do_if>
       </actions>
       <actions name="PilotAcademyAddTradeToBlacklist">
+        <set_value name="$commonData" exact="@player.entity.$pilotAcademyRAndRData" />
         <do_if value="@$commonData.$tradesBlacklist == null or typeof @$commonData.$tradesBlacklist != datatype.table">
           <set_value name="$commonData.$tradesBlacklist" exact="table[]" />
         </do_if>
-        <set_value name="$blackList" exact="@$commonData.$tradesBlacklist" />
-        <do_if value="@$blackList.{'$%s-%s-%s'.[$blackListAddOperation, $blackListAddOffer.owner.idcode, $blackListAddOffer.ware.id]} == null">
-          <set_value name="$blackList.{'$%s-%s-%s'.[$blackListAddOperation, $blackListAddOffer.owner.idcode, $blackListAddOffer.ware.id]}" exact="table[
+        <set_value name="$blackList" exact="@player.entity.$pilotAcademyRAndRData.$tradesBlacklist" />
+        <set_value name="$blacklistItemId" exact="'$%s-%s-%s'.[$blackListAddOperation, $blackListAddOffer.owner.idcode, $blackListAddOffer.ware.id]" />
+        <set_value name="$blacklistItem" exact="@$blackList.{$blacklistItemId}" />
+        <debug_text text="'Pilot Academy [%s]: going to add trade record to blacklist for operation: %s, station: %s, ware: %s. Blacklist: %s, Item: %s.' .
+          [this.assignedcontrolled.debugname, $blackListAddOperation, $blackListAddOffer.owner.debugname, $blackListAddOffer.ware.id, $blackList, $blacklistItem]"
+          chance="$debugchance" />
+        <do_if value="@$blacklistItem == null">
+          <set_value name="$blackList.{$blacklistItemId}" exact="table[
             $timeStamp = player.age
           ]" />
           <debug_text
-            text="'Pilot Academy [%s]: added trade record to blacklist for operation: %s, station: %s, ware: %s' .
-              [this.assignedcontrolled.debugname, $blackListAddOperation, $blackListAddOffer.owner.debugname, $blackListAddOffer.ware.id]"
+            text="'Pilot Academy [%s]: added trade record to blacklist for operation: %s, station: %s, ware: %s. Blacklist: %s, Item: %s.' .
+              [this.assignedcontrolled.debugname, $blackListAddOperation, $blackListAddOffer.owner.debugname, $blackListAddOffer.ware.id, $blackList, $blacklistItem]"
             chance="$debugchance" />
+          <do_if value="this.assignedcontrolled.commander != null">
+            <signal_objects object="this.assignedcontrolled.commander" param="'PilotAcademyRAndR.TradesBlacklistUpdatedSignal'" param2="this.assignedcontrolled" param3="$blackListAddOffer.ware" />
+          </do_if>
         </do_if>
         <remove_value name="$blackListAddOperation" />
         <remove_value name="$blackListAddOffer" />
-        <do_if value="this.assignedcontrolled.commander != null">
-          <signal_objects object="this.assignedcontrolled.commander" param="'PilotAcademyRAndR.TradesBlacklistUpdatedSignal'" param2="this.assignedcontrolled" />
+      </actions>
+      <actions name="PilotAcademyCheckAndClearReservation">
+        <do_if value="@$tradeTarget != null">
+          <do_if value="@$tradeOperation == 'buy'">
+            <get_ware_reservation object="$tradeTarget" type="buy" ware="$tradeWare" reserver="this.assignedcontrolled" result="$reservationResult" />
+            <debug_text text="'Pilot Academy [%s]: checking ware %s reservation for buy trade, result: %s' . [this.assignedcontrolled.debugname, $tradeWare.id, $reservationResult]" chance="$debugchance" />
+            <do_if value="$reservationResult gt 0">
+              <remove_ware_reservation object="$tradeTarget" type="buy" ware="$tradeWare" reserver="this.assignedcontrolled" />
+              <debug_text text="'Pilot Academy [%s]: removed ware %s reservation for buy trade' . [this.assignedcontrolled.debugname, $tradeWare.id]" chance="$debugchance" />
+            </do_if>
+          </do_if>
+          <do_elseif value="@$tradeOperation == 'sell'">
+            <get_ware_reservation object="$tradeTarget" type="sell" ware="$tradeWare" reserver="this.assignedcontrolled" result="$reservationResult" />
+            <debug_text text="'Pilot Academy [%s]: checking ware %s reservation for sell trade, result: %s' . [this.assignedcontrolled.debugname, $tradeWare.id, $reservationResult]" chance="$debugchance" />
+            <do_if value="$reservationResult gt 0">
+              <remove_ware_reservation object="$tradeTarget" type="sell" ware="$tradeWare" reserver="this.assignedcontrolled" />
+              <debug_text text="'Pilot Academy [%s]: removed ware %s reservation for sell trade' . [this.assignedcontrolled.debugname, $tradeWare.id]" chance="$debugchance" />
+            </do_if>
+          </do_elseif>
         </do_if>
       </actions>
     </library>
@@ -409,8 +438,8 @@
         <event_object_signalled object="this.assignedcontrolled" param="'PilotAcademyRAndR.TradesBlacklistUpdatedSignal'" />
       </conditions>
       <actions>
-        <debug_text text="'Pilot Academy [%s]: received trade blacklist update signal from subordinate %s. Scanning market: %s'.
-          [this.assignedcontrolled.debugname, event.param2 .debugname, $scanningMarket]"
+        <debug_text text="'Pilot Academy [%s]: received trade blacklist update signal from subordinate %s for ware: %s. Scanning market: %s. Blacklist: %s.'.
+          [this.assignedcontrolled.debugname, @event.param2.debugname, @event.param3.id, $scanningMarket, @player.entity.$pilotAcademyRAndRData.$tradesBlacklist]"
           chance="$debugchance" />
         <do_if value="$scanningMarket != true">
           <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
@@ -565,6 +594,7 @@
     <set_value name="$waitCoefficientBase" exact="5" />
     <set_value name="$scanningMarket" exact="false" />
     <set_value name="$scriptVersion" exact="5" />
+    <set_value name="$lastUndockedStamp" exact="player.age" />
   </init>
   <patch sinceversion="2">
     <set_value name="$shipDockSize" exact="this.assignedcontrolled.docksize" />
@@ -575,6 +605,7 @@
   <patch sinceversion="5">
     <set_value name="$scanningMarket" exact="false" />
     <set_value name="$tradeWare" exact="nil" />
+    <set_value name="$lastUndockedStamp" exact="player.age" />
   </patch>
   <attention min="unknown">
     <actions>
@@ -1314,6 +1345,8 @@
 
       <set_value name="$tradeAmountDefault" exact="1" />
 
+      <include_interrupt_actions ref="PilotAcademyCheckAndClearReservation" />
+
       <do_if value="$tradeOperation == 'buy'">
         <debug_text
           text="'Pilot Academy [%s]: completed buying %s of %s from %s' . [this.assignedcontrolled.debugname, $tradeAmountDefault, $tradeWare.id, $seller.debugname]"
@@ -1388,6 +1421,28 @@
           <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
           <resume label="prepareTrade" />
         </do_if>
+        <debug_text
+          text="'Pilot Academy [%s]: checking existing cargo %s before proceeding with buy trade operation.'. [this.assignedcontrolled.debugname, @this.assignedcontrolled.cargo.table]"
+          chance="$debugchance" />
+        <do_if value="@this.assignedcontrolled.cargo.count gt 0">
+          <debug_text
+            text="'Pilot Academy [%s]: clearing existing cargo %s before proceeding with buy trade operation.'. [this.assignedcontrolled.debugname, @this.assignedcontrolled.cargo.table]"
+            chance="$debugchance" />
+          <do_for_each name="$cargoWare" in="this.assignedcontrolled.cargo.list">
+            <set_value name="$wareAmount" exact="this.assignedcontrolled.cargo.{$cargoWare}.count" />
+            <debug_text text="'Pilot Academy [%s]: trying to remove cargo %s in amount %s' . [this.assignedcontrolled.debugname, $cargoWare, $wareAmount]" chance="$debugchance" />
+            <remove_cargo object="this.assignedcontrolled" ware="$cargoWare" exact="$wareAmount" result="$removeResult" />
+            <debug_text text="'Pilot Academy [%s]: removed cargo %s, result: %s, original amount: %s, not freed: %s.' . [this.assignedcontrolled.debugname, $cargoWare, $removeResult, $wareAmount, $removeResult lt $wareAmount]" chance="$debugchance" />
+            <do_if value="@$removeResult lt $wareAmount">
+              <debug_text text="'Pilot Academy [%s]: unable to remove all cargo %s, removed %s out of %s, going drop cargo and retry' . [this.assignedcontrolled.debugname, $cargoWare, $removeResult, $wareAmount]" chance="$debugchance" />
+              <drop_cargo object="this.assignedcontrolled" ware="$cargoWare" exact="$wareAmount" />
+              <debug_text text="'Pilot Academy [%s]: dropped cargo %s. In cargo: %s.' . [this.assignedcontrolled.debugname, $cargoWare, @this.assignedcontrolled.cargo.{$cargoWare}.count]" chance="$debugchance" />
+            </do_if>
+            <remove_value name="$wareAmount" />
+            <remove_value name="$removeResult" />
+          </do_for_each>
+        </do_if>
+        <debug_text text="'Pilot Academy [%s]: cargo for ware %s, free space amount %s' . [this.assignedcontrolled.debugname, $tradeWare.id, @this.assignedcontrolled.cargo.{$tradeWare}.free]" chance="$debugchance" />
       </do_else>
 
       <do_if value="@$tradeOffer.exists != true">
@@ -1396,25 +1451,6 @@
           chance="$debugchance" />
         <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
         <resume label="prepareTrade" />
-      </do_if>
-
-      <do_if value="@$tradeOperation == 'buy' and this.assignedcontrolled.cargo.count gt 0">
-        <debug_text
-          text="'Pilot Academy [%s]: clearing existing cargo %s before proceeding with buy trade operation.'. [this.assignedcontrolled.debugname, this.assignedcontrolled.cargo.table]"
-          chance="$debugchance" />
-        <do_for_each name="$cargoWare" in="this.assignedcontrolled.cargo.list">
-          <set_value name="$wareAmount" exact="this.assignedcontrolled.cargo.{$cargoWare}.count" />
-          <debug_text text="'Pilot Academy [%s]: trying to remove cargo %s in amount %s' . [this.assignedcontrolled.debugname, $cargoWare, $wareAmount]" chance="$debugchance" />
-          <remove_cargo object="this.assignedcontrolled" ware="$cargoWare" exact="$wareAmount" result="$removeResult" />
-          <debug_text text="'Pilot Academy [%s]: removed cargo %s, result: %s, original amount: %s, not freed: %s.' . [this.assignedcontrolled.debugname, $cargoWare, $removeResult, $wareAmount, $removeResult lt $wareAmount]" chance="$debugchance" />
-          <do_if value="@$removeResult lt $wareAmount">
-            <debug_text text="'Pilot Academy [%s]: unable to remove all cargo %s, removed %s out of %s, going drop cargo and retry' . [this.assignedcontrolled.debugname, $cargoWare, $removeResult, $wareAmount]" chance="$debugchance" />
-            <drop_cargo object="this.assignedcontrolled" ware="$cargoWare" exact="$wareAmount" />
-            <debug_text text="'Pilot Academy [%s]: dropped cargo %s. In cargo: %s.' . [this.assignedcontrolled.debugname, $cargoWare, @this.assignedcontrolled.cargo.{$cargoWare}.count]" chance="$debugchance" />
-          </do_if>
-          <remove_value name="$wareAmount" />
-          <remove_value name="$removeResult" />
-        </do_for_each>
       </do_if>
 
       <set_command command="command.trade" param="$tradeTarget" />
@@ -1429,13 +1465,13 @@
         <add_ware_reservation object="$tradeTarget" type="buy" ware="$tradeWare" amount="$tradeAmount" reserver="this.assignedcontrolled" result="$reservationResult" />
         <debug_text text="'Pilot Academy [%s]: added ware %s reservation for buy trade, result: %s' . [this.assignedcontrolled.debugname, $tradeWare.id, $reservationResult]" chance="$debugchance" />
       </do_if>
-      <do_else>
+      <do_elseif value="@$tradeOperation == 'sell'">
         <debug_text
           text="'Pilot Academy [%s]: preparing to sell %s of %s to %s' . [this.assignedcontrolled.debugname, $tradeAmountDefault, $tradeWare.id, $tradeTarget.debugname]"
           chance="$debugchance" />
         <add_ware_reservation object="$tradeTarget" type="sell" ware="$tradeWare" amount="$tradeAmount" reserver="this.assignedcontrolled" result="$reservationResult" />
         <debug_text text="'Pilot Academy [%s]: added ware %s reservation for sell trade, result: %s' . [this.assignedcontrolled.debugname, $tradeWare.id, $reservationResult]" chance="$debugchance" />
-      </do_else>
+      </do_elseif>
 
       <label name="moveTo" />
       <set_value name="$isMovingToTradeTarget" exact="true" />
@@ -1447,6 +1483,7 @@
           <param name="dockfollowers" value="false" />
           <param name="debugchance" value="$debugchance" />
         </run_script>
+        <set_value name="$lastUndockedStamp" exact="player.age" />
       </do_if>
       <do_if value="@this.assignedcontrolled.dock.container != $tradeTarget">
         <debug_text text="'Pilot Academy [%s]: still not reached %s %s' . [this.assignedcontrolled.debugname, $targetType, $tradeTarget.debugname]"
@@ -1489,43 +1526,72 @@
         text="'Pilot Academy [%s]: proceed to %s %s of %s from %s with result: %s.'.[this.assignedcontrolled.debugname, $tradeOperation, $tradeAmount, $tradeWare.id, $tradeTarget.debugname, $tradeResult]"
         chance="$debugchance" />
 
-      <do_if value="@$tradeOperation == 'buy'">
-        <get_ware_reservation object="$tradeTarget" type="buy" ware="$tradeWare" reserver="this.assignedcontrolled" result="$reservationResult" />
-        <debug_text text="'Pilot Academy [%s]: checking ware %s reservation for buy trade, result: %s' . [this.assignedcontrolled.debugname, $tradeWare.id, $reservationResult]" chance="$debugchance" />
-        <do_if value="$reservationResult gt 0">
-          <remove_ware_reservation object="$tradeTarget" type="buy" ware="$tradeWare" reserver="this.assignedcontrolled" />
-          <debug_text text="'Pilot Academy [%s]: removed ware %s reservation for buy trade' . [this.assignedcontrolled.debugname, $tradeWare.id]" chance="$debugchance" />
-        </do_if>
-      </do_if>
-      <do_else>
-        <get_ware_reservation object="$tradeTarget" type="sell" ware="$tradeWare" reserver="this.assignedcontrolled" result="$reservationResult" />
-        <debug_text text="'Pilot Academy [%s]: checking ware %s reservation for sell trade, result: %s' . [this.assignedcontrolled.debugname, $tradeWare.id, $reservationResult]" chance="$debugchance" />
-        <do_if value="$reservationResult gt 0">
-          <remove_ware_reservation object="$tradeTarget" type="sell" ware="$tradeWare" reserver="this.assignedcontrolled" />
-          <debug_text text="'Pilot Academy [%s]: removed ware %s reservation for sell trade' . [this.assignedcontrolled.debugname, $tradeWare.id]" chance="$debugchance" />
-        </do_if>
-      </do_else>
+      <include_interrupt_actions ref="PilotAcademyCheckAndClearReservation" />
 
       <do_if value="$tradeResult le 0">
         <debug_text
           text="'Pilot Academy [%s]: unable to trade to %s on %s'.[this.assignedcontrolled.debugname, $tradeOperation, $tradeOffer.owner.debugname]"
           chance="$debugchance" />
-        <wait min="500ms" max="1s" />
-        <set_value name="$tradeOperation" exact="''" />
-        <do_if value="$targetType == 'seller'">
-          <set_value name="$blackListAddOperation" exact="'sell'" />
-          <set_value name="$blackListAddOffer" exact="$tradeOffer" />
+        <do_if value="$tradeOperation == 'buy'">
+          <clamp_trade_amount trade="$tradeOffer" amount="$tradeAmount" buyer="this.assignedcontrolled" seller="$tradeTarget" result="$checkAmount" unbundle="$tradeOffer.unbundle" updatedeal="false" reason="$checkReason" />
+          <debug_text
+            text="'Pilot Academy [%s]: clamping trade amount for buy operation, original amount: %s, checked amount: %s, reason: %s' .
+            [this.assignedcontrolled.debugname, $tradeAmount, $checkAmount, $checkReason]"
+            chance="$debugchance" />
+          <do_if value="($checkReason == 'buyer_money' and player.money gt $tradeOffer.unitprice * 10 * $tradeAmount) or
+            ($checkReason == 'buyer_cargo' and @this.assignedcontrolled.cargo.{$tradeWare}.free ge $tradeAmount)">
+            <debug_text
+              text="'Pilot Academy [%s]: something wrong with this ship. Will wait a bit and retry the trade. Check reason: %s, player money: %s, buyer money: %s, buyer cargo free space for ware: %s' .
+              [this.assignedcontrolled.debugname, $checkReason, player.money, @this.assignedcontrolled.money, @this.assignedcontrolled.cargo.{$tradeWare}.free]"
+              chance="$debugchance" />
+            <wait min="33s" max="55s" />
+            <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
+            <include_interrupt_actions ref="PilotAcademyRemoveShipVariables" />
+            <resume label="prepareTrade" />
+          </do_if>
         </do_if>
-        <do_else>
-          <set_value name="$blackListAddOperation" exact="'buy'" />
-          <set_value name="$blackListAddOffer" exact="$tradeOffer" />
-        </do_else>
-        <include_interrupt_actions ref="PilotAcademyAddTradeToBlacklist" />
-        <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
-        <resume label="prepareTrade" />
+        <do_if value="$tradeOperation == 'buy' or this.assignedcontrolled.cargo.{$cargoWare}.count gt 0">
+          <set_value name="$tradeOperation" exact="''" />
+          <do_if value="$targetType == 'seller'">
+            <set_value name="$blackListAddOperation" exact="'sell'" />
+            <set_value name="$blackListAddOffer" exact="$tradeOffer" />
+          </do_if>
+          <do_else>
+            <set_value name="$blackListAddOperation" exact="'buy'" />
+            <set_value name="$blackListAddOffer" exact="$tradeOffer" />
+          </do_else>
+          <include_interrupt_actions ref="PilotAcademyAddTradeToBlacklist" />
+          <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
+          <include_interrupt_actions ref="PilotAcademyRemoveShipVariables" />
+          <resume label="prepareTrade" />
+        </do_if>
       </do_if>
 
-      <wait min="500ms" max="1s" />
+
+      <do_if value="$tradeOperation == 'sell'">
+        <set_value name="$freeDocks" exact="0" />
+        <find_dockingbay object="$tradeTarget" name="$targetDocks" multiple="true">
+          <match_dock storage="false" free="true" size="this.assignedcontrolled.macro.docksize" />
+        </find_dockingbay>
+        <do_all exact="$targetDocks.count" counter="$d">
+          <set_value name="$freeDocks" exact="$targetDocks.{$d}.shipstorage.free" operation="add" />
+        </do_all>
+        <debug_text
+          text="'Pilot Academy [%s]: found %s free docks of right size at %s. Last undock: %s.' . [this.assignedcontrolled.debugname, $freeDocks, $tradeTarget.debugname, @$lastUndockedStamp]"
+          chance="$debugchance" />
+        <do_if value="$freeDocks le 2 or player.age - @$lastUndockedStamp gt 300s">
+          <debug_text
+            text="'Pilot Academy [%s]: not enough free docks for trade at %s, free docks: %s, or too long since last undock: %s, going to undock.' .
+            [this.assignedcontrolled.debugname, $tradeTarget.debugname, $freeDocks, player.age - @$lastUndockedStamp]"
+            chance="$debugchance" />
+          <run_script name="'move.undock'">
+            <param name="debugchance" value="$debugchance" />
+          </run_script>
+        </do_if>
+      </do_if>
+
+      <wait min="200ms" max="400ms" />
+
 
       <resume label="proceedWithTrade" />
 
