@@ -366,7 +366,7 @@ There are examples of texts and notifications screenshots:
   - Color and tooltip message for `Wingman` with failed orders in the `Wing` management tab.
 - **Improved**
   - The order responsible for pilot training will now operate without constant docking and undocking cycles, which should significantly reduce training time and prevent possible issues with police interference during the training process.
-    It will still perform docking and undocking maneuvers when free docking space is limited for other ships, and will also do so at least once every 5 minutes.
+    It will still perform docking and undocking maneuvers when free docking space is limited for other ships and will also do so at least once every 5 minutes.
   - Some code optimization and refactoring
 
 ### [1.08] - 2026-03-02
