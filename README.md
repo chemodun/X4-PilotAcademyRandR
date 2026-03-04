@@ -338,6 +338,13 @@ There are examples of texts and notifications screenshots:
 
 - And hopefully, this warning will not be displayed: "Can't assign Academy training order on wing %s with leader ship %s! Please report the issue!"
 
+## Videos
+
+- [Pilot Academy: Ranks and Relations - Overview](https://www.youtube.com/watch?v=gJNCVAZHifA)
+  - First minute — setting up the Academy.
+  - Second minute — reaching the destination station and starting the training process.
+  - The remainder — the training process results shown at 10x speed.
+
 ## Credits
 
 - **Author**: Chem O`Dun, on [Nexus Mods](https://next.nexusmods.com/profile/ChemODun/mods?gameId=2659) and [Steam Workshop](https://steamcommunity.com/id/chemodun/myworkshopfiles/?appid=392160)
