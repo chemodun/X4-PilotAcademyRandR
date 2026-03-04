@@ -574,7 +574,7 @@
   </patch>
   <patch sinceversion="5">
     <set_value name="$scanningMarket" exact="false" />
-    <set_value name="$tradeExecutionCount" exact="0" />
+    <set_value name="$tradeWare" exact="nil" />
   </patch>
   <attention min="unknown">
     <actions>
@@ -1304,10 +1304,10 @@
           .[this.assignedcontrolled.debugname, $selectedFaction, $selectedSellOffer.ware.id, $selectedSellOffer.owner.debugname, $selectedSellOffer.amount, $selectedSellOffer.volume, $selectedSellOffer.unitprice.formatted.default, $selectedSellOffer.quantityfactor, $selectedBuyOffer.owner.debugname, $selectedBuyOffer.amount, $selectedBuyOffer.volume, $selectedBuyOffer.unitprice.formatted.default, $selectedBuyOffer.quantityfactor]"
         chance="$debugchance" />
 
+      <set_value name="$tradeWare" exact="$selectedSellOffer.ware" />
+
       <label name="proceedWithTrade" />
       <set_value name="$scanningMarket" exact="false" />
-
-      <debug_text text="'Pilot Academy [%s]: proceeding with trade operation %s'. [this.assignedcontrolled.debugname, @$tradeOperation]" chance="$debugchance" />
 
       <set_value name="$seller" exact="$selectedSellOffer.owner" />
       <set_value name="$buyer" exact="$selectedBuyOffer.owner" />
@@ -1316,7 +1316,7 @@
 
       <do_if value="$tradeOperation == 'buy'">
         <debug_text
-          text="'Pilot Academy [%s]: completed buying %s of %s from %s' . [this.assignedcontrolled.debugname, $tradeAmountDefault, $selectedSellOffer.ware.id, $seller.debugname]"
+          text="'Pilot Academy [%s]: completed buying %s of %s from %s' . [this.assignedcontrolled.debugname, $tradeAmountDefault, $tradeWare.id, $seller.debugname]"
           chance="$debugchance" />
         <set_value name="$tradeTarget" exact="$buyer" />
         <set_value name="$targetType" exact="'buyer'" />
@@ -1349,7 +1349,7 @@
       <do_else>
         <do_if value="$tradeOperation == 'sell'">
           <debug_text
-            text="'Pilot Academy [%s]: completed selling %s of %s to %s' . [this.assignedcontrolled.debugname, $tradeAmountDefault, $selectedBuyOffer.ware.id, $buyer.debugname]"
+            text="'Pilot Academy [%s]: completed selling %s of %s to %s' . [this.assignedcontrolled.debugname, $tradeAmountDefault, $tradeWare.id, $buyer.debugname]"
             chance="$debugchance" />
           <set_value name="$applyExperienceChance" exact="100" />
           <do_if value="this.combinedskill gt $targetCombinedSkill">
@@ -1392,7 +1392,7 @@
 
       <do_if value="@$tradeOffer.exists != true">
         <debug_text
-          text="'Pilot Academy [%s]: trade offer no longer exists for %s %s offer of %s from %s' . [this.assignedcontrolled.debugname, $targetType, $tradeOperation, $tradeOffer.ware.id, $tradeOffer.owner.debugname]"
+          text="'Pilot Academy [%s]: trade offer no longer exists for %s %s offer of %s from %s' . [this.assignedcontrolled.debugname, $targetType, $tradeOperation, $tradeWare.id, $tradeOffer.owner.debugname]"
           chance="$debugchance" />
         <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
         <resume label="prepareTrade" />
@@ -1424,17 +1424,17 @@
 
       <do_if value="@$tradeOperation == 'buy'">
         <debug_text
-          text="'Pilot Academy [%s]: preparing to buy %s of %s from %s' . [this.assignedcontrolled.debugname, $tradeAmountDefault, $tradeOffer.ware.id, $tradeTarget.debugname]"
+          text="'Pilot Academy [%s]: preparing to buy %s of %s from %s' . [this.assignedcontrolled.debugname, $tradeAmountDefault, $tradeWare.id, $tradeTarget.debugname]"
           chance="$debugchance" />
-        <add_ware_reservation object="$tradeTarget" type="buy" ware="$tradeOffer.ware" amount="$tradeAmount" reserver="this.assignedcontrolled" result="$reservationResult" />
-        <debug_text text="'Pilot Academy [%s]: added ware reservation for buy trade, result: %s' . [this.assignedcontrolled.debugname, $reservationResult]" chance="$debugchance" />
+        <add_ware_reservation object="$tradeTarget" type="buy" ware="$tradeWare" amount="$tradeAmount" reserver="this.assignedcontrolled" result="$reservationResult" />
+        <debug_text text="'Pilot Academy [%s]: added ware %s reservation for buy trade, result: %s' . [this.assignedcontrolled.debugname, $tradeWare.id, $reservationResult]" chance="$debugchance" />
       </do_if>
       <do_else>
         <debug_text
-          text="'Pilot Academy [%s]: preparing to sell %s of %s to %s' . [this.assignedcontrolled.debugname, $tradeAmountDefault, $tradeOffer.ware.id, $tradeTarget.debugname]"
+          text="'Pilot Academy [%s]: preparing to sell %s of %s to %s' . [this.assignedcontrolled.debugname, $tradeAmountDefault, $tradeWare.id, $tradeTarget.debugname]"
           chance="$debugchance" />
-        <add_ware_reservation object="$tradeTarget" type="sell" ware="$tradeOffer.ware" amount="$tradeAmount" reserver="this.assignedcontrolled" result="$reservationResult" />
-        <debug_text text="'Pilot Academy [%s]: added ware reservation for sell trade, result: %s' . [this.assignedcontrolled.debugname, $reservationResult]" chance="$debugchance" />
+        <add_ware_reservation object="$tradeTarget" type="sell" ware="$tradeWare" amount="$tradeAmount" reserver="this.assignedcontrolled" result="$reservationResult" />
+        <debug_text text="'Pilot Academy [%s]: added ware %s reservation for sell trade, result: %s' . [this.assignedcontrolled.debugname, $tradeWare.id, $reservationResult]" chance="$debugchance" />
       </do_else>
 
       <label name="moveTo" />
@@ -1469,63 +1469,40 @@
 
       <do_if value="@$tradeOffer.exists != true">
         <debug_text
-          text="'Pilot Academy [%s]: trade offer no longer exists for %s %s offer of %s from %s' . [this.assignedcontrolled.debugname, $targetType, $tradeOperation, $tradeOffer.ware.id, $tradeOffer.owner.debugname]"
+          text="'Pilot Academy [%s]: trade offer no longer exists for %s %s offer of %s from %s' . [this.assignedcontrolled.debugname, $targetType, $tradeOperation, $tradeWare.id, $tradeOffer.owner.debugname]"
           chance="$debugchance" />
         <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
         <resume label="prepareTrade" />
       </do_if>
 
-      <set_value name="$tradeExecutionCount" exact="0" />
-      <label name="executeTrade" />
-      <set_value name="$tradeExecutionCount" operation="add" />
       <debug_text
-        text="'Pilot Academy [%s]: going to execute trade on: %s. Iteration: %s.'.
-          [this.assignedcontrolled.debugname, @$tradeTarget.debugname, $tradeExecutionCount]"
+        text="'Pilot Academy [%s]: going to execute trade on: %s with: %s'.
+          [this.assignedcontrolled.debugname, @$tradeTarget.debugname, $tradeWare.id]"
         chance="$debugchance" />
       <do_if value="@$targetType == 'seller'">
-        <execute_custom_trade seller="$tradeTarget" buyer="this.assignedcontrolled" ware="$tradeOffer.ware" price="$tradeOffer.unitprice" amount="$tradeAmount" result="$tradeResult" sinceversion="5" />
+        <execute_custom_trade seller="$tradeTarget" buyer="this.assignedcontrolled" ware="$tradeWare" price="$tradeOffer.unitprice" amount="$tradeAmount" result="$tradeResult" sinceversion="5" />
       </do_if>
       <do_else>
-        <execute_custom_trade seller="this.assignedcontrolled" buyer="$tradeTarget" ware="$tradeOffer.ware" price="$tradeOffer.unitprice" amount="$tradeAmount" result="$tradeResult" sinceversion="5" />
+        <execute_custom_trade seller="this.assignedcontrolled" buyer="$tradeTarget" ware="$tradeWare" price="$tradeOffer.unitprice" amount="$tradeAmount" result="$tradeResult" sinceversion="5" />
       </do_else>
       <debug_text
-        text="'Pilot Academy [%s]: proceed to %s %s of %s from %s with result: %s.'.[this.assignedcontrolled.debugname, $tradeOperation, $tradeAmount, $tradeOffer.ware.id, $tradeTarget.debugname, $tradeResult]"
+        text="'Pilot Academy [%s]: proceed to %s %s of %s from %s with result: %s.'.[this.assignedcontrolled.debugname, $tradeOperation, $tradeAmount, $tradeWare.id, $tradeTarget.debugname, $tradeResult]"
         chance="$debugchance" />
 
-      <do_if value="$tradeResult le 0">
-        <do_if value="@$targetType == 'seller'">
-          <find_sell_offer tradepartner="this.assignedcontrolled" seller="$tradeTarget" wares="$tradeOffer.ware" result="$localSellOffer" />
-          <debug_text
-            text="'Pilot Academy [%s]: checking if offer still exists for %s %s offer of %s from %s after failed trade attempt, found: %s' . [this.assignedcontrolled.debugname, $targetType, $tradeOperation, $tradeOffer.ware.id, $tradeTarget.debugname, @$localSellOffer.amount]"
-            chance="$debugchance" />
-        </do_if>
-        <do_else>
-          <find_buy_offer tradepartner="this.assignedcontrolled" buyer="$tradeTarget" wares="$tradeOffer.ware" result="$localBuyOffer" />
-          <debug_text
-            text="'Pilot Academy [%s]: checking if offer still exists for %s %s offer of %s from %s after failed trade attempt, found: %s' . [this.assignedcontrolled.debugname, $targetType, $tradeOperation, $tradeOffer.ware.id, $tradeTarget.debugname, @$localBuyOffer.amount]"
-            chance="$debugchance" />
-        </do_else>
-        <do_if value="$tradeExecutionCount le 10">
-          <debug_text text="'Pilot Academy [%s]: retrying trade on: %s, to %s of %s. Iteration: %s.' . [this.assignedcontrolled.debugname, @$tradeTarget.debugname, $tradeOperation, $tradeOffer.ware, $tradeExecutionCount]" chance="$debugchance" />
-          <wait min="400ms * $tradeExecutionCount" max="800ms * $tradeExecutionCount" />
-          <resume label="executeTrade" />
-        </do_if>
-      </do_if>
-
       <do_if value="@$tradeOperation == 'buy'">
-        <get_ware_reservation object="$tradeTarget" type="buy" ware="$tradeOffer.ware" reserver="this.assignedcontrolled" result="$reservationResult" />
-        <debug_text text="'Pilot Academy [%s]: found ware reservation for buy trade, result: %s' . [this.assignedcontrolled.debugname, $reservationResult]" chance="$debugchance" />
+        <get_ware_reservation object="$tradeTarget" type="buy" ware="$tradeWare" reserver="this.assignedcontrolled" result="$reservationResult" />
+        <debug_text text="'Pilot Academy [%s]: checking ware %s reservation for buy trade, result: %s' . [this.assignedcontrolled.debugname, $tradeWare.id, $reservationResult]" chance="$debugchance" />
         <do_if value="$reservationResult gt 0">
-          <remove_ware_reservation object="$tradeTarget" type="buy" ware="$tradeOffer.ware" reserver="this.assignedcontrolled" />
-          <debug_text text="'Pilot Academy [%s]: removed ware reservation for buy trade' . [this.assignedcontrolled.debugname]" chance="$debugchance" />
+          <remove_ware_reservation object="$tradeTarget" type="buy" ware="$tradeWare" reserver="this.assignedcontrolled" />
+          <debug_text text="'Pilot Academy [%s]: removed ware %s reservation for buy trade' . [this.assignedcontrolled.debugname, $tradeWare.id]" chance="$debugchance" />
         </do_if>
       </do_if>
       <do_else>
-        <get_ware_reservation object="$tradeTarget" type="sell" ware="$tradeOffer.ware" reserver="this.assignedcontrolled" result="$reservationResult" />
-        <debug_text text="'Pilot Academy [%s]: found ware reservation for sell trade, result: %s' . [this.assignedcontrolled.debugname, $reservationResult]" chance="$debugchance" />
+        <get_ware_reservation object="$tradeTarget" type="sell" ware="$tradeWare" reserver="this.assignedcontrolled" result="$reservationResult" />
+        <debug_text text="'Pilot Academy [%s]: checking ware %s reservation for sell trade, result: %s' . [this.assignedcontrolled.debugname, $tradeWare.id, $reservationResult]" chance="$debugchance" />
         <do_if value="$reservationResult gt 0">
-          <remove_ware_reservation object="$tradeTarget" type="sell" ware="$tradeOffer.ware" reserver="this.assignedcontrolled" />
-          <debug_text text="'Pilot Academy [%s]: removed ware reservation for sell trade' . [this.assignedcontrolled.debugname]" chance="$debugchance" />
+          <remove_ware_reservation object="$tradeTarget" type="sell" ware="$tradeWare" reserver="this.assignedcontrolled" />
+          <debug_text text="'Pilot Academy [%s]: removed ware %s reservation for sell trade' . [this.assignedcontrolled.debugname, $tradeWare.id]" chance="$debugchance" />
         </do_if>
       </do_else>
 
