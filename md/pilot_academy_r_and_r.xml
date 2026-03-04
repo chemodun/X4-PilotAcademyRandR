@@ -432,7 +432,7 @@
           </actions>
         </cue>
 
-        <cue name="Process_Pilot_Auto_Hire" instantiate="true" version="2">
+        <cue name="Process_Pilot_Auto_Hire" instantiate="true" version="3">
           <conditions>
             <event_object_signalled object="player.entity" param="'PilotAcademyRAndR.CadetAutoHireRequest'" />
           </conditions>
