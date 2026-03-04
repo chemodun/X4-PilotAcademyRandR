@@ -1544,9 +1544,13 @@
               text="'Pilot Academy [%s]: something wrong with this ship. Will wait a bit and retry the trade. Check reason: %s, player money: %s, buyer money: %s, buyer cargo free space for ware: %s' .
               [this.assignedcontrolled.debugname, $checkReason, player.money, @this.assignedcontrolled.money, @this.assignedcontrolled.cargo.{$tradeWare}.free]"
               chance="$debugchance" />
-            <wait min="33s" max="55s" />
             <include_interrupt_actions ref="PilotAcademyResetCurrentTradeInfo" />
             <include_interrupt_actions ref="PilotAcademyRemoveShipVariables" />
+            <set_order_failed order="this.assignedcontrolled.order" text="{1972092412, 2009001}.[this.assignedcontrolled.name, this.assignedcontrolled.idcode]" comment="Unable to process trades." />
+            <wait min="180s" max="300s" />
+            <run_script name="'move.undock'">
+              <param name="debugchance" value="$debugchance" />
+            </run_script>
             <resume label="prepareTrade" />
           </do_if>
         </do_if>

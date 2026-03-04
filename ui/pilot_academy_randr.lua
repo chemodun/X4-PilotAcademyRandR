@@ -34,6 +34,16 @@ ffi.cdef [[
 	} OrderDefinition;
 
 	typedef struct {
+		uint32_t id;
+		AIOrderID orderid;
+		const char* orderdef;
+		const char* message;
+		double timestamp;
+		bool wasdefaultorder;
+		bool wasinloop;
+	} OrderFailure;
+
+	typedef struct {
 		const char* id;
 		const char* name;
 		const char* desc;
@@ -53,6 +63,8 @@ ffi.cdef [[
 	uint32_t CreateOrder(UniverseID controllableid, const char* orderid, bool default);
 	bool EnablePlannedDefaultOrder(UniverseID controllableid, bool checkonly);
 	bool GetOrderDefinition(OrderDefinition* result, const char* orderdef);
+
+	uint32_t GetNumOrderFailures(UniverseID controllableid, bool includelooporders);
 
   void SetFleetName(UniverseID controllableid, const char* fleetname);
 
@@ -2165,7 +2177,7 @@ function pilotAcademy.createWingmansTable(frame, menu, config, tableName, wingDi
           bgColor = Color["row_background_selected"]
         end
         row = tableHandler:addRow({ tableName = tableHandler.name, rowData = wingman }, { fixed = false, bgColor = bgColor })
-        local icon = row[2]:setColSpan(10):createIcon("order_assist", { height = config.mapRowHeight, width = config.mapRowHeight })
+        local icon = row[2]:setColSpan(10):createIcon("order_assist", { height = config.mapRowHeight, width = config.mapRowHeight, color = wingman.color, mouseOverText = wingman.message })
         icon:setText(wingman.text, { x = config.mapRowHeight, halign = "left", color = Color["text_normal"] })
         icon:setText2(wingman.text2, { halign = "right", color = Color["text_skills"] })
         if i == 10 then
@@ -2373,6 +2385,8 @@ function pilotAcademy.formatShipInfoOption(shipInfo)
     text = string.format("\027[%s] %s (%s): %s", shipInfo.shipIcon, pilotAcademy.formatName(shipInfo.shipName, 25), shipInfo.shipIdCode,
       pilotAcademy.formatName(shipInfo.pilotName, 20)),
     text2 = string.format("%s", shipInfo.pilotSkill and Helper.displaySkill(shipInfo.pilotSkill * 15 / 100)) or 0,
+    color = shipInfo.failedOrder ~= "" and Color["text_warning"] or nil,
+    message = shipInfo.failedOrder ~= "" and shipInfo.failedOrder or nil,
     displayremoveoption = false,
   }
 end
@@ -2794,6 +2808,11 @@ function pilotAcademy.fetchWingmans(wingLeaderId)
       local shipName, pilot, shipIcon = GetComponentData(wingmanId, "name", "assignedaipilot", "icon")
       local pilotName, pilotSkill = GetComponentData(pilot, "name", "combinedskill")
       local shipIdCode = ffi.string(C.GetObjectIDCode(wingmanId))
+      local failedOrder = ""
+      local failure = ffi.new("OrderFailure")
+      if C.GetDefaultOrderFailure(failure, wingmanId) then
+        failedOrder = ffi.string(failure.message)
+      end
       wingmans[#wingmans + 1] = pilotAcademy.formatShipInfoOption({
         shipId = wingmanId,
         shipName = shipName,
@@ -2801,6 +2820,7 @@ function pilotAcademy.fetchWingmans(wingLeaderId)
         pilotName = pilotName,
         pilotSkill = pilotSkill,
         shipIcon = shipIcon,
+        failedOrder = failedOrder,
       })
     end
   end
