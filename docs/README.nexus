@@ -10,6 +10,7 @@ This mod introduces the Pilot Academy, allowing the Player to train pilots throu
 [*] [b]Wing Organization[/b]: Organize the Player's trainees into Wings for efficient management.
 [*] [b]Goal Selection[/b]: Prioritize either pilot training or improving relations.
 [*] [b]Faction Limiting[/b]: Restrict training and relation-building activities to specific factions for each Wing.
+[*] [b]Station Managers[/b]: Automatically promote qualified pilots to Station Manager positions on Player-owned stations when their management skills exceed those of the current manager.
 [*] [b]Researchable Upgrades[/b]:
 [list]
 [*] Expand to 9 Wings.
@@ -133,6 +134,12 @@ In case of selecting the [b]To Selected Fleets[/b] option, the Player can select
 
 From version 1.05, the Player can also manually transfer any of [b]Skilled pilots[/b] to the [b]Academy[/b] when the [b]To Selected Fleets[/b] option is enabled. The Academy can then act as a [b]Pilot Dispatch center[/b], automatically assigning these experienced pilots to replace less skilled pilots in the Player's selected fleets.
 
+[img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/auto_assign_options_as_manager.png[/img]
+
+From version 1.09, the Player can also set the the option [b]Consider first as candidate for Station Manager[/b] - in this case the [b]Skilled pilots[/b] will be checked against the Station Managers on Player-owned stations. If this person Manager skills are higher than the current Station Manager, they will be automatically assigned to this position. Otherwise, they will be considered as candidates for pilot swapping based on previously selected priority.
+
+In addition, to prevent "losing" skilled pilots on position of Station Manager on [b]Defence Platforms[/b], there is a special option [b]Skip Stations without Storages[/b] - if enabled, the pilots with higher Manager skills will not be assigned to stations without storages, which are usually defense platforms.
+
 In addition, please be aware about situation when the target ship's crew is full. By default, in this case, the pilot swapping will not be performed and the Player will get a warning notification.
 
 But if the option [b]Auto fire less skilled crew member if crew is full[/b] is enabled, the less qualified crew member will be automatically dismissed to free up space for the new pilot transfer.
@@ -235,6 +242,14 @@ The Player can add any number of [b]Wingmen[/b] to an existing [b]Wing[/b] at an
 Note: It takes several seconds for an added [b]Wingman[/b] to appear in the [b]Wingmen[/b] list after selection.
 
 [img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/wing_alpha_with_wingman.png[/img]
+
+[size=2][u][i]Wingmans with Failed Orders[/i][/u][/size]
+
+In some cases, a [b]Wingman[/b] may have failed the trainings by some unclear reason. In this case, order icon of such [b]Wingman[/b] will be displayed with a warning color and a tooltip message indicating the failure reason.
+
+[img]https://raw.githubusercontent.com/chemodun/X4-PilotAcademyRandR/refs/heads/main/docs/images/wing_alpha_wingman_with_failed_order.png[/img]
+
+In this case, the best way to resolve the issue is to remove the [b]Wingman[/b] from the [b]Wing[/b] and use any other compatible ship as a replacement.
 
 [size=3][u][i]Fleets, Wing Leader and Wingman Context Menus, Hotkey and Mouse Double-click[/i][/u][/size]
 
@@ -341,6 +356,23 @@ There are examples of texts and notifications screenshots:
 [/list]
 [size=3][u][b]Changelog[/b][/u][/size]
 
+[size=3][u][i][1.09] - 2026-03-04[/i][/u][/size]
+[list]
+[*] [b]Added[/b]
+[list]
+[*] New option [b]Consider first as candidate for Station Manager[/b] to automatically assign skilled pilots to Station Manager positions if their Manager skills are higher than the current Station Manager.
+[*] New option [b]Skip Stations without Storages[/b] to prevent assigning skilled pilots to stations without storages, which are usually defense platforms.
+[*] Color and tooltip message for [b]Wingman[/b] with failed orders in the [b]Wing[/b] management tab.
+[/list]
+[*] [b]Improved[/b]
+[list]
+[*] The order responsible for pilot training will now operate without constant docking and undocking cycles, which should significantly reduce training time and prevent possible issues with police interference during the training process.
+[/list]
+[/list]    It will still perform docking and undocking maneuvers when free docking space is limited for other ships, and will also do so at least once every 5 minutes.
+[list][list]
+[*] Some code optimization and refactoring
+[/list]
+[/list]
 [size=3][u][i][1.08] - 2026-03-02[/i][/u][/size]
 [list]
 [*] [b]Fixed[/b]
