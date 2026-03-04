@@ -10,6 +10,7 @@ This mod introduces the Pilot Academy, allowing the Player to train pilots throu
 - **Wing Organization**: Organize the Player's trainees into Wings for efficient management.
 - **Goal Selection**: Prioritize either pilot training or improving relations.
 - **Faction Limiting**: Restrict training and relation-building activities to specific factions for each Wing.
+- **Station Managers**: Automatically promote qualified pilots to Station Manager positions on Player-owned stations when their management skills exceed those of the current manager.
 - **Researchable Upgrades**:
   - Expand to 9 Wings.
   - Train pilots up to the 5-star rank.
@@ -127,6 +128,12 @@ In case of selecting the `To Selected Fleets` option, the Player can select spec
 
 From version 1.05, the Player can also manually transfer any of `Skilled pilots` to the `Academy` when the `To Selected Fleets` option is enabled. The Academy can then act as a **Pilot Dispatch center**, automatically assigning these experienced pilots to replace less skilled pilots in the Player's selected fleets.
 
+![Auto-assign options as Station Manager.](docs/images/auto_assign_options_as_manager.png)
+
+From version 1.09, the Player can also set the the option `Consider first as candidate for Station Manager` - in this case the `Skilled pilots` will be checked against the Station Managers on Player-owned stations. If this person Manager skills are higher than the current Station Manager, they will be automatically assigned to this position. Otherwise, they will be considered as candidates for pilot swapping based on previously selected priority.
+
+In addition, to prevent "losing" skilled pilots on position of Station Manager on `Defence Platforms`, there is a special option `Skip Stations without Storages` - if enabled, the pilots with higher Manager skills will not be assigned to stations without storages, which are usually defense platforms.
+
 In addition, please be aware about situation when the target ship's crew is full. By default, in this case, the pilot swapping will not be performed and the Player will get a warning notification.
 
 But if the option `Auto fire less skilled crew member if crew is full` is enabled, the less qualified crew member will be automatically dismissed to free up space for the new pilot transfer.
@@ -229,6 +236,14 @@ The Player can add any number of `Wingmen` to an existing `Wing` at any time on 
 Note: It takes several seconds for an added `Wingman` to appear in the `Wingmen` list after selection.
 
 ![Wing Alpha tab with Wing Leader and assigned Wingman.](docs/images/wing_alpha_with_wingman.png)
+
+##### Wingmans with Failed Orders
+
+In some cases, a `Wingman` may have failed the trainings by some unclear reason. In this case, order icon of such `Wingman` will be displayed with a warning color and a tooltip message indicating the failure reason.
+
+![Wingman with failed order.](docs/images/wing_alpha_wingman_with_failed_order.png)
+
+In this case, the best way to resolve the issue is to remove the `Wingman` from the `Wing` and use any other compatible ship as a replacement.
 
 ### Fleets, Wing Leader and Wingman Context Menus, Hotkey and Mouse Double-click
 
@@ -335,6 +350,17 @@ There are examples of texts and notifications screenshots:
 - [SirNukes](https://next.nexusmods.com/profile/sirnukes?gameId=2659) — for the `Mod Support APIs` that power the UI hooks.
 
 ## Changelog
+
+### [1.09] - 2026-03-04
+
+- **Added**
+  - New option `Consider first as candidate for Station Manager` to automatically assign skilled pilots to Station Manager positions if their Manager skills are higher than the current Station Manager.
+  - New option `Skip Stations without Storages` to prevent assigning skilled pilots to stations without storages, which are usually defense platforms.
+  - Color and tooltip message for `Wingman` with failed orders in the `Wing` management tab.
+- **Improved**
+  - The order responsible for pilot training will now operate without constant docking and undocking cycles, which should significantly reduce training time and prevent possible issues with police interference during the training process.
+    It will still perform docking and undocking maneuvers when free docking space is limited for other ships, and will also do so at least once every 5 minutes.
+  - Some code optimization and refactoring
 
 ### [1.08] - 2026-03-02
 
