@@ -27,8 +27,9 @@
         <do_if value="@$commonData != null and @$commonData.$targetRankLevel != null">
           <set_value name="$targetRankLevel" exact="@$commonData.$targetRankLevel" />
         </do_if>
+        <set_value name="$targetCombinedSkill" exact="@$targetRankLevel * 20" />
         <debug_text
-          text="'Pilot Academy [%s]: determined targetRankLevel: %s' . [this.assignedcontrolled.debugname, $targetRankLevel]"
+          text="'Pilot Academy [%s]: determined targetRankLevel: %s, targetCombinedSkill: %s' . [this.assignedcontrolled.debugname, $targetRankLevel, $targetCombinedSkill]"
           chance="$debugchance" />
       </actions>
       <actions name="PilotAcademyProcessWingData">
@@ -1388,6 +1389,7 @@
           <do_if value="this.combinedskill gt $targetCombinedSkill">
             <set_value name="$applyExperienceChance" exact="5" />
           </do_if>
+          <debug_text text="'Pilot Academy [%s]: applying experience for trade operation %s with chance %s' . [this.assignedcontrolled.debugname, $tradeOperation, $applyExperienceChance]" chance="$debugchance" />
           <apply_experience entity="this" experience="'ship_trade_good'" factor="1" chance="$applyExperienceChance" />
           <apply_experience object="this.assignedcontrolled" role="entityrole.service" experience="'ship_trade_good'" factor="1" chance="$applyExperienceChance" />
           <do_if value="$shipInfo.$dataIsUpdated">
