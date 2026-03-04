@@ -341,9 +341,9 @@ There are examples of texts and notifications screenshots:
 ## Videos
 
 - [Pilot Academy: Ranks and Relations - Overview](https://www.youtube.com/watch?v=gJNCVAZHifA)
-  - First minute — setting up the Academy.
-  - Second minute — reaching the destination station and starting the training process.
-  - The remainder — the training process results shown at 10x speed.
+  - First minute: setting up the Academy.
+  - Second minute: reaching the destination station and starting the training process.
+  - The remainder: the training process results shown at 10x speed.
 
 ## Credits
 
@@ -352,9 +352,9 @@ There are examples of texts and notifications screenshots:
 
 ## Acknowledgements
 
-- [EGOSOFT](https://www.egosoft.com) — for the X series.
-- [kuertee](https://next.nexusmods.com/profile/kuertee?gameId=2659) — for the `UI Extensions and HUD` that makes this extension possible.
-- [SirNukes](https://next.nexusmods.com/profile/sirnukes?gameId=2659) — for the `Mod Support APIs` that power the UI hooks.
+- [EGOSOFT](https://www.egosoft.com) - for the X series.
+- [kuertee](https://next.nexusmods.com/profile/kuertee?gameId=2659) - for the `UI Extensions and HUD` that makes this extension possible.
+- [SirNukes](https://next.nexusmods.com/profile/sirnukes?gameId=2659) - for the `Mod Support APIs` that power the UI hooks.
 
 ## Changelog
 
