@@ -34,6 +34,8 @@
       <t id="10142">Küçükten Büyüğe</t>
       <t id="10143">Büyükten Küçüğe</t>
       <t id="10151">Kullanılabilir filo yok</t>
+      <t id="10161">Önce İstasyon Müdürü adayı olarak değerlendir</t>
+      <t id="10162">Depo olmayan İstasyonları atla</t>
       <t id="10191">Mürettebat doluysa daha az yetenekli ekip üyesini otomatik olarak kovun</t>
       <t id="10201">Adaylar:</t>
       <t id="10209">Atanmış aday yok</t>
@@ -57,6 +59,7 @@
       <t id="10903">Güncelle</t>
       <t id="10904">Oluştur</t>
       <t id="20001">Aday olarak ata</t>
+      <t id="20002">Yeniden Atama için Akademiye Geri Çağır</t>
       <t id="90001">Mesajları göster:</t>
       <t id="90009">Hata ayıklama seviyesi:</t>
       <t id="90091">Hata ayıklama yok</t>
@@ -78,6 +81,10 @@
       <t id="1000005">Pilot %s, %s üzerine transfer edildi.</t>
       <t id="1000006">Pilot %s yeni Akademi adayı olarak atandı.</t>
       <t id="1000007">Pilot %s, %s üzerinde pilot olarak atandı.</t>
+      <t id="1000013">Müdür %s Akademi'ye geri döndürüldü. Artık onları herhangi bir yeni göreve atayabilirsiniz.</t>
+      <t id="1000015">Pilot %s, İstasyon Müdürü olmak üzere %s üzerine transfer edildi.</t>
+      <t id="1000016">Müdür %s yeni Akademi adayı olarak atandı.</t>
+      <t id="1000017">Pilot %s, %s üzerinde İstasyon Müdürü olarak atandı.</t>
       <t id="2000001">Pilot değiştirme için kullanılabilir boş aday yok!</t>
       <t id="2000002">Pilot değiştirmek için %s üzerinde boş mürettebat kapasitesi yok!</t>
       <t id="2000003">%s üzerinde pilot değiştirme gerçekleştirilemiyor! Lütfen manuel olarak yapın!</t>
@@ -85,6 +92,11 @@
       <t id="2000005">Pilot %s'i geri döndürmek için Akademi'de boş kapasite yok! Lütfen çözün!</t>
       <t id="2000006">Yeni pilot %s, %s'e taşınamıyor!</t>
       <t id="2000007">Filo %s üzerinde lider gemi %s ile Akademi eğitim emri atanamıyor! Lütfen sorunu bildirin!</t>
+      <t id="2000012">Müdür değiştirmek için %s üzerinde boş mürettebat kapasitesi yok!</t>
+      <t id="2000013">%s üzerinde müdür değiştirme gerçekleştirilemiyor! Lütfen manuel olarak yapın!</t>
+      <t id="2000014">Müdür %s Akademi'ye geri döndürülemiyor! Lütfen manuel olarak yapın!</t>
+      <t id="2000016">Yeni müdür %s, %s'e taşınamıyor!</t>
+      <t id="2009001">Bu gemi ile bir sorun var: %s \(%s\). Akademi eğitimleri için kullanılamaz!</t>
       <t id="9000001">Pilot Akademisi: Rütbeler ve İlişkiler</t>
       <t id="9000002">Pilot Akademisi. Beş filo</t>
       <t id="9000003">Pilot Akademisi. Dokuz filo</t>

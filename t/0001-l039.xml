@@ -34,6 +34,8 @@
       <t id="10142">Da Piccola a Grande</t>
       <t id="10143">Da Grande a Piccola</t>
       <t id="10151">Nessuna flotta disponibile</t>
+      <t id="10161">Considera prima come candidato a Responsabile di Stazione</t>
+      <t id="10162">Salta le Stazioni senza Depositi</t>
       <t id="10191">Licenzia automaticamente il membro dell'equipaggio meno qualificato se l'equipaggio è pieno</t>
       <t id="10201">Cadetti:</t>
       <t id="10209">Nessun cadetto assegnato</t>
@@ -57,6 +59,7 @@
       <t id="10903">Aggiorna</t>
       <t id="10904">Crea</t>
       <t id="20001">Nomina come cadetto</t>
+      <t id="20002">Richiama all'Accademia per Riassegnazione</t>
       <t id="90001">Visualizza messaggi in:</t>
       <t id="90009">Livello di debug:</t>
       <t id="90091">Nessun debug</t>
@@ -78,6 +81,10 @@
       <t id="1000005">Il pilota %s è stato trasferito su %s.</t>
       <t id="1000006">Pilota %s nominato nuovo cadetto dell'Accademia.</t>
       <t id="1000007">Pilota %s assegnato come pilota su %s.</t>
+      <t id="1000013">Il responsabile %s è stato riportato all'Accademia. Ora puoi assegnargli qualsiasi nuovo compito.</t>
+      <t id="1000015">Il pilota %s è stato trasferito su %s per diventare Responsabile di Stazione.</t>
+      <t id="1000016">Responsabile %s nominato nuovo cadetto dell'Accademia.</t>
+      <t id="1000017">Pilota %s assegnato come Responsabile di Stazione su %s.</t>
       <t id="2000001">Nessun cadetto libero disponibile per lo scambio piloti!</t>
       <t id="2000002">Nessuna capacità equipaggio libera su %s per effettuare lo scambio piloti!</t>
       <t id="2000003">Impossibile effettuare lo scambio piloti su %s! Per favore fallo manualmente!</t>
@@ -85,6 +92,11 @@
       <t id="2000005">Nessuna capacità libera all'Accademia per riportare il pilota %s! Per favore risolvilo!</t>
       <t id="2000006">Impossibile spostare il nuovo pilota %s su %s!</t>
       <t id="2000007">Impossibile assegnare l'ordine di addestramento dell'Accademia sulla squadriglia %s con nave capo %s! Per favore segnala il problema!</t>
+      <t id="2000012">Nessuna capacità equipaggio libera su %s per effettuare lo scambio responsabile!</t>
+      <t id="2000013">Impossibile effettuare lo scambio responsabile su %s! Per favore fallo manualmente!</t>
+      <t id="2000014">Impossibile riportare il responsabile %s all'Accademia! Per favore fallo manualmente!</t>
+      <t id="2000016">Impossibile spostare il nuovo responsabile %s su %s!</t>
+      <t id="2009001">Qualcosa non va con questa nave: %s \(%s\). Non può essere usata per gli addestramenti dell'Accademia!</t>
       <t id="9000001">Accademia Piloti: Gradi e Relazioni</t>
       <t id="9000002">Accademia Piloti. Cinque squadriglie</t>
       <t id="9000003">Accademia Piloti. Nove squadriglie</t>

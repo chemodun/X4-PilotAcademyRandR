@@ -34,6 +34,8 @@
       <t id="10142">Pequena para Grande</t>
       <t id="10143">Grande para Pequena</t>
       <t id="10151">Nenhuma frota disponível</t>
+      <t id="10161">Considerar primeiro como candidato a Gerente de Estação</t>
+      <t id="10162">Ignorar Estações sem Armazéns</t>
       <t id="10191">Demitir automaticamente o membro da tripulação menos qualificado se a tripulação estiver cheia</t>
       <t id="10201">Cadetes:</t>
       <t id="10209">Nenhum cadete atribuído</t>
@@ -57,6 +59,7 @@
       <t id="10903">Atualizar</t>
       <t id="10904">Criar</t>
       <t id="20001">Nomear como cadete</t>
+      <t id="20002">Convocar à Academia para Reatribuição</t>
       <t id="90001">Exibir mensagens em:</t>
       <t id="90009">Nível de depuração:</t>
       <t id="90091">Sem depuração</t>
@@ -78,6 +81,10 @@
       <t id="1000005">O piloto %s foi transferido para %s.</t>
       <t id="1000006">Piloto %s nomeado novo cadete da Academia.</t>
       <t id="1000007">Piloto %s atribuído como piloto em %s.</t>
+      <t id="1000013">O gerente %s foi devolvido à Academia. Você pode agora atribuí-lo a qualquer nova tarefa.</t>
+      <t id="1000015">O piloto %s foi transferido para %s para ser Gerente de Estação.</t>
+      <t id="1000016">Gerente %s nomeado novo cadete da Academia.</t>
+      <t id="1000017">Piloto %s atribuído como Gerente de Estação em %s.</t>
       <t id="2000001">Nenhum cadete livre disponível para troca de pilotos!</t>
       <t id="2000002">Sem capacidade de tripulação livre em %s para realizar a troca de pilotos!</t>
       <t id="2000003">Não é possível realizar a troca de pilotos em %s! Por favor faça manualmente!</t>
@@ -85,6 +92,11 @@
       <t id="2000005">Sem capacidade livre na Academia para devolver o piloto %s! Por favor resolva isso!</t>
       <t id="2000006">Não é possível mover o novo piloto %s para %s!</t>
       <t id="2000007">Não é possível atribuir a ordem de treinamento da Academia no esquadrão %s com nave líder %s! Por favor reporte o problema!</t>
+      <t id="2000012">Sem capacidade de tripulação livre em %s para realizar a troca de gerente!</t>
+      <t id="2000013">Não é possível realizar a troca de gerente em %s! Por favor faça manualmente!</t>
+      <t id="2000014">Não é possível devolver o gerente %s à Academia! Por favor faça manualmente!</t>
+      <t id="2000016">Não é possível mover o novo gerente %s para %s!</t>
+      <t id="2009001">Algo está errado com esta nave: %s \(%s\). Não pode ser usada para treinamentos da Academia!</t>
       <t id="9000001">Academia de Pilotos: Patentes e Relações</t>
       <t id="9000002">Academia de Pilotos. Cinco esquadrões</t>
       <t id="9000003">Academia de Pilotos. Nove esquadrões</t>

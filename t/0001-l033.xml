@@ -34,6 +34,8 @@
       <t id="10142">Petit vers Grand</t>
       <t id="10143">Grand vers Petit</t>
       <t id="10151">Aucune flotte disponible</t>
+      <t id="10161">Considérer en premier comme candidat au poste de Gestionnaire de Station</t>
+      <t id="10162">Ignorer les Stations sans Stockages</t>
       <t id="10191">Renvoyer automatiquement le membre d'équipage le moins qualifié si l'équipage est complet</t>
       <t id="10201">Cadets:</t>
       <t id="10209">Aucun cadet assigné</t>
@@ -57,6 +59,7 @@
       <t id="10903">Mettre à jour</t>
       <t id="10904">Créer</t>
       <t id="20001">Nommer comme cadet</t>
+      <t id="20002">Rappeler à l'Académie pour Réaffectation</t>
       <t id="90001">Afficher les messages en:</t>
       <t id="90009">Niveau de débogage:</t>
       <t id="90091">Pas de débogage</t>
@@ -78,6 +81,10 @@
       <t id="1000005">Le pilote %s a été transféré sur %s.</t>
       <t id="1000006">Le pilote %s nommé nouveau cadet de l'Académie.</t>
       <t id="1000007">Le pilote %s assigné comme pilote sur %s.</t>
+      <t id="1000013">Le gestionnaire %s a été renvoyé à l'Académie. Vous pouvez maintenant l'assigner à une nouvelle tâche.</t>
+      <t id="1000015">Le pilote %s a été transféré sur %s pour devenir Gestionnaire de Station.</t>
+      <t id="1000016">Le gestionnaire %s nommé nouveau cadet de l'Académie.</t>
+      <t id="1000017">Le pilote %s assigné comme Gestionnaire de Station sur %s.</t>
       <t id="2000001">Aucun cadet libre disponible pour l'échange de pilotes!</t>
       <t id="2000002">Aucune capacité d'équipage libre sur %s pour effectuer l'échange de pilotes!</t>
       <t id="2000003">Impossible d'effectuer l'échange de pilotes sur %s! Veuillez le faire manuellement!</t>
@@ -85,6 +92,11 @@
       <t id="2000005">Aucune capacité libre à l'Académie pour renvoyer le pilote %s! Veuillez résoudre ce problème!</t>
       <t id="2000006">Impossible de déplacer le nouveau pilote %s vers %s!</t>
       <t id="2000007">Impossible d'assigner l'ordre de formation de l'Académie sur l'escadron %s avec le vaisseau chef %s! Veuillez signaler le problème!</t>
+      <t id="2000012">Aucune capacité d'équipage libre sur %s pour effectuer l'échange de gestionnaire!</t>
+      <t id="2000013">Impossible d'effectuer l'échange de gestionnaire sur %s! Veuillez le faire manuellement!</t>
+      <t id="2000014">Impossible de renvoyer le gestionnaire %s à l'Académie! Veuillez le faire manuellement!</t>
+      <t id="2000016">Impossible de déplacer le nouveau gestionnaire %s vers %s!</t>
+      <t id="2009001">Quelque chose ne va pas avec ce vaisseau: %s \(%s\). Impossible de l'utiliser pour les entraînements de l'Académie!</t>
       <t id="9000001">Académie de Pilotage: Rangs et Relations</t>
       <t id="9000002">Académie de Pilotage. Cinq escadrons</t>
       <t id="9000003">Académie de Pilotage. Neuf escadrons</t>

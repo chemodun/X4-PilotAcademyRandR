@@ -34,6 +34,8 @@
       <t id="10142">Small to Large</t>
       <t id="10143">Large to Small</t>
       <t id="10151">No fleets available</t>
+      <t id="10161">Consider first as candidate for Station Manager</t>
+      <t id="10162">Skip Stations without Storages</t>
       <t id="10191">Auto fire less skilled crew member if crew is full</t>
       <t id="10201">Cadets:</t>
       <t id="10209">No cadets assigned</t>
@@ -57,6 +59,7 @@
       <t id="10903">Update</t>
       <t id="10904">Create</t>
       <t id="20001">Appoint as a cadet</t>
+      <t id="20002">Recall to Academy for Reassignment</t>
       <t id="90001">Display messages in:</t>
       <t id="90009">Debug level:</t>
       <t id="90091">No debug</t>
@@ -78,6 +81,10 @@
       <t id="1000005">Pilot %s has been transferred on %s.</t>
       <t id="1000006">Pilot %s appointed as new Academy cadet.</t>
       <t id="1000007">Pilot %s assigned as pilot on %s.</t>
+      <t id="1000013">Manager %s has been moved back to Academy. You can now assign them to any new task.</t>
+      <t id="1000015">Pilot %s has been transferred on %s to be a Station Manager.</t>
+      <t id="1000016">Manager %s appointed as new Academy cadet.</t>
+      <t id="1000017">Pilot %s assigned as Station Manager on %s.</t>
       <t id="2000001">No free cadets available for pilots swapping!</t>
       <t id="2000002">No free crew capacity on %s to do pilot swapping!</t>
       <t id="2000003">Can't perform pilot swapping on %s! Please do it manually!</t>
@@ -85,6 +92,11 @@
       <t id="2000005">No free capacity at Academy to return pilot %s! Please resolve it!</t>
       <t id="2000006">Can't move new pilot %s to %s!</t>
       <t id="2000007">Can't assign Academy training order on wing %s with leader ship %s! Please report the issue!</t>
+      <t id="2000012">No free crew capacity on %s to do manager swapping!</t>
+      <t id="2000013">Can't perform manager swapping on %s! Please do it manually!</t>
+      <t id="2000014">Can't return manager %s to the Academy! Please do it manually!</t>
+      <t id="2000016">Can't move new manager %s to %s!</t>
+      <t id="2009001">Something wrong with this ship: %s \(%s\). Can not use it for Academy trainings!</t>
       <t id="9000001">Pilot Academy: Ranks and Relations</t>
       <t id="9000002">Pilot Academy: R&amp;R. Five wings</t>
       <t id="9000003">Pilot Academy: R&amp;R. Nine wings</t>

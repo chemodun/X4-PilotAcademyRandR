@@ -34,6 +34,8 @@
       <t id="10142">Klein bis Groß</t>
       <t id="10143">Groß bis Klein</t>
       <t id="10151">Keine Flotten verfügbar</t>
+      <t id="10161">Als ersten Kandidaten für Stationsmanager berücksichtigen</t>
+      <t id="10162">Stationen ohne Lager überspringen</t>
       <t id="10191">Weniger qualifiziertes Besatzungsmitglied automatisch entlassen, wenn die Besatzung voll ist</t>
       <t id="10201">Kadetten:</t>
       <t id="10209">Keine Kadetten zugewiesen</t>
@@ -57,6 +59,7 @@
       <t id="10903">Aktualisieren</t>
       <t id="10904">Erstellen</t>
       <t id="20001">Als Kadett ernennen</t>
+      <t id="20002">Zur Akademie zurückrufen für Neuzuweisung</t>
       <t id="90001">Nachrichten anzeigen in:</t>
       <t id="90009">Debug-Level:</t>
       <t id="90091">Kein Debug</t>
@@ -78,6 +81,10 @@
       <t id="1000005">Pilot %s wurde auf %s versetzt.</t>
       <t id="1000006">Pilot %s wurde zum neuen Akademie-Kadett ernannt.</t>
       <t id="1000007">Pilot %s wurde als Pilot auf %s zugewiesen.</t>
+      <t id="1000013">Manager %s wurde zur Akademie zurückversetzt. Sie können ihn nun einer neuen Aufgabe zuweisen.</t>
+      <t id="1000015">Pilot %s wurde auf %s als Stationsmanager versetzt.</t>
+      <t id="1000016">Manager %s wurde zum neuen Akademie-Kadett ernannt.</t>
+      <t id="1000017">Pilot %s wurde als Stationsmanager auf %s zugewiesen.</t>
       <t id="2000001">Keine freien Kadetten für Pilotentausch verfügbar!</t>
       <t id="2000002">Keine freie Besatzungskapazität auf %s für Pilotentausch!</t>
       <t id="2000003">Kann Pilotentausch auf %s nicht durchführen! Bitte manuell vornehmen!</t>
@@ -85,6 +92,11 @@
       <t id="2000005">Keine freie Kapazität an der Akademie um Pilot %s zurückzubringen! Bitte beheben!</t>
       <t id="2000006">Kann neuen Pilot %s nicht nach %s verschieben!</t>
       <t id="2000007">Kann Akademie-Trainingsauftrag für Schwarm %s mit Führungsschiff %s nicht zuweisen! Bitte melden Sie das Problem!</t>
+      <t id="2000012">Keine freie Besatzungskapazität auf %s für Manager-Tausch!</t>
+      <t id="2000013">Kann Manager-Tausch auf %s nicht durchführen! Bitte manuell vornehmen!</t>
+      <t id="2000014">Kann Manager %s nicht zur Akademie zurückbringen! Bitte manuell vornehmen!</t>
+      <t id="2000016">Kann neuen Manager %s nicht nach %s verschieben!</t>
+      <t id="2009001">Etwas stimmt nicht mit diesem Schiff: %s \(%s\). Es kann nicht für Akademie-Trainings verwendet werden!</t>
       <t id="9000001">Pilotenakademie: Ränge und Beziehungen</t>
       <t id="9000002">Pilotenakademie. Fünf Staffeln</t>
       <t id="9000003">Pilotenakademie. Neun Staffeln</t>

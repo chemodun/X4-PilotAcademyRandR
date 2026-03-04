@@ -34,6 +34,8 @@
       <t id="10142">Od Małego do Dużego</t>
       <t id="10143">Od Dużego do Małego</t>
       <t id="10151">Brak dostępnych flot</t>
+      <t id="10161">Rozważ jako pierwszego kandydata na Menedżera Stacji</t>
+      <t id="10162">Pomiń Stacje bez Magazynów</t>
       <t id="10191">Automatycznie zwolnij mniej wykwalifikowanego członka załogi, jeśli załoga jest pełna</t>
       <t id="10201">Kadeci:</t>
       <t id="10209">Brak przypisanych kadetów</t>
@@ -57,6 +59,7 @@
       <t id="10903">Aktualizuj</t>
       <t id="10904">Utwórz</t>
       <t id="20001">Mianuj na kadeta</t>
+      <t id="20002">Odwołaj do Akademii w celu Ponownego Przypisania</t>
       <t id="90001">Wyświetl wiadomości w:</t>
       <t id="90009">Poziom debugowania:</t>
       <t id="90091">Bez debugowania</t>
@@ -78,6 +81,10 @@
       <t id="1000005">Pilot %s został przeniesiony na %s.</t>
       <t id="1000006">Pilot %s mianowany nowym kadetem Akademii.</t>
       <t id="1000007">Pilot %s przypisany jako pilot na %s.</t>
+      <t id="1000013">Menedżer %s został przeniesiony z powrotem do Akademii. Możesz teraz przypisac go do nowego zadania.</t>
+      <t id="1000015">Pilot %s został przeniesiony na %s, aby zostać Menedżerem Stacji.</t>
+      <t id="1000016">Menedżer %s mianowany nowym kadetem Akademii.</t>
+      <t id="1000017">Pilot %s przypisany jako Menedżer Stacji na %s.</t>
       <t id="2000001">Brak wolnych kadetów dostępnych do wymiany pilotów!</t>
       <t id="2000002">Brak wolnej pojemności załogi na %s do wykonania wymiany pilotów!</t>
       <t id="2000003">Nie można wykonać wymiany pilotów na %s! Zrób to ręcznie!</t>
@@ -85,6 +92,11 @@
       <t id="2000005">Brak wolnej pojemności w Akademii aby zwrócić pilota %s! Rozwiąż to!</t>
       <t id="2000006">Nie można przenieść nowego pilota %s do %s!</t>
       <t id="2000007">Nie można przypisać rozkazu szkolenia Akademii na skrzydło %s z statkiem dowódcy %s! Zgłoś problem!</t>
+      <t id="2000012">Brak wolnej pojemności załogi na %s do wykonania wymiany menedżera!</t>
+      <t id="2000013">Nie można wykonać wymiany menedżera na %s! Zrób to ręcznie!</t>
+      <t id="2000014">Nie można zwrócić menedżera %s do Akademii! Zrób to ręcznie!</t>
+      <t id="2000016">Nie można przenieść nowego menedżera %s do %s!</t>
+      <t id="2009001">Coś jest nie tak z tym statkiem: %s \(%s\). Nie można go używać do szkoleń Akademii!</t>
       <t id="9000001">Akademia Pilotów: Rangi i Relacje</t>
       <t id="9000002">Akademia Pilotów. Pięć skrzydeł</t>
       <t id="9000003">Akademia Pilotów. Dziewięć skrzydeł</t>
