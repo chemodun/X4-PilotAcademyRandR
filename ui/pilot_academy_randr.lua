@@ -64,7 +64,7 @@ ffi.cdef [[
 	bool EnablePlannedDefaultOrder(UniverseID controllableid, bool checkonly);
 	bool GetOrderDefinition(OrderDefinition* result, const char* orderdef);
 
-	uint32_t GetNumOrderFailures(UniverseID controllableid, bool includelooporders);
+	bool GetDefaultOrderFailure(OrderFailure* result, UniverseID controllableid);
 
   void SetFleetName(UniverseID controllableid, const char* fleetname);
 
