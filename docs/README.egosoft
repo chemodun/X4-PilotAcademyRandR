@@ -377,7 +377,7 @@ There are examples of texts and notifications screenshots:
 [list]
 [*] The order responsible for pilot training will now operate without constant docking and undocking cycles, which should significantly reduce training time and prevent possible issues with police interference during the training process.
 [/list]
-[/list]    It will still perform docking and undocking maneuvers when free docking space is limited for other ships, and will also do so at least once every 5 minutes.
+[/list]    It will still perform docking and undocking maneuvers when free docking space is limited for other ships and will also do so at least once every 5 minutes.
 [list][list]
 [*] Some code optimization and refactoring
 [/list]
