@@ -343,16 +343,25 @@ function pilotAcademy.resetData()
   pilotAcademy.selectedTab = "settings"
 end
 
-function pilotAcademy.createSideBar(config)
+function pilotAcademy.createSideBar(_config)
   if not pilotAcademy.sideBarIsCreated then
-    for i = 1, #config.leftBar do
-      if config.leftBar[i].mode == pilotAcademy.academySideBarInfo.mode then
+    local positionIndex = 0
+    for i = 1, #_config.leftBar do
+      if _config.leftBar[i].mode == pilotAcademy.academySideBarInfo.mode then
         trace("Pilot Academy R&R sidebar entry already exists, not adding again")
         return
       end
+      if _config.leftBar[i].mode == "info" then
+        positionIndex = i
+      end
     end
-    config.leftBar[#config.leftBar + 1] = { spacing = true }
-    config.leftBar[#config.leftBar + 1] = pilotAcademy.academySideBarInfo
+    if positionIndex > 0 then
+      table.insert(_config.leftBar, positionIndex + 1, { spacing = true })
+      table.insert(_config.leftBar, positionIndex + 2, pilotAcademy.academySideBarInfo)
+    else
+      _config.leftBar[#_config.leftBar + 1] = { spacing = true }
+      _config.leftBar[#_config.leftBar + 1] = pilotAcademy.academySideBarInfo
+    end
     trace("Added Pilot Academy R&R sidebar entry")
     pilotAcademy.sideBarIsCreated = true
   end
