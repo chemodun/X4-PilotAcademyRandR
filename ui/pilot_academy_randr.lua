@@ -630,7 +630,7 @@ function pilotAcademy.setButtonsColumnWidths(tableHandle, menu, config)
   end
 
   if pilotAcademy.buttonsColumnWidths == nil then
-    local buttonWidth = math.floor((menu.infoTableWidth - Helper.scrollbarWidth * 5 - 2) / 3)
+    local buttonWidth = math.floor((menu.infoTableWidth - Helper.scrollbarWidth * 4 - 8 * Helper.borderSize - 2) / 3)
     pilotAcademy.buttonsColumnWidths = {
       Helper.scrollbarWidth + 1,
       buttonWidth,
