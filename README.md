@@ -358,6 +358,13 @@ There are examples of texts and notifications screenshots:
 
 ## Changelog
 
+### [1.10] - 2026-03-13
+
+- **Fixed**
+  - Buttons absence under game version 9.00
+- **Changed**
+  - `Academy` button location in the left sidebar of the map menu to be next after the `Information` button.
+
 ### [1.09] - 2026-03-04
 
 - **Added**
