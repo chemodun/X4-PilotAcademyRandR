@@ -366,6 +366,17 @@ There are examples of texts and notifications screenshots:
 [/list]
 [h2][b]Changelog[/b][/h2]
 
+[h2][1.10] - 2026-03-13[/h2]
+[list]
+[*] [b]Fixed[/b]
+[list]
+[*] Buttons absence under game version 9.00
+[/list]
+[*] [b]Changed[/b]
+[list]
+[*] [b]Academy[/b] button location in the left sidebar of the map menu to be next after the [b]Information[/b] button.
+[/list]
+[/list]
 [h2][1.09] - 2026-03-04[/h2]
 [list]
 [*] [b]Added[/b]
