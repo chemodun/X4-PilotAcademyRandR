@@ -366,6 +366,13 @@ There are examples of texts and notifications screenshots:
 [/list]
 [size=3][u][b]Changelog[/b][/u][/size]
 
+[size=3][u][i][1.11] - 2026-05-26[/i][/u][/size]
+[list]
+[*] [b]Fixed[/b]
+[list]
+[*] Some tabs not shown under some specific conditions (combination of resolution, UI scale and language settings)
+[/list]
+[/list]
 [size=3][u][i][1.10] - 2026-03-14[/i][/u][/size]
 [list]
 [*] [b]Fixed[/b]
