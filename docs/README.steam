@@ -366,15 +366,18 @@ There are examples of texts and notifications screenshots:
 [/list]
 [h2][b]Changelog[/b][/h2]
 
+[h2][1.12] - 2026-05-26[/h2]
+[list]
+[*] [b]Added[/b]
+[list]
+[*] Some additional info about game version and installed extensions in the debug output
+[/list]
+[/list]
 [h2][1.11] - 2026-05-26[/h2]
 [list]
 [*] [b]Fixed[/b]
 [list]
 [*] Some tabs not shown under some specific conditions (combination of resolution, UI scale and language settings)
-[/list]
-[*] [b]Added[/b]
-[list]
-[*] Some additional info about game version and installed extensions in the debug output
 [/list]
 [/list]
 [h2][1.10] - 2026-03-14[/h2]
