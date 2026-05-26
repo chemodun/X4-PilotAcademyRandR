@@ -358,12 +358,15 @@ There are examples of texts and notifications screenshots:
 
 ## Changelog
 
+### [1.12] - 2026-05-26
+
+- **Added**
+  - Some additional info about game version and installed extensions in the debug output
+
 ### [1.11] - 2026-05-26
 
 - **Fixed**
   - Some tabs not shown under some specific conditions (combination of resolution, UI scale and language settings)
-- **Added**
-  - Some additional info about game version and installed extensions in the debug output
 
 ### [1.10] - 2026-03-14
 
