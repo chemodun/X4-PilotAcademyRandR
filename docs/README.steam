@@ -372,6 +372,10 @@ There are examples of texts and notifications screenshots:
 [list]
 [*] Some tabs not shown under some specific conditions (combination of resolution, UI scale and language settings)
 [/list]
+[*] [b]Added[/b]
+[list]
+[*] Some additional info about game version and installed extensions in the debug output
+[/list]
 [/list]
 [h2][1.10] - 2026-03-14[/h2]
 [list]
