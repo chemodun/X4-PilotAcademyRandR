@@ -362,6 +362,8 @@ There are examples of texts and notifications screenshots:
 
 - **Fixed**
   - Some tabs not shown under some specific conditions (combination of resolution, UI scale and language settings)
+- **Added**
+  - Some additional info about game version and installed extensions in the debug output
 
 ### [1.10] - 2026-03-14
 
