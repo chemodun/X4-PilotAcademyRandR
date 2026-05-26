@@ -215,7 +215,8 @@ local pilotAcademy = {
   academyContentColumnWidths = nil,
   buttonsColumnWidths = nil,
   infoContentColumnWidths = nil,
-  relationNameMaxLen = 8, -- will be calculated on init based on actual relation names
+  relationNameMaxLen = 8,    -- will be calculated on init based on actual relation names
+  relationNameLongest = nil, -- actual longest relation name string (for pixel-accurate width measurement)
   selectedShips = {},
   selectedRow = {}
 }
@@ -335,6 +336,7 @@ function pilotAcademy.Init(menuMap, menuPlayerInfo)
   if relationNameMax then
     trace("Longest relation name is '" .. relationNameMax .. "' with length " .. relationNameMaxLen)
     pilotAcademy.relationNameMaxLen = relationNameMaxLen
+    pilotAcademy.relationNameLongest = relationNameMax
   end
 end
 
@@ -603,8 +605,9 @@ function pilotAcademy.setInfoContentColumnWidths(tableHandle, menu, config)
   end
   if (pilotAcademy.infoContentColumnWidths == nil) then
     local maxShortNameWidth = math.floor(C.GetTextWidth("[WWW]", Helper.standardFont, Helper.scaleFont(Helper.standardFont, config.mapFontSize)))
-    local maxRelationNameWidth = math.floor(C.GetTextWidth(string.rep("W", pilotAcademy.relationNameMaxLen), Helper.standardFont, Helper.scaleFont(Helper.standardFont, config.mapFontSize)))
+    local relationNameSample = pilotAcademy.relationNameLongest or string.rep("W", pilotAcademy.relationNameMaxLen)
     local relationWidth = math.floor(C.GetTextWidth("99999", Helper.standardFont, Helper.scaleFont(Helper.standardFont, config.mapFontSize)))
+    local maxRelationNameWidth = math.min(2 * relationWidth, math.floor(C.GetTextWidth(relationNameSample, Helper.standardFont, Helper.scaleFont(Helper.standardFont, config.mapFontSize))))
     local minWidth = Helper.scaleX(config.mapRowHeight)
     pilotAcademy.infoContentColumnWidths = {
       Helper.scrollbarWidth + 1,
