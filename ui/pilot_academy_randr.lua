@@ -3231,7 +3231,7 @@ end
 
 function pilotAcademy.addAcademyRowToPersonnelContextMenu(contextFrame, contextMenuData, contextMenuMode, menu)
   local result = nil
-  trace("pilotAcademy.addAAcademyRowToPersonnelContextMenu called with mode: " .. tostring(contextMenuMode))
+  trace("pilotAcademy.addAcademyRowToPersonnelContextMenu called with mode: " .. tostring(contextMenuMode))
 
   if menu == nil then
     trace("menu is nil, returning")
