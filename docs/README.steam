@@ -366,6 +366,14 @@ There are examples of texts and notifications screenshots:
 [/list]
 [h2][b]Changelog[/b][/h2]
 
+[h2][1.13] - 2026-05-28[/h2]
+[list]
+[*] [b]Fixed[/b]
+[list]
+[*] Several issues with 2-bytes languages strings processing.
+[*] [b]Work somewhere else for me[/b] and [b]Fire[/b] options in context menu for [b]Academy[/b] personnel were not working right if game not paused.
+[/list]
+[/list]
 [h2][1.12] - 2026-05-26[/h2]
 [list]
 [*] [b]Added[/b]
