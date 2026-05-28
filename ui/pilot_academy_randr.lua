@@ -3312,9 +3312,11 @@ function pilotAcademy.addAcademyRowToPersonnelContextMenu(contextFrame, contextM
             local row = menuTable.rows[rowIndex]
             if row and row.rowdata then
               if row.rowdata == "info_person_worksomewhere" and row[1].type == "button" then
-                row[1].handlers.onClick = function () Helper.closeMenuAndOpenNewMenu(menu, "MapMenu", { 0, 0, true, controllable, nil, "hire", { "signal", controllable, 0, person} }); menu.cleanup() end
+                row[1].handlers.onClick = function() Helper.closeMenuAndOpenNewMenu(menu, "MapMenu", { 0, 0, true, controllable, nil, "hire", { "signal", controllable, 0, person} }); menu.cleanup() end
+                trace("Modified 'Works Somewhere' button to open MapMenu for hiring person: " .. tostring(ffi.string(C.GetPersonName(person, controllable))))
               elseif row.rowdata == "info_person_fire" and row[1].type == "button" then
-                row[1].handlers.onClick = function () return menu.infoSubmenuFireNPCConfirm(controllable, nil, person, instance) end
+                row[1].handlers.onClick = function() return menu.infoSubmenuFireNPCConfirm(controllable, nil, person, instance) end
+                trace("Modified 'Fire' button to open confirmation for firing person: " .. tostring(ffi.string(C.GetPersonName(person, controllable)))) 
               end
             end
           end
