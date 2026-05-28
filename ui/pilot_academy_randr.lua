@@ -1,5 +1,6 @@
 local ffi = require("ffi")
 local C = ffi.C
+local utf8 = require("utf8")
 
 ffi.cdef [[
   typedef uint64_t UniverseID;
@@ -326,7 +327,7 @@ function pilotAcademy.Init(menuMap, menuPlayerInfo)
     if relation ~= nil and relation.id ~= "player" then
       local relationInfo = C.GetUIRelationName("player", relation.id)
       local relationName = ffi.string(relationInfo.name)
-      local relationNameLength = string.len(relationName)
+      local relationNameLength = utf8.len(relationName)
       if relationNameLength > relationNameMaxLen then
         relationNameMaxLen = relationNameLength
         relationNameMax = relationName
@@ -2832,10 +2833,10 @@ function pilotAcademy.formatName(name, maxLength)
   if maxLength == nil or maxLength <= 0 then
     return name
   end
-  if #name <= maxLength then
+  if utf8.len(name) <= maxLength then
     return name
   end
-  return string.sub(name, 1, maxLength - 1) .. "..."
+  return utf8.sub(name, 1, maxLength - 1) .. "..."
 end
 
 function pilotAcademy.fetchWingmans(wingLeaderId)
