@@ -821,7 +821,7 @@ function pilotAcademy.createAcademyLocationTable(frame, menu, config, tableName,
     local isAnyPersonNotArrived = pilotAcademy.isAnyPersonNotArrived()
     row[2]:setColSpan(2):createButton({
       active = not isAnyPersonNotArrived,
-      mouseOverText = string.format("%s\027X %s", locationOptions[1].text, locationOptions[1].text2)
+      mouseOverText = locationOptions[1].mouseovertext ~= "" and locationOptions[1].mouseovertext or nil
     }):setText(locationOptions[1].text, { halign = "left" }):setText2(locationOptions[1].text2, { halign = "right" })
     row[2].handlers.onClick = function() return pilotAcademy.onToChangeLocation() end
   end
@@ -1257,12 +1257,14 @@ function pilotAcademy.fetchPotentialLocations(selectable, currentLocationId, fac
   for i = 1, #stations do
     local station = stations[i]
     if station ~= nil then
+      local truncatedStationName = pilotAcademy.formatName(station.name, 40)
       locations[#locations + 1] = {
         id = station.id,
         icon = "",
-        text = string.format("%s\027[%s] %s (%s)", station.color, station.icon, pilotAcademy.formatName(station.name, 40), station.idCode),
+        text = string.format("%s\027[%s] %s (%s)", station.color, station.icon, truncatedStationName, station.idCode),
         text2 = station.sector,
         displayremoveoption = false,
+        mouseovertext = (station.name ~= nil and truncatedStationName ~= station.name) and station.name or "",
       }
     end
   end
@@ -2157,7 +2159,7 @@ function pilotAcademy.createWingLeaderTable(frame, menu, config, tableName, wing
     end
     row = tableHandler:addRow({ tableName = tableHandler.name, rowData = leaderInfo }, { fixed = false, bgColor = bgColor })
     row[1]:createText("", { halign = "left" })
-    local icon = row[2]:setColSpan(10):createIcon("order_pilotacademywing", { height = config.mapRowHeight, width = config.mapRowHeight })
+    local icon = row[2]:setColSpan(10):createIcon("order_pilotacademywing", { height = config.mapRowHeight, width = config.mapRowHeight, mouseOverText = leaderInfo.mouseovertext ~= "" and leaderInfo.mouseovertext or nil })
     icon:setText(leaderInfo.text, { x = config.mapRowHeight, halign = "left", color = Color["text_normal"] })
     icon:setText2(leaderInfo.text2, { halign = "right", color = Color["text_skills"] })
   else
@@ -2228,7 +2230,8 @@ function pilotAcademy.createWingmansTable(frame, menu, config, tableName, wingDi
           bgColor = Color["row_background_selected"]
         end
         row = tableHandler:addRow({ tableName = tableHandler.name, rowData = wingman }, { fixed = false, bgColor = bgColor })
-        local icon = row[2]:setColSpan(10):createIcon("order_assist", { height = config.mapRowHeight, width = config.mapRowHeight, color = wingman.color, mouseOverText = wingman.message })
+        local wingmanTooltip = wingman.mouseovertext ~= "" and wingman.message and (wingman.mouseovertext .. "\n" .. wingman.message) or wingman.mouseovertext ~= "" and wingman.mouseovertext or wingman.message
+        local icon = row[2]:setColSpan(10):createIcon("order_assist", { height = config.mapRowHeight, width = config.mapRowHeight, color = wingman.color, mouseOverText = wingmanTooltip })
         icon:setText(wingman.text, { x = config.mapRowHeight, halign = "left", color = Color["text_normal"] })
         icon:setText2(wingman.text2, { halign = "right", color = Color["text_skills"] })
         if i == 10 then
@@ -2430,15 +2433,21 @@ function pilotAcademy.sortPotentialWingLeaders(a, b)
 end
 
 function pilotAcademy.formatShipInfoOption(shipInfo)
+  local truncatedShipName = pilotAcademy.formatName(shipInfo.shipName, 25)
+  local truncatedPilotName = pilotAcademy.formatName(shipInfo.pilotName, 20)
+  local mouseOverText = ""
+  if (shipInfo.shipName ~= nil and truncatedShipName ~= shipInfo.shipName) or (shipInfo.pilotName ~= nil and truncatedPilotName ~= shipInfo.pilotName) then
+    mouseOverText = string.format("%s (%s): %s", shipInfo.shipName or "", shipInfo.shipIdCode or "", shipInfo.pilotName or "")
+  end
   return {
     id = tostring(shipInfo.shipId),
     icon = "",
-    text = string.format("\027[%s] %s (%s): %s", shipInfo.shipIcon, pilotAcademy.formatName(shipInfo.shipName, 25), shipInfo.shipIdCode,
-      pilotAcademy.formatName(shipInfo.pilotName, 20)),
+    text = string.format("\027[%s] %s (%s): %s", shipInfo.shipIcon, truncatedShipName, shipInfo.shipIdCode, truncatedPilotName),
     text2 = string.format("%s", shipInfo.pilotSkill and Helper.displaySkill(shipInfo.pilotSkill * 15 / 100)) or 0,
     color = shipInfo.failedOrder ~= "" and Color["text_warning"] or nil,
     message = shipInfo.failedOrder ~= "" and shipInfo.failedOrder or nil,
     displayremoveoption = false,
+    mouseovertext = mouseOverText,
   }
 end
 
