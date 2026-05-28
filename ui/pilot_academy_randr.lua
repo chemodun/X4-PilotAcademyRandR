@@ -1712,10 +1712,10 @@ end
 
 function pilotAcademy.getOrCreateEntity(person, controllable)
   local entity = C.GetInstantiatedPerson(person, controllable)
-  trace("Retrieved entity for person: " .. tostring(entity))
+  trace("Retrieved entity: ".. tostring(entity) .. " for person: " .. tostring(person))
   if entity == 0 or entity == nil then
     entity = C.CreateNPCFromPerson(person, controllable)
-    trace("Created entity for person: " .. tostring(entity))
+    trace("Created entity: ".. tostring(entity) .. " for person: " .. tostring(person))
   end
   return entity
 end
@@ -3295,6 +3295,7 @@ function pilotAcademy.addAcademyRowToPersonnelContextMenu(contextFrame, contextM
   local isPlayerOwned = true
   if isMapContext then
     -- Map context: data comes from contextMenuData
+    local instance = contextMenuData.instance
     entity = contextMenuData.entity
     person = contextMenuData.person
     controllable = contextMenuData.component
@@ -3304,7 +3305,20 @@ function pilotAcademy.addAcademyRowToPersonnelContextMenu(contextFrame, contextM
     isPlayerOwned = GetComponentData(controllable, "isplayerowned")
     if contextMenuData.isAcademyPersonnel then
       if isPlayerOwned then
-        trace("Context menu is for academy personnel; skipping 'Assign as Cadet' option")
+        trace("Context menu is for academy personnel; skipping 'Assign as Cadet' option.")
+        if controllable and person then
+          trace("Context menu is for academy personnel; modifying existing menu items for person: " .. tostring(ffi.string(C.GetPersonName(person, controllable))))
+          for rowIndex = 1, #menuTable.rows do
+            local row = menuTable.rows[rowIndex]
+            if row and row.rowdata then
+              if row.rowdata == "info_person_worksomewhere" and row[1].type == "button" then
+                row[1].handlers.onClick = function () Helper.closeMenuAndOpenNewMenu(menu, "MapMenu", { 0, 0, true, controllable, nil, "hire", { "signal", controllable, 0, person} }); menu.cleanup() end
+              elseif row.rowdata == "info_person_fire" and row[1].type == "button" then
+                row[1].handlers.onClick = function () return menu.infoSubmenuFireNPCConfirm(controllable, nil, person, instance) end
+              end
+            end
+          end
+        end
         return result
       end
     end
