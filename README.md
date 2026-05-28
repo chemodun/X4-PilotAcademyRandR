@@ -358,6 +358,12 @@ There are examples of texts and notifications screenshots:
 
 ## Changelog
 
+### [1.13] - 2026-05-28
+
+- **Fixed**
+  - Several issues with 2-bytes languages strings processing.
+  - `Work somewhere else for me` and `Fire` options in context menu for `Academy` personnel were not working right if game not paused.
+
 ### [1.12] - 2026-05-26
 
 - **Added**
