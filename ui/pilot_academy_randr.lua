@@ -3642,8 +3642,9 @@ function pilotAcademy.assignAsStationManager(pilot, stations)
   local pilotManagerSkill = C.GetEntityCombinedSkill(pilot.entity, nil, "manager")
   trace(string.format("assignAsStationManager called for pilot '%s' and stations count: %d", pilot.name, #stations))
   local result = false
-  if pilotManagerSkill < stations[1].managerSkill then
-    trace(string.format("Pilot '%s' does not meet manager skill requirement for station '%s' (pilot skill: %d, required: %d), skipping assignment",
+  -- Replace only on a strict improvement; an unmanned post is filled regardless.
+  if stations[1].manager and pilotManagerSkill <= stations[1].managerSkill then
+    trace(string.format("Pilot '%s' is not better than the current manager of station '%s' (pilot skill: %d, current: %d), skipping assignment",
       pilot.name, stations[1].name, pilotManagerSkill, stations[1].managerSkill))
   else
     local station = stations[1]
