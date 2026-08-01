@@ -309,76 +309,98 @@
               text="'Pilot Academy: Process_Move_New_Pilot: Iteration %s. Going to move new %s %s (%s) to %s. Free capacity: %s.' .
                   [$iteration, $npcType, $newNPCName, $newNPCTemplate, $targetName, @$target.people.free]"
               chance="$debugchance" />
-            <include_actions ref="Fire_Least_Skilled_Crew_Member" />
-            <do_if value="@$target.people.free gt 0">
-              <transfer_people result="$personTransferred" object="$target" otherobject="$academyObject"
-                receiveworkforce="false">
-                <existing_people people="[$newNPCTemplate]" />
-              </transfer_people>
-              <do_if value="$personTransferred.count == 1">
-                <debug_text
-                  text="'Pilot Academy: Process_Move_New_Pilot: new %s %s (%s) successfully transferred to %s. Initiating %s swap.' .
-                      [$npcType, $newNPCName, $newNPCTemplate, $target.debugname, $npcType]"
-                  chance="$debugchance" />
-                <run_actions ref="Notify_Player">
-                  <param name="title" value="{1972092412,1}" />
-                  <param name="text" value="if $isStation then {1972092412,1000015}.[$newNPCName, $targetName] else {1972092412,1000005}.[$newNPCName, $targetName]" />
-                  <param name="object" value="$target" />
-                  <param name="debugchance" value="$debugchance" />
-                </run_actions>
-                <signal_objects object="player.entity" param="'PilotAcademyRAndR.PilotSwapRequest'"
-                  param2="table[
-                    $target = $target,
-                    $newNPCTemplate = $personTransferred.{1},
-                    $academyObject = $academyObject,
-                    $isCadet = false,
-                    $iteration = 0
-                  ]"
-                  delay="200ms" />
+            <set_value name="$controlPost" exact="if $isStation then controlpost.manager else controlpost.aipilot" />
+            <set_value name="$currentNPC" exact="@$target.controlentity.{$controlPost}" />
+            <set_value name="$isTargetBusy" exact="false" />
+            <do_if value="@$target.order != null">
+              <do_if value="$target.order.state == orderstate.critical or not $target.order.canplayercancel">
+                <set_value name="$isTargetBusy" exact="true" />
               </do_if>
-              <do_else>
-                <do_if value="$iteration le 5">
+            </do_if>
+            <do_if value="@$currentNPC.isbusy">
+              <set_value name="$isTargetBusy" exact="true" />
+            </do_if>
+            <do_if value="$isTargetBusy">
+              <debug_text
+                text="'Pilot Academy: Process_Move_New_Pilot: %s is busy (order state: %s, player can cancel: %s, NPC busy: %s). Skipping, new %s %s stays at the academy.' .
+                  [$target.debugname, @$target.order.state, @$target.order.canplayercancel, @$currentNPC.isbusy, $npcType, $newNPCName]"
+                chance="$debugchance" />
+            </do_if>
+            <do_else>
+              <include_actions ref="Fire_Least_Skilled_Crew_Member" />
+              <do_if value="@$target.people.free gt 0">
+                <transfer_people result="$personTransferred" object="$target" otherobject="$academyObject"
+                  receiveworkforce="false">
+                  <existing_people people="[$newNPCTemplate]" />
+                </transfer_people>
+                <do_if value="$personTransferred.count == 1">
                   <debug_text
-                    text="'Pilot Academy: Process_Move_New_Pilot: failed to transfer new %s %s (%s) to %s. Going to repeat.' .
-                      [$npcType, $newNPCName, $newNPCTemplate, $targetName]"
-                    chance="$debugchance" />
-                  <signal_objects object="player.entity" param="'PilotAcademyRAndR.MoveNewPilotRequest'"
-                    param2="table[
-                    $newNPCTemplate = $newNPCTemplate,
-                    $target = $target,
-                    $academyObject = $academyObject,
-                    $iteration = $iteration + 1
-                  ]"
-                    delay="500ms" />
-                </do_if>
-                <do_else>
-                  <debug_text
-                    text="'Pilot Academy: Process_Move_New_Pilot: exceeded max attempts to transfer new %s %s (%s) to %s. Please do it manually!' .
-                          [$npcType, $newNPCName, $newNPCTemplate, $target.debugname]"
+                    text="'Pilot Academy: Process_Move_New_Pilot: new %s %s (%s) successfully transferred to %s. Initiating %s swap.' .
+                        [$npcType, $newNPCName, $newNPCTemplate, $target.debugname, $npcType]"
                     chance="$debugchance" />
                   <run_actions ref="Notify_Player">
                     <param name="title" value="{1972092412,1}" />
-                    <param name="text" value="if $isStation then {1972092412,2000016}.[$newNPCName, $targetName] else {1972092412,2000006}.[$newNPCName, $targetName]" />
-                    <param name="isWarning" value="true" />
+                    <param name="text" value="if $isStation then {1972092412,1000015}.[$newNPCName, $targetName] else {1972092412,1000005}.[$newNPCName, $targetName]" />
                     <param name="object" value="$target" />
                     <param name="debugchance" value="$debugchance" />
                   </run_actions>
+                  <signal_objects object="player.entity" param="'PilotAcademyRAndR.PilotSwapRequest'"
+                    param2="table[
+                      $target = $target,
+                      $newNPCTemplate = $personTransferred.{1},
+                      $academyObject = $academyObject,
+                      $isCadet = false,
+                      $iteration = 0
+                    ]"
+                    delay="200ms" />
+                </do_if>
+                <do_else>
+                  <do_if value="$iteration le 5">
+                    <debug_text
+                      text="'Pilot Academy: Process_Move_New_Pilot: failed to transfer new %s %s (%s) to %s. Going to repeat.' .
+                        [$npcType, $newNPCName, $newNPCTemplate, $targetName]"
+                      chance="$debugchance" />
+                    <signal_objects object="player.entity" param="'PilotAcademyRAndR.MoveNewPilotRequest'"
+                      param2="table[
+                      $newNPCTemplate = $newNPCTemplate,
+                      $target = $target,
+                      $academyObject = $academyObject,
+                      $iteration = $iteration + 1
+                    ]"
+                      delay="500ms" />
+                  </do_if>
+                  <do_else>
+                    <debug_text
+                      text="'Pilot Academy: Process_Move_New_Pilot: exceeded max attempts to transfer new %s %s (%s) to %s. Please do it manually!' .
+                            [$npcType, $newNPCName, $newNPCTemplate, $target.debugname]"
+                      chance="$debugchance" />
+                    <run_actions ref="Notify_Player">
+                      <param name="title" value="{1972092412,1}" />
+                      <param name="text" value="if $isStation then {1972092412,2000016}.[$newNPCName, $targetName] else {1972092412,2000006}.[$newNPCName, $targetName]" />
+                      <param name="isWarning" value="true" />
+                      <param name="object" value="$target" />
+                      <param name="debugchance" value="$debugchance" />
+                    </run_actions>
+                  </do_else>
                 </do_else>
+              </do_if>
+              <do_else>
+                <debug_text
+                  text="'Pilot Academy: Process_Move_New_Pilot: no free capacity on ship %s to move new %s %s (%s).' .
+                    [$target.debugname, $npcType, $newNPCName, $newNPCTemplate]"
+                  chance="$debugchance" />
+                <run_actions ref="Notify_Player">
+                  <param name="title" value="{1972092412,1}" />
+                  <param name="text" value="if $isStation then {1972092412,2000012}.[$targetName] else {1972092412,2000002}.[$targetName]" />
+                  <param name="isWarning" value="true" />
+                  <param name="object" value="$target" />
+                  <param name="debugchance" value="$debugchance" />
+                </run_actions>
               </do_else>
-            </do_if>
-            <do_else>
-              <debug_text
-                text="'Pilot Academy: Process_Move_New_Pilot: no free capacity on ship %s to move new %s %s (%s).' .
-                  [$target.debugname, $npcType, $newNPCName, $newNPCTemplate]"
-                chance="$debugchance" />
-              <run_actions ref="Notify_Player">
-                <param name="title" value="{1972092412,1}" />
-                <param name="text" value="if $isStation then {1972092412,2000012}.[$targetName] else {1972092412,2000002}.[$targetName]" />
-                <param name="isWarning" value="true" />
-                <param name="object" value="$target" />
-                <param name="debugchance" value="$debugchance" />
-              </run_actions>
             </do_else>
+            <remove_value name="$controlPost" />
+            <remove_value name="$currentNPC" />
+            <remove_value name="$isTargetBusy" />
             <remove_value name="$iteration" />
             <remove_value name="$newNPCName" />
             <remove_value name="$newNPCTemplate" />
