@@ -67,6 +67,8 @@ ffi.cdef [[
 
 	bool GetDefaultOrderFailure(OrderFailure* result, UniverseID controllableid);
 
+	bool IsCurrentOrderCritical(UniverseID controllableid);
+
   void SetFleetName(UniverseID controllableid, const char* fleetname);
 
 
@@ -3661,6 +3663,23 @@ function pilotAcademy.assignAsStationManager(pilot, stations)
 
 end
 
+-- Mirrors the vanilla Replace-Pilot gate (menu_map): order-side critical state, then the pilot's own busy flag.
+function pilotAcademy.isShipBusyForSwap(shipId, pilot, shipName, idcode)
+  if C.IsCurrentOrderCritical(shipId) then
+    trace(string.format("Ship '%s' (%s) is busy: current order is critical", shipName, idcode))
+    return true
+  end
+  if pilot ~= nil and IsValidComponent(pilot) then
+    local ok, isBusy = pcall(GetComponentData, pilot, "isbusy")
+    trace(string.format("Ship '%s' (%s): pilot isbusy probe ok=%s value=%s (%s)",
+      shipName, idcode, tostring(ok), tostring(isBusy), type(isBusy)))
+    if ok and isBusy == true then
+      return true
+    end
+  end
+  return false
+end
+
 function pilotAcademy.processCandidateForReplacement(shipId, candidateShips, academyShips, targetRankLevel)
   local shipMacro, isDeployable, shipName, pilot, classId, idcode, purpose = GetComponentData(shipId, "macro", "isdeployable", "name", "assignedaipilot",
     "classid", "idcode", "primarypurpose")
@@ -3677,6 +3696,9 @@ function pilotAcademy.processCandidateForReplacement(shipId, candidateShips, aca
         trace(string.format("Evaluating ship '%s' (idcode: %s, class: %s, purpose: %s) with pilot '%s' (skill: %d, base rank: %d)",
           shipName, idcode, class, purpose, pilotName, pilotSkill, skillBase))
         if class ~= "unknown" then
+          if pilotAcademy.isShipBusyForSwap(shipId, pilot, shipName, idcode) then
+            return
+          end
           purpose = pilotAcademy.normalizePurpose(purpose)
           candidateShips[#candidateShips + 1] = {
             shipId = shipId,
