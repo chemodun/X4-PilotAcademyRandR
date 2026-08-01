@@ -358,6 +358,13 @@ There are examples of texts and notifications screenshots:
 
 ## Changelog
 
+### [1.14] - 2026-08-01
+
+- **Fixed**
+  - `Station Manager` is now replaced only if the candidate's `Manager` skill is strictly higher, not equal.
+- **Improved**
+  - Ships and stations busy with an uninterruptible order are skipped during automatic assignment.
+
 ### [1.13] - 2026-05-28
 
 - **Fixed**
