@@ -628,7 +628,7 @@
           </actions>
         </library>
 
-        <library name="Notify_Player" purpose="run_actions" version="2">
+        <library name="Notify_Player" purpose="run_actions" version="3">
           <params>
             <param name="title" />
             <param name="text" />
@@ -642,7 +642,7 @@
               text="'Pilot Academy: Notify_Player: Title: %s, Text: %s, IsWarning: %s, Object: %s, Money: %s. Notify: %s. LogBook: %s.'.
                 [$title, $text, $isWarning, @$object.debugname, $money, @player.entity.$pilotAcademyRAndRData.$notificationsEnabled, @player.entity.$pilotAcademyRAndRData.$logbookEnabled]"
               chance="$debugchance" filter="scripts" />
-            <do_if value="@player.entity.$pilotAcademyRAndRData.$notificationsEnabled == true">
+            <do_if value="@player.entity.$pilotAcademyRAndRData.$notificationsEnabled == true or @player.entity.$pilotAcademyRAndRData.$notificationsEnabled == 1">
               <do_if value="@$isWarning == true">
                 <show_notification text="'%s\n%s'.[$title, $text]" priority="2" sound="notification_warning"
                   timeout="15s" />
@@ -651,7 +651,7 @@
                 <show_notification text="'%s\n%s'.[$title, $text]" timeout="15s" />
               </do_else>
             </do_if>
-            <do_if value="@player.entity.$pilotAcademyRAndRData.$logbookEnabled == true">
+            <do_if value="@player.entity.$pilotAcademyRAndRData.$logbookEnabled == true or @player.entity.$pilotAcademyRAndRData.$logbookEnabled == 1">
               <do_if value="@$money != null">
                 <write_to_logbook category="general" title="$title" text="$text"
                   interaction="showonmap" object="$object" highlighted="@$isWarning == true" money="$money" />

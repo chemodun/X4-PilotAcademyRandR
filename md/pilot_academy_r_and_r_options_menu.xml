@@ -1,34 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mdscript name="Pilot_Academy_Options_Menu" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <cues>
-    <cue name="Init" instantiate="false" version="1">
+    <cue name="Init" instantiate="false" version="2">
       <actions>
         <set_value name="$debugLevelIndexes" exact="['none', 'debug', 'trace']" />
+        <set_value name="$debugchance" exact="0" />
       </actions>
       <cues>
-        <cue name="Register_Menu" instantiate="true" version="1">
+        <cue name="Register_Menu" instantiate="true" version="2">
           <conditions>
             <event_cue_signalled cue="md.Simple_Menu_API.Reloaded" />
           </conditions>
           <actions>
-            <debug_text text="'Pilot Academy Options: Registering Options Menus'" context="false" filter="scripts" />
+            <include_actions ref="md.Pilot_Academy_Ranks_And_Relations.Process_Debug_Level" />
+            <debug_text text="'Pilot Academy Options: Registering Options Menus'" context="false" filter="scripts" chance="$debugchance" />
             <signal_cue_instantly cue="md.Simple_Menu_API.Register_Options_Menu"
               param="table[
                 $id      = 'Pilot_Academy_options_menu',
-                $columns = 8,
+                $columns = 12,
                 $title   = {1972092412, 1},
                 $onOpen  = Pilot_Academy_Options_Menu,
               ]" />
           </actions>
         </cue>
 
-        <cue name="Pilot_Academy_Options_Menu" instantiate="true" version="1">
+        <cue name="Pilot_Academy_Options_Menu" instantiate="true" version="2">
           <conditions>
             <event_cue_signalled />
           </conditions>
           <actions>
-            <debug_text text="'Pilot Academy Options: Opening Pilot Academy Options Menu with common data: %s' .
-              [@player.entity.$pilotAcademyRAndRData]" context="false" filter="scripts" />
+            <include_actions ref="md.Pilot_Academy_Ranks_And_Relations.Process_Debug_Level" />
             <set_value name="$commonData" exact="@player.entity.$pilotAcademyRAndRData" />
             <do_if value="@$commonData != null">
               <do_if value="$commonData.$notificationsEnabled? == false">
@@ -43,83 +44,58 @@
               <debug_text
                 text="'Pilot Academy Options: Current options: notifications: %s, logbook: %s, debug level: %s' .
                 [@$commonData.$notificationsEnabled, @$commonData.$logbookEnabled, @$commonData.$debugLevel]"
-                context="false" filter="scripts" />
-              <create_list name="$debugLevelOptions" />
-              <do_for_each name="$indexValue" in="$debugLevelIndexes" counter="$index">
-                <do_if value="$index == 1">
-                  <set_value name="$textValue" exact="{1972092412, 90091}" />
-                </do_if>
-                <do_elseif value="$index == 2">
-                  <set_value name="$textValue" exact="{1972092412, 90092}" />
-                </do_elseif>
-                <do_else>
-                  <set_value name="$textValue" exact="{1972092412, 90093}" />
-                </do_else>
-                <append_to_list name="$debugLevelOptions"
-                  exact="table[ $text = $textValue, $value = $indexValue ]" />
-              </do_for_each>
+                context="false" filter="scripts" chance="$debugchance" />
+              <set_value name="$debugLevelOptions" exact="[
+                table[$text = {1972092412, 90091}, $value = 'none'],
+                table[$text = {1972092412, 90092}, $value = 'debug'],
+                table[$text = {1972092412, 90093}, $value = 'trace']
+              ]" />
               <set_value name="$debugLevelCurrentIndex" exact="$debugLevelIndexes.indexof.{$commonData.$debugLevel}" />
               <do_if value="$debugLevelCurrentIndex == 0">
                 <set_value name="$debugLevelCurrentIndex" exact="1" />
               </do_if>
-              <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row" />
-              <signal_cue_instantly cue="md.Simple_Menu_API.Make_Text"
-                param="table[
-                $col = 1,
-                $colSpan = 8,
-                $text = {1972092412, 90001},
-              ]" />
-              <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row" />
-              <signal_cue_instantly cue="md.Simple_Menu_API.Make_CheckBox"
-                param="table[
-                  $id = 'pilot_academy_notifications',
-                  $checked = @$commonData.$notificationsEnabled,
-                  $col = 2,
-                  $width = 'Helper.standardButtonHeight',
-                  $height = 'Helper.standardButtonHeight',
-                  $onClick = Pilot_Academy_On_Checkbox_Change
-                ]" />
-              <signal_cue_instantly cue="md.Simple_Menu_API.Make_Text"
-                param="table[
-                $col = 3,
-                $colSpan = 6,
-                $text = {1001, 7743},
-              ]" />
-              <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row" />
-              <signal_cue_instantly cue="md.Simple_Menu_API.Make_CheckBox"
-                param="table[
-                  $id = 'pilot_academy_logbook',
-                  $checked = @$commonData.$logbookEnabled,
-                  $col = 2,
-                  $width = 'Helper.standardButtonHeight',
-                  $height = 'Helper.standardButtonHeight',
-                  $onClick = Pilot_Academy_On_Checkbox_Change
-                ]" />
-              <signal_cue_instantly cue="md.Simple_Menu_API.Make_Text"
-                param="table[
-                $col = 3,
-                $colSpan = 6,
-                $text = {1001, 5700},
-              ]" />
-              <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row" />
-              <signal_cue_instantly cue="md.Simple_Menu_API.Make_Text"
-                param="table[
-                $col = 1,
-                $colSpan = 5,
-                $text = {1972092412, 90009},
-              ]" />
-              <signal_cue_instantly cue="md.Simple_Menu_API.Make_Dropdown"
-                param="table[
-                $col = 6,
-                $colSpan = 3,
-                $options = $debugLevelOptions,
-                $startOption = $debugLevelCurrentIndex,
-                $onDropDownConfirmed = Pilot_Academy_Handle_Debug_Level,
-                ]" />
+
+              <run_actions ref="md.Options_Helper.Add_Title_Row">
+                <param name="title" value="{1972092412, 90001}" />
+                <param name="columns" value="12" />
+              </run_actions>
+
+              <run_actions ref="md.Options_Helper.Add_Checkbox">
+                <param name="id" value="'notificationsEnabled'" />
+                <param name="col" value="1" />
+                <param name="textColSpan" value="11" />
+                <param name="text" value="{1001, 7743}" />
+                <param name="data" value="$commonData" />
+                <param name="handle" value="Pilot_Academy_On_Checkbox_Change" />
+              </run_actions>
+
+              <include_actions ref="md.Options_Helper.Add_Empty_Row" />
+
+              <run_actions ref="md.Options_Helper.Add_Checkbox">
+                <param name="id" value="'logbookEnabled'" />
+                <param name="col" value="1" />
+                <param name="textColSpan" value="11" />
+                <param name="text" value="{1001, 5700}" />
+                <param name="data" value="$commonData" />
+                <param name="handle" value="Pilot_Academy_On_Checkbox_Change" />
+              </run_actions>
+
+              <include_actions ref="md.Options_Helper.Add_Empty_Row" />
+
+              <run_actions ref="md.Options_Helper.Add_Dropdown">
+                <param name="id" value="'debugLevel'" />
+                <param name="options" value="$debugLevelOptions" />
+                <param name="currentIndex" value="$debugLevelCurrentIndex" />
+                <param name="col" value="1" />
+                <param name="textColSpan" value="7" />
+                <param name="text" value="{1972092412, 90009}" />
+                <param name="dropdownColSpan" value="5" />
+                <param name="handle" value="Pilot_Academy_Handle_Debug_Level" />
+              </run_actions>
             </do_if>
             <do_else>
               <debug_text text="'Pilot Academy Options: Unable to open options menu - missing pilot academy data on player entity.'" context="false"
-                filter="scripts" />
+                filter="scripts" chance="$debugchance" />
             </do_else>
             <remove_value name="$commonData" />
             <remove_value name="$debugLevelOptions" />
@@ -128,38 +104,37 @@
         </cue>
 
 
-        <cue name="Pilot_Academy_Handle_Debug_Level" instantiate="true" version="1">
+        <cue name="Pilot_Academy_Handle_Debug_Level" instantiate="true" version="2">
           <conditions>
             <event_cue_signalled />
           </conditions>
           <actions>
-            <debug_text text="'Pilot Academy Options: Debug Level changed to %s' .[event.param.$option.$value]" context="false" filter="scripts" />
-            <set_value name="$commonData" exact="@player.entity.$pilotAcademyRAndRData" />
-            <do_if value="@$commonData != null">
-              <set_value name="$commonData.$debugLevel" exact="event.param.$option.$value" />
+            <include_actions ref="md.Pilot_Academy_Ranks_And_Relations.Process_Debug_Level" />
+            <debug_text text="'Pilot Academy Options: Debug Level changed to %s' .[event.param.$option.$value]" context="false" filter="scripts"
+              chance="$debugchance" />
+            <set_value name="$resultTable" exact="@player.entity.$pilotAcademyRAndRData" />
+            <do_if value="@$resultTable != null">
+              <include_actions ref="md.Options_Helper.Process_Dropdown_Changed" />
               <signal_objects object="player.entity" param="'PilotAcademyRAndR.DebugLevelChangedSignal'" />
               <raise_lua_event name="'PilotAcademyRAndR.DebugLevelChanged'" />
             </do_if>
-            <remove_value name="$commonData" />
+            <remove_value name="$resultTable" />
           </actions>
         </cue>
 
-        <cue name="Pilot_Academy_On_Checkbox_Change" instantiate="true">
+        <cue name="Pilot_Academy_On_Checkbox_Change" instantiate="true" version="2">
           <conditions>
             <event_cue_signalled />
           </conditions>
           <actions>
-            <debug_text text="'Pilot Academy Options: CheckBox %s changed to %s' .[event.param.$id, event.param.$checked]" context="false" filter="scripts" />
-            <set_value name="$commonData" exact="@player.entity.$pilotAcademyRAndRData" />
-            <do_if value="@$commonData != null">
-              <do_if value="event.param.$id == 'pilot_academy_notifications'">
-                <set_value name="$commonData.$notificationsEnabled" exact="if event.param.$checked then true else false" />
-              </do_if>
-              <do_if value="event.param.$id == 'pilot_academy_logbook'">
-                <set_value name="$commonData.$logbookEnabled" exact="if event.param.$checked then true else false" />
-              </do_if>
-            </do_if>
-            <remove_value name="$commonData" />
+            <include_actions ref="md.Pilot_Academy_Ranks_And_Relations.Process_Debug_Level" />
+            <debug_text text="'Pilot Academy Options: CheckBox %s changed to %s' .[event.param.$echo.$valueId, event.param.$checked]" context="false"
+              filter="scripts" chance="$debugchance" />
+            <set_value name="$resultTable" exact="@player.entity.$pilotAcademyRAndRData" />
+            <include_actions ref="md.Options_Helper.Process_Checkbox_Changed" />
+            <debug_text text="'Pilot Academy Options: Options table: %s' .[@player.entity.$pilotAcademyRAndRData]" context="false"
+              filter="scripts" chance="$debugchance" />
+            <remove_value name="$resultTable" />
           </actions>
         </cue>
 
