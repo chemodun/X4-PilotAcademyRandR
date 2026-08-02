@@ -26,8 +26,8 @@ This mod introduces the Pilot Academy, allowing the Player to train pilots throu
 [/list]
 [h2][b]Requirements[/b][/h2]
 [list]
-[*] [b]X4: Foundations[/b]: Version 8.00HF3 or newer.
-[*] [b]UI Extensions and HUD[/b]: Version v8.0.4.0 or higher by [url=https://next.nexusmods.com/profile/kuertee?gameId=2659]kuertee[/url].
+[*] [b]X4: Foundations[/b]: Version 8.00HF3 or 9.0 and newer.
+[*] [b]UI Extensions and HUD[/b]: Version v8.0.4.0 or v9.0.0.9 higher by [url=https://next.nexusmods.com/profile/kuertee?gameId=2659]kuertee[/url].
 [list]
 [*] Available on Nexus Mods: [url=https://www.nexusmods.com/x4foundations/mods/552]UI Extensions and HUD[/url]
 [/list]
@@ -366,11 +366,12 @@ There are examples of texts and notifications screenshots:
 [/list]
 [h2][b]Changelog[/b][/h2]
 
-[h2][1.14] - 2026-08-01[/h2]
+[h2][1.14] - 2026-08-02[/h2]
 [list]
 [*] [b]Fixed[/b]
 [list]
 [*] [b]Station Manager[/b] is now replaced only if the candidate's [b]Manager[/b] skill is strictly higher, not equal.
+[*] Ships with no crew capacity, where a pilot swap is impossible, are no longer offered for a [b]Wing[/b] and are skipped during automatic assignment.
 [/list]
 [*] [b]Improved[/b]
 [list]
