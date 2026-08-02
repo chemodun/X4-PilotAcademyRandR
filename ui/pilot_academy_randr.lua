@@ -69,6 +69,8 @@ ffi.cdef [[
 
 	bool IsCurrentOrderCritical(UniverseID controllableid);
 
+	uint32_t GetPeopleCapacity(UniverseID controllableid, const char* macroname, bool includepilot);
+
   void SetFleetName(UniverseID controllableid, const char* fleetname);
 
 
@@ -2394,7 +2396,7 @@ function pilotAcademy.fetchPotentialWingmans(existingWing, existingWingLeader)
       if #subordinates == 0 and commander == nil and containerCapacity > 0 then
         if academyShips[tostring(shipId)] ~= true then
           local pilotName, pilotSkill = GetComponentData(pilot, "name", "combinedskill")
-          if pilotAcademy.skillBase(pilotSkill) < pilotAcademy.commonData.targetRankLevel then
+          if pilotAcademy.hasCrewCapacityForSwap(shipId, shipName, idcode) and pilotAcademy.skillBase(pilotSkill) < pilotAcademy.commonData.targetRankLevel then
             candidateShips[#candidateShips + 1] = {
               shipId = shipId,
               shipName = shipName,
@@ -3662,6 +3664,14 @@ function pilotAcademy.isShipBusyForSwap(shipId, shipName, idcode)
   return false
 end
 
+function pilotAcademy.hasCrewCapacityForSwap(shipId, shipName, idcode)
+  if C.GetPeopleCapacity(shipId, "", false) == 0 then
+    trace(string.format("Ship '%s' (%s) cannot be swapped: no crew capacity besides the pilot", shipName, idcode))
+    return false
+  end
+  return true
+end
+
 function pilotAcademy.processCandidateForReplacement(shipId, candidateShips, academyShips, targetRankLevel)
   local shipMacro, isDeployable, shipName, pilot, classId, idcode, purpose = GetComponentData(shipId, "macro", "isdeployable", "name", "assignedaipilot",
     "classid", "idcode", "primarypurpose")
@@ -3678,6 +3688,9 @@ function pilotAcademy.processCandidateForReplacement(shipId, candidateShips, aca
         trace(string.format("Evaluating ship '%s' (idcode: %s, class: %s, purpose: %s) with pilot '%s' (skill: %d, base rank: %d)",
           shipName, idcode, class, purpose, pilotName, pilotSkill, skillBase))
         if class ~= "unknown" then
+          if not pilotAcademy.hasCrewCapacityForSwap(shipId, shipName, idcode) then
+            return
+          end
           if pilotAcademy.isShipBusyForSwap(shipId, shipName, idcode) then
             return
           end
