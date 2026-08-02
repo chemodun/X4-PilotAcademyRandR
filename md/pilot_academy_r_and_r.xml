@@ -36,7 +36,7 @@
           </actions>
         </cue>
 
-        <cue name="Process_Pilot_Swapping" instantiate="true" version="3">
+        <cue name="Process_Pilot_Swapping" instantiate="true" version="4">
           <conditions>
             <event_object_signalled object="player.entity" param="'PilotAcademyRAndR.PilotSwapRequest'" />
             <check_value value="@event.param2 != null" />
@@ -120,6 +120,7 @@
                   [$npcType, @$oldNPCName, $target.debugname, $npcType, $newNPCName, $newNPCTemplate, $swappingMessage]"
                 chance="$debugchance" />
               <do_if value="$iteration le 5">
+                <set_value name="$retryDelay" min="3s" max="7s" />
                 <signal_objects object="player.entity" param="'PilotAcademyRAndR.PilotSwapRequest'"
                   param2="table[
                     $target = $target,
@@ -128,7 +129,8 @@
                     $isCadet = $isCadet,
                     $iteration = $iteration + 1
                   ]"
-                  delay="200ms" />
+                  delay="$retryDelay" />
+                <remove_value name="$retryDelay" />
               </do_if>
               <do_else>
                 <debug_text
@@ -142,6 +144,20 @@
                   <param name="object" value="$target" />
                   <param name="debugchance" value="$debugchance" />
                 </run_actions>
+                <do_if value="$isCadet == false">
+                  <debug_text
+                    text="'Pilot Academy: Process_Pilot_Swapping: returning auto-assigned %s %s (%s) from %s back to %s.' .
+                      [$npcType, $newNPCName, $newNPCTemplate, $target.debugname, $academyObject.debugname]"
+                    chance="$debugchance" />
+                  <signal_objects object="player.entity" param="'PilotAcademyRAndR.OldPilotReturnRequest'"
+                    param2="table[
+                      $oldNPCTemplate = $newNPCTemplate,
+                      $target = $target,
+                      $academyObject = $academyObject,
+                      $iteration = 0
+                    ]"
+                    delay="3s" />
+                </do_if>
               </do_else>
             </do_else>
             <remove_value name="$iteration" />

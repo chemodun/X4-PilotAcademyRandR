@@ -364,6 +364,8 @@ There are examples of texts and notifications screenshots:
   - `Station Manager` is now replaced only if the candidate's `Manager` skill is strictly higher, not equal.
 - **Improved**
   - Ships and stations busy with an uninterruptible order are skipped during automatic assignment.
+  - A pilot moved by auto assign is returned to the `Academy` if the swap keeps failing, instead of staying aboard as an idle crew member.
+  - Swap attempts are now spread over 3-7 seconds each, instead of retrying within one second.
 
 ### [1.13] - 2026-05-28
 
