@@ -215,9 +215,9 @@ local pilotAcademy = {
     60,
   },
   maxOrderErrors = 3,
-  academyContentColumnWidths = nil,
-  buttonsColumnWidths = nil,
-  infoContentColumnWidths = nil,
+  academyContentColumnWidths = {},
+  buttonsColumnWidths = {},
+  infoContentColumnWidths = {},
   relationNameMaxLen = 8,    -- will be calculated on init based on actual relation names
   relationNameLongest = nil, -- actual longest relation name string (for pixel-accurate width measurement)
   selectedShips = {},
@@ -241,14 +241,8 @@ local function trace(message)
   end
 end
 
-local function bind(obj, methodName)
-  return function(...)
-    return obj[methodName](obj, ...)
-  end
-end
-
 local function hasItemsExcept(table, excludedKey)
-  for k, v in pairs(table) do
+  for k in pairs(table) do
     if k ~= excludedKey then
       return true -- found at least one other entry
     end
@@ -383,24 +377,24 @@ function pilotAcademy.resetData()
   pilotAcademy.selectedTab = "settings"
 end
 
-function pilotAcademy.createSideBar(_config)
+function pilotAcademy.createSideBar(menuConfig)
   if not pilotAcademy.sideBarIsCreated then
     local positionIndex = 0
-    for i = 1, #_config.leftBar do
-      if _config.leftBar[i].mode == pilotAcademy.academySideBarInfo.mode then
+    for i = 1, #menuConfig.leftBar do
+      if menuConfig.leftBar[i].mode == pilotAcademy.academySideBarInfo.mode then
         trace("Pilot Academy R&R sidebar entry already exists, not adding again")
         return
       end
-      if _config.leftBar[i].mode == "info" then
+      if menuConfig.leftBar[i].mode == "info" then
         positionIndex = i
       end
     end
     if positionIndex > 0 then
-      table.insert(_config.leftBar, positionIndex + 1, { spacing = true })
-      table.insert(_config.leftBar, positionIndex + 2, pilotAcademy.academySideBarInfo)
+      table.insert(menuConfig.leftBar, positionIndex + 1, { spacing = true })
+      table.insert(menuConfig.leftBar, positionIndex + 2, pilotAcademy.academySideBarInfo)
     else
-      _config.leftBar[#_config.leftBar + 1] = { spacing = true }
-      _config.leftBar[#_config.leftBar + 1] = pilotAcademy.academySideBarInfo
+      menuConfig.leftBar[#menuConfig.leftBar + 1] = { spacing = true }
+      menuConfig.leftBar[#menuConfig.leftBar + 1] = pilotAcademy.academySideBarInfo
     end
     trace("Added Pilot Academy R&R sidebar entry")
     pilotAcademy.sideBarIsCreated = true
@@ -437,8 +431,6 @@ function pilotAcademy.createInfoFrame()
     return
   end
   local frame = menu.infoFrame
-  local instance = "left"
-  local infoTableMode = menu.infoTableMode[instance]
 
   pilotAcademy.loadCommonData()
   pilotAcademy.loadWings()
@@ -574,7 +566,7 @@ function pilotAcademy.sortFactionsDescending(a, b)
   return a.uiRelation > b.uiRelation
 end
 
-function pilotAcademy.getFactions(config, sortAscending)
+function pilotAcademy.getFactions(sortAscending)
   local factionsAll = GetLibrary("factions")
   local factions = {}
   for i = 1, #factionsAll do
@@ -621,7 +613,7 @@ function pilotAcademy.setAcademyContentColumnWidths(tableHandle, menu, config)
     debug("tableWingmans or menu is nil; cannot set column widths")
     return
   end
-  if (pilotAcademy.academyContentColumnWidths == nil) then
+  if (#pilotAcademy.academyContentColumnWidths == 0) then
     local contentWidth = menu.infoTableWidth - Helper.scrollbarWidth * 2 - config.mapRowHeight - Helper.borderSize * 5
     pilotAcademy.academyContentColumnWidths = {
       Helper.scrollbarWidth + 1,
@@ -641,7 +633,7 @@ function pilotAcademy.setInfoContentColumnWidths(tableHandle, menu, config)
     debug("tableWingmans or menu is nil; cannot set column widths")
     return
   end
-  if (pilotAcademy.infoContentColumnWidths == nil) then
+  if (#pilotAcademy.infoContentColumnWidths == 0) then
     local maxShortNameWidth = math.floor(C.GetTextWidth("[WWW]", Helper.standardFont, Helper.scaleFont(Helper.standardFont, config.mapFontSize)))
     local relationNameSample = pilotAcademy.relationNameLongest or string.rep("W", pilotAcademy.relationNameMaxLen)
     local relationWidth = math.floor(C.GetTextWidth("99999", Helper.standardFont, Helper.scaleFont(Helper.standardFont, config.mapFontSize)))
@@ -673,13 +665,13 @@ function pilotAcademy.setInfoContentColumnWidths(tableHandle, menu, config)
   end
 end
 
-function pilotAcademy.setButtonsColumnWidths(tableHandle, menu, config)
+function pilotAcademy.setButtonsColumnWidths(tableHandle, menu)
   if tableHandle == nil or menu == nil then
     debug("tableWingmans or menu is nil; cannot set column widths")
     return
   end
 
-  if pilotAcademy.buttonsColumnWidths == nil then
+  if #pilotAcademy.buttonsColumnWidths == 0 then
     local buttonWidth = math.floor((menu.infoTableWidth - Helper.scrollbarWidth * 4 - 8 * Helper.borderSize - 2) / 3)
     pilotAcademy.buttonsColumnWidths = {
       Helper.scrollbarWidth + 1,
@@ -708,7 +700,7 @@ function pilotAcademy.createTable(frame, numCols, tableName, isSelectable, reser
   if numCols == 4 then
     pilotAcademy.setAcademyContentColumnWidths(tableHandler, pilotAcademy.menuMap, config)
   elseif numCols == 7 then
-    pilotAcademy.setButtonsColumnWidths(tableHandler, menu, config)
+    pilotAcademy.setButtonsColumnWidths(tableHandler, menu)
   elseif numCols == 12 then
     pilotAcademy.setInfoContentColumnWidths(tableHandler, menu, config)
   end
@@ -731,7 +723,7 @@ function pilotAcademy.createFactionsTable(frame, menu, config, tableName, stored
     if faction ~= nil then
       local row = tableHandler:addRow(faction.id, { fixed = false })
       row[2]:createCheckBox(factionsEdit[faction.id] == true or factionsEdit[faction.id] ~= false and factionsSaved[faction.id] == true, { scaling = false })
-      row[2].handlers.onClick = function(_, checked) return pilotAcademy.onSelectFaction(faction.id, checked, storedData) end
+      row[2].handlers.onClick = function(_, checked) return pilotAcademy.onSelectFaction(faction.id, checked) end
       row[3]:createIcon(faction.icon, { height = config.mapRowHeight, width = config.mapRowHeight, color = Color[faction.colorId] or Color["text_normal"] })
       row[4]:createText(string.format("[%s]", faction.shortName), { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
       row[5]:createText("-", { halign = "center", color = Color[faction.colorId] or Color["text_normal"] })
@@ -786,7 +778,7 @@ local function getMaxRankLevel()
 end
 
 -- Helper: Create academy header with location selection
-function pilotAcademy.createAcademyHeaderTable(frame, menu, config, tableName, titleText)
+function pilotAcademy.createAcademyHeaderTable(frame, menu, config, tableName, _titleText)
   local tableHandler = pilotAcademy.createTable(frame, 4, tableName, false, false, menu, config)
 
   local row = tableHandler:addRow(nil, { fixed = true })
@@ -1078,7 +1070,7 @@ function pilotAcademy.fetchFleets()
   local academyShips = pilotAcademy.fetchAllAcademyShipsForExclusion()
   for i = 0, allShipsCount - 1 do
     local shipId = ConvertStringTo64Bit(tostring(allShips[i]))
-    local shipMacro, isDeployable, shipName, pilot, classId, idcode, icon, fleetName, sector = GetComponentData(shipId, "macro", "isdeployable", "name", "assignedaipilot",
+    local shipMacro, isDeployable, shipName, pilot, _classId, idcode, icon, fleetName, sector = GetComponentData(shipId, "macro", "isdeployable", "name", "assignedaipilot",
       "classid", "idcode", "icon", "fleetname", "sector")
     local isLasertower, shipWare = GetMacroData(shipMacro, "islasertower", "ware")
     local isUnit = C.IsUnit(shipId)
@@ -1144,7 +1136,7 @@ function pilotAcademy.displayAcademyInfo(frame, menu, config)
   local displayData = getAcademyDisplayData()
 
   -- Get factions and location data
-  local factions = pilotAcademy.getFactions(config, false)
+  local factions = pilotAcademy.getFactions(false)
   local emptyText, locationOptions = pilotAcademy.fetchPotentialLocations(
     displayData.locationSelectable,
     displayData.academyData.locationId,
@@ -1322,7 +1314,7 @@ function pilotAcademy.onSelectTargetRankLevel(level)
   pilotAcademy.editData.targetRankLevel = level
 end
 
-function pilotAcademy.onSelectFaction(factionId, isSelected, savedData)
+function pilotAcademy.onSelectFaction(factionId, isSelected)
   trace("onSelectFaction called with factionId: " .. tostring(factionId) .. ", isSelected: " .. tostring(isSelected))
   if factionId == nil then
     trace("factionId is nil; cannot process")
@@ -1367,7 +1359,7 @@ function pilotAcademy.onSelectAssign(priority)
   end
 end
 
-function pilotAcademy.onSelectFleet(fleetId, isSelected, savedData)
+function pilotAcademy.onSelectFleet(fleetId, isSelected)
   trace("onSelectFleet called with fleetId: " .. tostring(fleetId) .. ", isSelected: " .. tostring(isSelected))
   if fleetId == nil then
     trace("fleetId is nil; cannot process")
@@ -1955,7 +1947,6 @@ function pilotAcademy.isAnyPersonNotArrived()
     local roleId = ffi.string(role.id)
     trace("Processing role ID: " .. tostring(roleId) .. " with amount: " .. tostring(role.amount))
     if roleId == pilotAcademy.role and role.amount > 0 then
-      local amount = role.amount
       local personsTable = GetRoleTierNPCs(locationId, roleId, 0)
       for j = 1, #personsTable do
         local person = personsTable[j]
@@ -2255,7 +2246,6 @@ function pilotAcademy.createWingmansTable(frame, menu, config, tableName, wingDi
   tableHandler.properties.maxVisibleHeight = math.min(tableHandler:getFullHeight(), tableWingmansMaxHeight)
 
   -- Restore scroll position if available
-  local wingKey = tostring(pilotAcademy.selectedTab)
   if #wingmans > 0 then
     pilotAcademy.setTopRow(tableHandler, tableName)
   end
@@ -2308,7 +2298,7 @@ function pilotAcademy.displayWingInfo(frame, menu, config)
 
 
   -- Get factions data
-  local factions = pilotAcademy.getFactions(config, true)
+  local factions = pilotAcademy.getFactions(true)
 
   local suffix = string.format(displayData.wingId ~= nil and texts.wing or texts.addNewWing,
     displayData.existingWing and texts.wingNames[displayData.wingId] or "")
@@ -2511,7 +2501,7 @@ function pilotAcademy.resetTableSelection(currentTableName)
   end
 end
 
-function pilotAcademy.onRowChanged(row, rowData, uiTable, modified, input, source)
+function pilotAcademy.onRowChanged(row, _rowData, uiTable, _modified, _input, source)
   -- trace("pilotAcademy.onRowChanged called for row " .. tostring(row) .. " with modified: " .. tostring(modified) .. " and source: " .. tostring(source))
 
   local menu = pilotAcademy.menuMap
@@ -2553,7 +2543,7 @@ function pilotAcademy.onRowChanged(row, rowData, uiTable, modified, input, sourc
   pilotAcademy.selectedRow[table.name] = row
 end
 
-function pilotAcademy.onSelectElement(uiTable, modified, row, isDoubleClick, input)
+function pilotAcademy.onSelectElement(uiTable, _modified, row, isDoubleClick, input)
   trace("onSelectElement called with double click: " .. tostring(isDoubleClick) .. " at row " .. tostring(row))
   local menu = pilotAcademy.menuMap
   if menu == nil then
@@ -2772,7 +2762,7 @@ function pilotAcademy.createShipContextMenu(contextFrame, contextMenuData)
 
   if menuMap ~= nil then
     row = ftable:addRow(true, {})
-    local button = row[1]:setColSpan(5):createButton({
+    row[1]:setColSpan(5):createButton({
       bgColor = Color["button_background_hidden"],
       highlightColor = Color["button_highlight_default"],
       mouseOverText = "",
@@ -2804,7 +2794,7 @@ function pilotAcademy.createShipContextMenu(contextFrame, contextMenuData)
       { font = Helper.standardFontBold, halign = "right", height = Helper.subHeaderHeight, titleColor = Color["row_title"] })
     height = height + row:getHeight() + Helper.borderSize
     row = ftable:addRow(true, {})
-    local button = row[1]:setColSpan(5):createButton({
+    row[1]:setColSpan(5):createButton({
       bgColor = Color["button_background_hidden"],
       highlightColor = Color["button_highlight_default"],
       mouseOverText = "",
@@ -2899,7 +2889,7 @@ function pilotAcademy.fetchAllAcademyShipsForExclusion()
     local wingLeaderId = wingData.wingLeaderId
     if wingLeaderId ~= nil then
       academyShips[tostring(wingLeaderId)] = true
-      local mimicGroupId, wingmans = pilotAcademy.fetchWingmans(wingLeaderId)
+      local _mimicGroupId, wingmans = pilotAcademy.fetchWingmans(wingLeaderId)
       for i = 1, #wingmans do
         local wingman = wingmans[i]
         if wingman ~= nil and wingman.id ~= nil then
@@ -3318,7 +3308,7 @@ function pilotAcademy.addAcademyRowToPersonnelContextMenu(contextFrame, contextM
                 trace("Modified 'Works Somewhere' button to open MapMenu for hiring person: " .. tostring(ffi.string(C.GetPersonName(person, controllable))))
               elseif row.rowdata == "info_person_fire" and row[1].type == "button" then
                 row[1].handlers.onClick = function() return menu.infoSubmenuFireNPCConfirm(controllable, nil, person, instance) end
-                trace("Modified 'Fire' button to open confirmation for firing person: " .. tostring(ffi.string(C.GetPersonName(person, controllable)))) 
+                trace("Modified 'Fire' button to open confirmation for firing person: " .. tostring(ffi.string(C.GetPersonName(person, controllable))))
               end
             end
           end
@@ -3583,7 +3573,7 @@ function pilotAcademy.autoAssignPilots()
     trace("Auto-assign cool down not yet elapsed, returning")
     return
   end
-  local cadets, pilots = pilotAcademy.fetchAcademyPersonnel(false, true)
+  local _cadets, pilots = pilotAcademy.fetchAcademyPersonnel(false, true)
   if pilots == nil or #pilots == 0 then
     trace("No available pilots found, returning")
     return
