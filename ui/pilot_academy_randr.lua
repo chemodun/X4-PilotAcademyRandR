@@ -339,41 +339,6 @@ function pilotAcademy.Init(menuMap, menuPlayerInfo)
   end
 end
 
-function pilotAcademy.printGameEnvironmentStats()
-  if debugLevel == "none" then
-    return
-  end
-  local lines = {}
-  lines[#lines + 1] = "=== Game Environment ==="
-  lines[#lines + 1] = "Version: " .. GetVersionString() .. "  Build: " .. ffi.string(C.GetBuildVersionSuffix())
-
-  local extensions = GetExtensionList()
-  local dlcs = {}
-  local mods = {}
-  for _, ext in ipairs(extensions) do
-    if ext.enabled then
-      if ext.egosoftextension and ext.enabledbydefault then
-        dlcs[#dlcs + 1] = ext
-      else
-        mods[#mods + 1] = ext
-      end
-    end
-  end
-
-  lines[#lines + 1] = "--- Enabled DLCs (" .. #dlcs .. ") ---"
-  for _, dlc in ipairs(dlcs) do
-    lines[#lines + 1] = string.format("  id:%-30s  name:%-40s  v%-10s  date:%s", dlc.id, dlc.name, dlc.version, dlc.date)
-  end
-
-  lines[#lines + 1] = "--- Enabled Extensions (" .. #mods .. ") ---"
-  for _, mod in ipairs(mods) do
-    local source = mod.egosoftextension and "ego" or (mod.isworkshop and "workshop" or (mod.personal and "personal" or "local"))
-    lines[#lines + 1] = string.format("  id:%-30s  name:%-40s  author:%-25s  [%s]  v%-10s  date:%s", mod.id, mod.name, mod.author or "", source, mod.version, mod.date)
-  end
-
-  debug(table.concat(lines, "\n"))
-end
-
 function pilotAcademy.resetData()
   pilotAcademy.editData = {}
   pilotAcademy.selectedTab = "settings"
@@ -2061,9 +2026,6 @@ function pilotAcademy.onDebugLevelChanged(event)
   end
   if pilotAcademy.commonData ~= nil then
     debugLevel = pilotAcademy.commonData.debugLevel or "none"
-  end
-  if debugLevel ~= "none" then
-    pilotAcademy.printGameEnvironmentStats()
   end
 end
 
