@@ -280,7 +280,11 @@
         </do_if>
       </actions>
       <actions name="PilotAcademyNotify">
-        <do_if value="@$commonData.$notificationsEnabled == true">
+        <set_value name="$commonData" exact="@player.entity.$pilotAcademyRAndRData" />
+        <debug_text text="'Pilot Academy [%s]: notification is enabled: %s, logbook is enabled: %s' . [this.assignedcontrolled.debugname, @$commonData.$notificationsEnabled, @$commonData.$logbookEnabled]" chance="$debugchance" />
+        <do_if value="@$commonData.$notificationsEnabled == true or @$commonData.$notificationsEnabled == 1">
+          <debug_text text="'Pilot Academy [%s]: sending notification with title: %s, text: %s, object: %s, warning: %s' .
+            [this.assignedcontrolled.debugname, $messageTitle, $messageText, $messageObject, $isMessageWarning]" chance="$debugchance" />
           <do_if value="@$isMessageWarning == true">
             <show_notification text="'%s\n%s'.[$messageTitle, $messageText]" priority="2" sound="notification_warning"
               timeout="15s" />
@@ -289,7 +293,9 @@
             <show_notification text="'%s\n%s'.[$messageTitle, $messageText]" timeout="15s" />
           </do_else>
         </do_if>
-        <do_if value="@$commonData.$logbookEnabled == true">
+        <do_if value="@$commonData.$logbookEnabled == true or @$commonData.$logbookEnabled == 1">
+          <debug_text text="'Pilot Academy [%s]: writing to logbook with title: %s, text: %s, object: %s, warning: %s, money: %s' .
+            [this.assignedcontrolled.debugname, $messageTitle, $messageText, $messageObject, $isMessageWarning, $messageMoney]" chance="$debugchance" />
           <do_if value="@$messageMoney != null">
             <write_to_logbook category="general" title="$messageTitle" text="$messageText"
               interaction="showonmap" object="$messageObject" highlighted="@$isMessageWarning == true" money="$messageMoney" />
