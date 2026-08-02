@@ -1104,7 +1104,7 @@ function pilotAcademy.fetchFleets()
 end
 
 -- Helper: Create bottom buttons table
-function pilotAcademy.createAcademyButtonsTable(frame, menu, config, tableName, canSave,  displayData)
+function pilotAcademy.createAcademyButtonsTable(frame, menu, config, tableName, canSave, displayData)
   local tableHandler = pilotAcademy.createTable(frame, 7, tableName, false, false, menu, config)
 
   tableHandler:addEmptyRow(Helper.standardTextHeight / 2, { fixed = true })
@@ -1714,10 +1714,10 @@ end
 
 function pilotAcademy.getOrCreateEntity(person, controllable)
   local entity = C.GetInstantiatedPerson(person, controllable)
-  trace("Retrieved entity: ".. tostring(entity) .. " for person: " .. tostring(person))
+  trace("Retrieved entity: " .. tostring(entity) .. " for person: " .. tostring(person))
   if entity == 0 or entity == nil then
     entity = C.CreateNPCFromPerson(person, controllable)
-    trace("Created entity: ".. tostring(entity) .. " for person: " .. tostring(person))
+    trace("Created entity: " .. tostring(entity) .. " for person: " .. tostring(person))
   end
   return entity
 end
@@ -2538,7 +2538,7 @@ function pilotAcademy.onRowChanged(row, rowData, uiTable, modified, input, sourc
     trace("Row change source is auto; attempting to restore previous selection for table " .. tostring(uiTable) .. " stored :" .. tostring(next(pilotAcademy.selectedRow)))
     if pilotAcademy.selectedRow[table.name] ~= nil then
       SelectRow(uiTable, pilotAcademy.selectedRow[table.name], nil, nil, nil, true)
-      trace("Auto-selecting previously selected row " .. tostring(pilotAcademy.selectedRow[table.name]) .. " for table " .. tostring(uiTable)  .. " name: " .. tostring(table.name))
+      trace("Auto-selecting previously selected row " .. tostring(pilotAcademy.selectedRow[table.name]) .. " for table " .. tostring(uiTable) .. " name: " .. tostring(table.name))
     end
     return
   end
@@ -3314,7 +3314,7 @@ function pilotAcademy.addAcademyRowToPersonnelContextMenu(contextFrame, contextM
             local row = menuTable.rows[rowIndex]
             if row and row.rowdata then
               if row.rowdata == "info_person_worksomewhere" and row[1].type == "button" then
-                row[1].handlers.onClick = function() Helper.closeMenuAndOpenNewMenu(menu, "MapMenu", { 0, 0, true, controllable, nil, "hire", { "signal", controllable, 0, person} }); menu.cleanup() end
+                row[1].handlers.onClick = function() Helper.closeMenuAndOpenNewMenu(menu, "MapMenu", { 0, 0, true, controllable, nil, "hire", { "signal", controllable, 0, person } }); menu.cleanup() end
                 trace("Modified 'Works Somewhere' button to open MapMenu for hiring person: " .. tostring(ffi.string(C.GetPersonName(person, controllable))))
               elseif row.rowdata == "info_person_fire" and row[1].type == "button" then
                 row[1].handlers.onClick = function() return menu.infoSubmenuFireNPCConfirm(controllable, nil, person, instance) end
