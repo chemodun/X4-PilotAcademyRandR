@@ -293,7 +293,7 @@
           </actions>
         </cue>
 
-        <cue name="Process_Move_New_Pilot" instantiate="true" version="4">
+        <cue name="Process_Move_New_Pilot" instantiate="true" version="5">
           <conditions>
             <check_any>
               <event_object_signalled object="player.entity" param="'PilotAcademyRAndR.MoveNewPilotRequest'" />
