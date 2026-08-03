@@ -33,7 +33,7 @@ This mod introduces the Pilot Academy, allowing the Player to train pilots throu
 - **Options Helper**: Version 1.10 or higher by [Chem O`Dun](https://next.nexusmods.com/profile/ChemODun/mods?gameId=2659):
   - Available on Steam: [Options Helper](https://steamcommunity.com/sharedfiles/filedetails/?id=3715253556)
   - Available on Nexus Mods: [Options Helper](https://www.nexusmods.com/x4foundations/mods/2089)
-- **Print Extension List**: Version 1.00 or higher by [Chem O`Dun](https://next.nexusmods.com/profile/ChemODun/mods?gameId=2659):
+- **Print Extension List**: Version 1.01 or higher by [Chem O`Dun](https://next.nexusmods.com/profile/ChemODun/mods?gameId=2659):
   - Available on Steam: [Print Extension List](https://steamcommunity.com/sharedfiles/filedetails/?id=3770927339)
   - Available on Nexus Mods: [Print Extension List](https://www.nexusmods.com/x4foundations/mods/2191)
 
