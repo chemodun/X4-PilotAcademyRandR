@@ -33,6 +33,9 @@ This mod introduces the Pilot Academy, allowing the Player to train pilots throu
 - **Options Helper**: Version 1.10 or higher by [Chem O`Dun](https://next.nexusmods.com/profile/ChemODun/mods?gameId=2659):
   - Available on Steam: [Options Helper](https://steamcommunity.com/sharedfiles/filedetails/?id=3715253556)
   - Available on Nexus Mods: [Options Helper](https://www.nexusmods.com/x4foundations/mods/2089)
+- **Print Extension List**: Version 1.00 or higher by [Chem O`Dun](https://next.nexusmods.com/profile/ChemODun/mods?gameId=2659):
+  - Available on Steam: [Print Extension List](https://steamcommunity.com/sharedfiles/filedetails/?id=3770927339)
+  - Available on Nexus Mods: [Print Extension List](https://www.nexusmods.com/x4foundations/mods/2191)
 
 ## Caution
 
@@ -370,6 +373,8 @@ There are examples of texts and notifications screenshots:
   - Ships and stations busy with an uninterruptible order are skipped during automatic assignment.
   - A pilot moved by auto assign is returned to the `Academy` if the swap keeps failing, instead of staying aboard as an idle crew member.
   - Swap attempts are now spread over 3-7 seconds each, instead of retrying within one second.
+- **Added**
+  - Dependency on `Options Helper` mod and on `Print Extension List` mod.
 
 ### [1.13] - 2026-05-28
 
