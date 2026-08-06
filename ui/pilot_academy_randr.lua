@@ -821,7 +821,7 @@ function pilotAcademy.createTargetRankTable(frame, menu, config, tableName, disp
     minSelect = 2,
     max = maxRankLevel,
     maxSelect = maxRankLevel,
-    start = targetRankLevel,
+    start = targetRankLevel < maxRankLevel and targetRankLevel or maxRankLevel,
     step = 1,
   })
   row[2].handlers.onSliderCellChanged = function(_, val) return pilotAcademy.onSelectTargetRankLevel(val) end
